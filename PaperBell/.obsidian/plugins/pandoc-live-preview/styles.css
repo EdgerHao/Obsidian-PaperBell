@@ -1,0 +1,115 @@
+/* styles.css - v3.5.0 (Full Audit) */
+
+/* === 1. 基础组件 === */
+.pandoc-widget {
+    border-radius: 4px;
+    padding: 0;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+/* === 2. 引用处 (Reference) === */
+.pandoc-ref {
+    background-color: rgba(var(--color-accent-rgb), 0.12);
+    display: inline;
+    padding: 0 2px;
+}
+.pandoc-ref:hover {
+    background-color: rgba(var(--color-accent-rgb), 0.3);
+    text-decoration: underline;
+}
+.pandoc-ref.pandoc-clickable { cursor: pointer; }
+.pandoc-ref:not(.pandoc-clickable) { cursor: text; }
+
+/* 【新增】失效引用 (Broken Reference) */
+/* 当 @fig:xxx 找不到对应的 {#fig:xxx} 时 */
+.pandoc-ref.pandoc-broken {
+    color: #ffffff !important;
+    background-color: #d32f2f !important; /* 红底白字，醒目 */
+    font-weight: bold;
+    border-radius: 4px;
+    padding: 0 4px;
+    text-decoration: line-through; /* 删除线 */
+}
+
+/* === 3. 定义处 (Definition) === */
+.pandoc-def {
+    display: block;         
+    width: 100%;
+    line-height: 1.4;
+    font-size: 0.9em;
+    background-color: transparent; 
+    border: none;
+    cursor: text;
+    margin: 0; 
+}
+
+/* 定义了但未被引用 -> 标橙警告 */
+.pandoc-def.pandoc-unused {
+    color: #e67e22 !important; 
+    text-decoration: underline wavy #e67e22;
+}
+
+/* === 4. 图片标题 === */
+.pandoc-fig.pandoc-def {
+    color: #1e88e5; 
+    margin-top: 6px !important;  
+    margin-bottom: 12px !important;
+}
+
+/* === 5. 表格标题 === */
+.pandoc-tbl.pandoc-def {
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+}
+
+/* === 6. 侧边栏大纲 (Pandoc Outline View) === */
+.pandoc-outline-container {
+    padding: 10px;
+}
+.pandoc-outline-header {
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 5px;
+}
+.pandoc-section-title {
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+}
+
+.pandoc-outline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    font-size: 0.85em;
+}
+.pandoc-outline-item:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+/* 侧边栏状态颜色 */
+.pandoc-item-normal { color: var(--text-normal); }
+.pandoc-item-unused { color: #e67e22; } /* 橙色：未使用 */
+.pandoc-item-broken { color: #d32f2f; font-weight: bold; } /* 红色：引用失效 */
+.pandoc-item-missing-id { color: #7f8c8d; font-style: italic; } /* 灰色：未定义ID */
+
+.pandoc-tag {
+    font-size: 0.75em;
+    opacity: 0.7;
+    margin-left: 8px;
+}
+
+/* === 7. 辅助 === */
+.pandoc-gap { display: none; }
+.pandoc-suggest-label { font-weight: bold; color: var(--text-accent); margin-right: 8px; }
+.pandoc-suggest-id { color: var(--text-muted); font-size: 0.85em; }

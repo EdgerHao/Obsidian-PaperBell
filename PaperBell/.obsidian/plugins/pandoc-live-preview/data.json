@@ -1,0 +1,16 @@
+{
+  "picgoUrl": "http://127.0.0.1:36677/upload",
+  "autoUpload": true,
+  "addNewLineAroundImage": true,
+  "hideGapAroundImage": true,
+  "deleteLocal": true,
+  "figPrefix": "图",
+  "tblPrefix": "表",
+  "autoParentheses": true,
+  "enableClickToJump": true,
+  "captionColor": "#1e88e5",
+  "captionBold": true,
+  "captionCenter": true,
+  "referenceColor": "#1e88e5",
+  "referenceBold": true
+}

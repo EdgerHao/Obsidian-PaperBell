@@ -1,11 +1,11 @@
 {
-  "registrationId": "",
+  "registrationId": "PB-6B438B-F8AD-AF2A",
   "noteLocation": "Locations/Institutes",
   "institutionNoteTemplate": "40 - Obsidian/模板/机构模板pro",
   "autoGenerateInstitutionNotes": true,
   "openInstitutionAfterCreation": true,
   "listenToFileCreatedInPath": "Persons/Scholars",
-  "enableUpdater": false,
+  "enableUpdater": true,
   "landing": {
     "firstLoad": false,
     "completedSteps": {
