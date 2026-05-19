@@ -1,5 +1,5 @@
 
-  print('zotero-live-citations 199d652')
+  print('zotero-live-citations 199d652 - MODIFIED')
   local online, mt, latest = pcall(pandoc.mediabag.fetch, 'https://retorque.re/zotero-better-bibtex/exporting/zotero.lua.revision')
   if online then
     latest = string.sub(latest, 1, 10)

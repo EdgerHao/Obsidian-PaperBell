@@ -6,7 +6,7 @@
 [![Pandoc](https://img.shields.io/badge/Pandoc-3.x-orange)](https://pandoc.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 为什么需要这个项目？
+## 为什么需要这个项目？（已修改）
 
 [PaperBell](https://github.com/PaperBell-Org/Obsidian-PaperBell) 提供了完整的学术 Obsidian 库模板，让研究者在 Obsidian 中管理文献、笔记和项目。但写作到交付之间还有一道坎：
 
