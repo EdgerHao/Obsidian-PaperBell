@@ -1,0 +1,61 @@
+{
+  "project_name": "PaperBell Research Vault",
+  "description": "An Obsidian-based academic research management system",
+  "author": "PaperBell Community",
+  "version": "2.0.0",
+  
+  "ai_settings": {
+    "provider": "claude",
+    "model": "claude-3-sonnet-20240229",
+    "temperature": 0.3,
+    "max_tokens": 4096
+  },
+  
+  "workspace_settings": {
+    "root_path": ".",
+    "include_patterns": [
+      "**/*.md",
+      "**/*.txt",
+      "**/*.json"
+    ],
+    "exclude_patterns": [
+      ".obsidian/**",
+      ".git/**",
+      "node_modules/**",
+      "*.pdf",
+      "*.docx"
+    ]
+  },
+  
+  "skill_settings": {
+    "enabled_skills": [
+      "paperbell-academic-writing",
+      "paperbell-note-conventions"
+    ],
+    "skill_paths": [
+      ".claude/skills/"
+    ]
+  },
+  
+  "command_settings": {
+    "command_paths": [
+      ".claude/commands/"
+    ]
+  },
+  
+  "security_settings": {
+    "require_approval_for_write": true,
+    "require_approval_for_delete": true,
+    "trusted_domains": [
+      "*.anthropic.com",
+      "*.obsidian.md"
+    ]
+  },
+  
+  "ui_settings": {
+    "theme": "dark",
+    "font_size": 14,
+    "show_line_numbers": true,
+    "word_wrap": true
+  }
+}
