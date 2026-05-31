@@ -105,6 +105,7 @@ PaperBell-md-2-word/
 | [PaperBell](https://github.com/PaperBell-Org/Obsidian-PaperBell) | 学术库模板 | 按官方文档初始化 |
 | [pandoc-live-preview](https://github.com/EdgerHao/pandoc-live-preview) | 写作时实时预览 | Obsidian 社区插件 |
 | Pandoc ≥ 3.0 | Markdown → Word 转换 | `brew install pandoc` 或官网下载 |
+| librsvg / rsvg-convert | 将 SVG 图片转换为 Word 可嵌入格式 | `brew install librsvg` |
 | [pandoc-crossref](https://github.com/lierdakil/pandoc-crossref) | 交叉引用 | 与 Pandoc 版本匹配的编译版本 |
 | Zotero + Better BibTeX | 文献管理 | Zotero 官网 + 插件市场 |
 | Obsidian Enhancing Export | OB 内一键导出 | Obsidian 社区插件 |
@@ -135,6 +136,33 @@ git clone https://github.com/EdgerHao/PaperBell-md-2-word.git
 ```
 
 > **过滤器顺序重要**：`pandoc-crossref` 必须在最前面，`move-tbl-caption-en` 必须在 `pandoc-crossref` 之后。
+
+#### SVG 图片导出错误排查
+
+如果导出 Word 时出现类似错误：
+
+```text
+[WARNING] Could not convert image xxx.svg: check that rsvg-convert is in path
+rsvg-convert: createProcess: posix_spawnp: does not exist
+```
+
+说明 Pandoc 在处理 SVG 图片时找不到 `rsvg-convert`。安装 `librsvg` 即可：
+
+```bash
+brew install librsvg
+which rsvg-convert
+rsvg-convert --version
+```
+
+正常情况下应能看到 `/usr/local/bin/rsvg-convert` 或 `/opt/homebrew/bin/rsvg-convert`。
+
+如果终端中可以找到 `rsvg-convert`，但 Obsidian 插件仍然报错，通常是 macOS GUI 应用没有继承终端的 `PATH`。可尝试从终端启动 Obsidian：
+
+```bash
+open -a Obsidian
+```
+
+然后重新导出。
 
 **3. 安装 VBA 宏**
 

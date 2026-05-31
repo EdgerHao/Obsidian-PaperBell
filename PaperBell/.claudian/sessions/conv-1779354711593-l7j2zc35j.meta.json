@@ -1,0 +1,26 @@
+{
+  "id": "conv-1779354711593-l7j2zc35j",
+  "providerId": "codex",
+  "title": "Migrate Git repository",
+  "titleGenerationStatus": "success",
+  "createdAt": 1779354711593,
+  "updatedAt": 1779506673325,
+  "lastResponseAt": 1779354788421,
+  "sessionId": "019e49ce-3916-72f0-a92f-7eb9f74e64b2",
+  "providerState": {
+    "threadId": "019e49ce-3916-72f0-a92f-7eb9f74e64b2",
+    "sessionFilePath": "/Users/a1234/.codex/sessions/2026/05/21/rollout-2026-05-21T17-11-52-019e49ce-3916-72f0-a92f-7eb9f74e64b2.jsonl",
+    "transcriptRootPath": "/Users/a1234/.codex/sessions"
+  },
+  "currentNote": "40 - Obsidian/脚本/pandoc/PaperBell-md-2-word/README.md",
+  "usage": {
+    "inputTokens": 21424,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 20608,
+    "contextWindow": 258400,
+    "contextWindowIsAuthoritative": true,
+    "contextTokens": 21424,
+    "percentage": 8,
+    "model": "gpt-5.5"
+  }
+}

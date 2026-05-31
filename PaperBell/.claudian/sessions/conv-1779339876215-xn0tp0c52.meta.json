@@ -1,0 +1,26 @@
+{
+  "id": "conv-1779339876215-xn0tp0c52",
+  "providerId": "codex",
+  "title": "Fix ob pandoc Word export error",
+  "titleGenerationStatus": "success",
+  "createdAt": 1779339876217,
+  "updatedAt": 1779354679183,
+  "lastResponseAt": 1779346165777,
+  "sessionId": "019e48eb-da18-7261-9099-bd594c2b0b19",
+  "providerState": {
+    "threadId": "019e48eb-da18-7261-9099-bd594c2b0b19",
+    "sessionFilePath": "/Users/a1234/.codex/sessions/2026/05/21/rollout-2026-05-21T13-04-36-019e48eb-da18-7261-9099-bd594c2b0b19.jsonl",
+    "transcriptRootPath": "/Users/a1234/.codex/sessions"
+  },
+  "currentNote": "40 - Obsidian/脚本/pandoc/PaperBell-md-2-word/README.md",
+  "usage": {
+    "inputTokens": 32238,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 31872,
+    "contextWindow": 258400,
+    "contextWindowIsAuthoritative": true,
+    "contextTokens": 32238,
+    "percentage": 12,
+    "model": "gpt-5.5"
+  }
+}

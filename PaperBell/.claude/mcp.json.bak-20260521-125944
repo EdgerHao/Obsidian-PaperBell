@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "zotero-mcp": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://127.0.0.1:23120/mcp"
+      ],
+      "env": {}
+    }
+  }
+}

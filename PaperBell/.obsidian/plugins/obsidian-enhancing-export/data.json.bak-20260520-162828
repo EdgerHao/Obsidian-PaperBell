@@ -25,10 +25,7 @@
       "name": "PDF"
     },
     {
-      "name": "Word (.docx)",
-      "type": "pandoc",
-      "arguments": "-f ${fromFormat} --resource-path=\"${currentDir}\" --resource-path=\"${attachmentFolderPath}\" --resource-path=\"${currentDir}/figs\" --resource-path=\"${currentDir}/../figs\" --resource-path=\"${currentDir}/../imgs\" --resource-path=\"${currentDir}/imgs\" --resource-path=\"${currentDir}/images\" --resource-path=\"${currentDir}/../images\" --filter=\"pandoc-crossref\" --lua-filter=\"${vaultDir}/40 - Obsidian/脚本/pandoc/PaperBell-md-2-word/zotero/zotero.lua\" --lua-filter=\"${vaultDir}/40 - Obsidian/脚本/pandoc/PaperBell-md-2-word/move-tbl-caption-en/move-tbl-caption-en.lua\" --reference-doc=\"${vaultDir}/40 - Obsidian/脚本/pandoc/PaperBell-md-2-word/word模板-常规.docx\" --lua-filter=\"${vaultDir}/40 - Obsidian/脚本/pandoc/PaperBell-md-2-word/replace-nbsp/replace-nbsp.lua\" -M link-citations=true -M chapDelim=- -M figureTitle=图 -M figPrefix=图 -o \"${outputPath}\" -t docx",
-      "extension": ".docx"
+      "name": "Word (.docx)"
     },
     {
       "name": "OpenOffice"
