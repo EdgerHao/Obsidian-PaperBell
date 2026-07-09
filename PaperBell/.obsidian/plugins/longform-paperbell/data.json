@@ -1,0 +1,300 @@
+{
+  "version": 3,
+  "language": "auto",
+  "projects": {},
+  "selectedDraftVaultPath": "Outputs/demo/Index.md",
+  "userScriptFolder": null,
+  "sessionStorage": "data",
+  "sessions": [
+    {
+      "start": "2026-07-09T15:16:05.345Z",
+      "total": 0,
+      "drafts": {
+        "Outputs/demo/Index.md": {
+          "total": 0,
+          "scenes": {
+            "DEMO_引言": 0,
+            "DEMO_结果": 0,
+            "DEMO_讨论": 0,
+            "DEMO_方法": 0
+          }
+        },
+        "Outputs/PaperBell用户文档/index.md": {
+          "total": 0,
+          "scenes": {
+            "日常记录": 0,
+            "文献阅读笔记": 0,
+            "管理科研项目": 0,
+            "撰写输出笔记": 0,
+            "撰写长文本": 0,
+            "导出学术文档": 0,
+            "追踪学者和组织": 0
+          }
+        },
+        "测试/Index.md": {
+          "total": 0,
+          "scenes": {}
+        },
+        "测试22/Main Manuscript (Index).md": {
+          "total": 0,
+          "scenes": {}
+        },
+        "测试22/Response Letter (Index).md": {
+          "total": 0,
+          "scenes": {}
+        },
+        "测试22/Cover Letter.md": {
+          "total": 0,
+          "scenes": {}
+        },
+        "测试22/supplementary/Supplementary (Index).md": {
+          "total": 0,
+          "scenes": {}
+        }
+      }
+    }
+  ],
+  "showWordCountInStatusBar": true,
+  "startNewSessionEachDay": true,
+  "sessionGoal": 500,
+  "applyGoalTo": "all",
+  "notifyOnGoal": true,
+  "countDeletionsForGoal": false,
+  "keepSessionCount": 30,
+  "sessionFile": "longform-sessions.json",
+  "numberScenes": false,
+  "sceneTemplate": null,
+  "waitForSync": false,
+  "fallbackWaitEnabled": true,
+  "fallbackWaitTime": 5,
+  "writeProperty": false,
+  "pandocAssetsUrl": "",
+  "pandocAssetsFolder": "",
+  "pandocOutputFolder": "",
+  "pandocBinary": "pandoc",
+  "pandocBibliography": "",
+  "pandocSetupDismissed": true,
+  "pandocMarketIndexUrl": "",
+  "workflows": {
+    "Default Workflow": {
+      "name": "Default Workflow",
+      "description": "A starter workflow. Feel free to edit, rename, or delete it and create your own.",
+      "steps": [
+        {
+          "id": "strip-frontmatter",
+          "optionValues": {}
+        },
+        {
+          "id": "remove-links",
+          "optionValues": {
+            "remove-wikilinks": true,
+            "remove-external-links": true
+          }
+        },
+        {
+          "id": "prepend-title",
+          "optionValues": {
+            "format": "$3{#} $1",
+            "separator": "\n\n"
+          }
+        },
+        {
+          "id": "concatenate-text",
+          "optionValues": {
+            "separator": "\\n\\n---\\n\\n"
+          }
+        },
+        {
+          "id": "write-to-note",
+          "optionValues": {
+            "target": "manuscript.md",
+            "open-after": true
+          }
+        }
+      ]
+    },
+    "PaperBell Manuscript": {
+      "name": "PaperBell Manuscript",
+      "description": "Compile the main manuscript to PDF, then harvest line/figure numbers so a response letter can cite it.",
+      "steps": [
+        {
+          "id": "strip-frontmatter",
+          "optionValues": {}
+        },
+        {
+          "id": "concatenate-text",
+          "optionValues": {
+            "separator": "\\n\\n"
+          }
+        },
+        {
+          "id": "remove-comments",
+          "optionValues": {
+            "remove-markdown-comments": true,
+            "remove-html-comments": false
+          }
+        },
+        {
+          "id": "replace-json-placeholders",
+          "optionValues": {
+            "json-file": "metadata.json, results.json",
+            "start-delim": "{{",
+            "end-delim": "}}",
+            "error-on-missing": false
+          }
+        },
+        {
+          "id": "add-zenodo-frontmatter",
+          "optionValues": {
+            "metadata-file": "metadata.json",
+            "error-on-missing-file": true
+          }
+        },
+        {
+          "id": "write-to-note",
+          "optionValues": {
+            "target": "$1_$2.md",
+            "open-after": true
+          }
+        },
+        {
+          "id": "run-pandoc-export",
+          "optionValues": {
+            "template": "",
+            "dry-run": false,
+            "open-after": true,
+            "filename": "{acronym}_{date}"
+          }
+        },
+        {
+          "id": "harvest-manuscript-lines",
+          "optionValues": {
+            "enabled": true
+          }
+        }
+      ]
+    },
+    "PaperBell Supplementary": {
+      "name": "PaperBell Supplementary",
+      "description": "Compile the Supplementary Information (S-numbered figures/tables) to PDF and harvest its line/figure numbers.",
+      "steps": [
+        {
+          "id": "strip-frontmatter",
+          "optionValues": {}
+        },
+        {
+          "id": "concatenate-text",
+          "optionValues": {
+            "separator": "\\n\\n"
+          }
+        },
+        {
+          "id": "remove-comments",
+          "optionValues": {
+            "remove-markdown-comments": true,
+            "remove-html-comments": false
+          }
+        },
+        {
+          "id": "replace-json-placeholders",
+          "optionValues": {
+            "json-file": "metadata.json, results.json",
+            "start-delim": "{{",
+            "end-delim": "}}",
+            "error-on-missing": false
+          }
+        },
+        {
+          "id": "add-zenodo-frontmatter",
+          "optionValues": {
+            "metadata-file": "metadata.json",
+            "error-on-missing-file": true
+          }
+        },
+        {
+          "id": "supplementary-info",
+          "optionValues": {
+            "abstract": true,
+            "summarize-sections": true
+          }
+        },
+        {
+          "id": "write-to-note",
+          "optionValues": {
+            "target": "$1_$2.md",
+            "open-after": true
+          }
+        },
+        {
+          "id": "run-pandoc-export",
+          "optionValues": {
+            "template": "",
+            "dry-run": false,
+            "open-after": true,
+            "filename": "{acronym}_SI_{date}"
+          }
+        },
+        {
+          "id": "harvest-manuscript-lines",
+          "optionValues": {
+            "enabled": true
+          }
+        }
+      ]
+    },
+    "PaperBell Response Letter": {
+      "name": "PaperBell Response Letter",
+      "description": "Compile a response letter that cites the manuscript/SI (```manuscript / @id) with synced text, line numbers, and figure numbers from the latest Manuscript/SI compile.",
+      "steps": [
+        {
+          "id": "strip-frontmatter",
+          "optionValues": {}
+        },
+        {
+          "id": "concatenate-text",
+          "optionValues": {
+            "separator": "\\n\\n"
+          }
+        },
+        {
+          "id": "add-zenodo-frontmatter",
+          "optionValues": {
+            "metadata-file": "metadata.json",
+            "error-on-missing-file": false
+          }
+        },
+        {
+          "id": "write-to-note",
+          "optionValues": {
+            "target": "$1_Response.md",
+            "open-after": true
+          }
+        },
+        {
+          "id": "run-pandoc-export",
+          "optionValues": {
+            "template": "response-letter",
+            "dry-run": false,
+            "open-after": true,
+            "filename": "{acronym}_Response_{date}"
+          }
+        }
+      ]
+    },
+    "PaperBell Cover Letter": {
+      "name": "PaperBell Cover Letter",
+      "description": "Export a single-file cover letter to PDF via the cover_letter preset (moderncv letterhead). Keeps the note's own to/date/manuscript/enclosure frontmatter; journal/title/corresponding author come from metadata.json via cover_letter.lua.",
+      "steps": [
+        {
+          "id": "run-pandoc-export",
+          "optionValues": {
+            "template": "cover_letter",
+            "dry-run": false,
+            "open-after": true,
+            "filename": "{acronym}_Cover_{date}"
+          }
+        }
+      ]
+    }
+  }
+}

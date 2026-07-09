@@ -1,0 +1,25 @@
+{
+  "paperbell-windows": {
+    "id": "paperbell-windows",
+    "version": "1.0.0",
+    "kind": "bundle",
+    "files": [
+      "filters/link.lua",
+      "filters/preamble.lua",
+      "filters/xlsx_table.lua",
+      "filters/image.lua",
+      "filters/mute.lua",
+      "filters/div.lua",
+      "filters/quotes-i18n.lua",
+      "filters/math.lua",
+      "filters/callout.lua",
+      "filters/codeblock.lua",
+      "filters/shift_headings.lua",
+      "filters/highlight.lua",
+      "defaults/crossref.yaml",
+      "defaults/paperbell-windows.yaml",
+      "templates/paperbell.latex"
+    ],
+    "installedAt": "2026-07-09T15:17:43.648Z"
+  }
+}
