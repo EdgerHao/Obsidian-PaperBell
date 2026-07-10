@@ -16,7 +16,7 @@ function Inlines(el)
   if next(el) and el[1].tag == "Str" and el[#el].tag == "Str" and el[1].text:match('^%%%%') and el[#el].text:match('^%%%%') then
 	el[1] = pandoc.Str('::: hidden\n')
 	el[#el] = pandoc.Str(':::\n')
-	return {pandoc.Div(el)}
+	return {pandoc.Span(el)}
   end
   return el
 end
