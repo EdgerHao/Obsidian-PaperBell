@@ -6,32 +6,6 @@ if you want to view the source visit the plugins github repository
 'use strict';
 
 var obsidian = require('obsidian');
-var child_process = require('child_process');
-var fs = require('fs');
-var os = require('os');
-var path = require('path');
-
-function _interopNamespace(e) {
-    if (e && e.__esModule) return e;
-    var n = Object.create(null);
-    if (e) {
-        Object.keys(e).forEach(function (k) {
-            if (k !== 'default') {
-                var d = Object.getOwnPropertyDescriptor(e, k);
-                Object.defineProperty(n, k, d.get ? d : {
-                    enumerable: true,
-                    get: function () { return e[k]; }
-                });
-            }
-        });
-    }
-    n["default"] = e;
-    return Object.freeze(n);
-}
-
-var fs__namespace = /*#__PURE__*/_interopNamespace(fs);
-var os__namespace = /*#__PURE__*/_interopNamespace(os);
-var path__namespace = /*#__PURE__*/_interopNamespace(path);
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -2528,14 +2502,14 @@ function assign(tar, src) {
         tar[k] = src[k];
     return tar;
 }
-function run$1(fn) {
+function run(fn) {
     return fn();
 }
 function blank_object() {
     return Object.create(null);
 }
 function run_all(fns) {
-    fns.forEach(run$1);
+    fns.forEach(run);
 }
 function is_function(thing) {
     return typeof thing === 'function';
@@ -3067,7 +3041,7 @@ function mount_component(component, target, anchor, customElement) {
     if (!customElement) {
         // onMount happens before the initial afterUpdate
         add_render_callback(() => {
-            const new_on_destroy = on_mount.map(run$1).filter(is_function);
+            const new_on_destroy = on_mount.map(run).filter(is_function);
             if (on_destroy) {
                 on_destroy.push(...new_on_destroy);
             }
@@ -20603,7 +20577,7 @@ function createNoteWithPotentialTemplate(app, path, template) {
                 }
             }
             catch (error) {
-                console.error(`[PaperOut] Error using plugin [${pluginUsed}]:`, error);
+                console.error(`[Longform] Error using plugin [${pluginUsed}]:`, error);
             }
             if (contents !== "") {
                 yield app.vault.adapter.write(path, contents);
@@ -20627,7 +20601,7 @@ function createNote(app, path, initialContent = "") {
                 yield app.vault.createFolder(pathComponents.join("/"));
             }
             catch (e) {
-                console.error(`[PaperOut] Failed to create new note at "${path}"`, e);
+                console.error(`[Longform] Failed to create new note at "${path}"`, e);
                 return null;
             }
         }
@@ -20639,7 +20613,7 @@ function createNote(app, path, initialContent = "") {
             return yield app.vault.create(path, initialContent);
         }
         catch (e) {
-            console.error(`[PaperOut] Failed to create new note at "${path}"`, e);
+            console.error(`[Longform] Failed to create new note at "${path}"`, e);
             return null;
         }
     });
@@ -20654,7 +20628,7 @@ function createWithTemplater(app, file, templatePath) {
     return __awaiter(this, void 0, void 0, function* () {
         const templaterPlugin = app.plugins.getPlugin("templater-obsidian");
         if (!templaterPlugin) {
-            console.error("[PaperOut] Attempted to use Templater plugin while disabled.");
+            console.error("[Longform] Attempted to use Templater plugin while disabled.");
             return;
         }
         const template = app.vault.getAbstractFileByPath(templatePath);
@@ -20666,7 +20640,7 @@ function createWithTemplates(app, templatePath) {
     return __awaiter(this, void 0, void 0, function* () {
         const corePlugin = app.internalPlugins.getEnabledPluginById("templates");
         if (!corePlugin) {
-            console.error("[PaperOut] Attempted to use core template plugin while disabled.");
+            console.error("[Longform] Attempted to use core template plugin while disabled.");
             return;
         }
         // Get template body
@@ -20759,13 +20733,6 @@ const draftWordCounts = writable({});
  * Writeable store of whether the plugin is waiting for sync.
  */
 const waitingForSync = writable(false);
-/**
- * Writeable store of the basenames (without `.yaml`) of the downloaded Pandoc
- * `defaults/` presets. Populates the "Template / preset" dropdown on the Run
- * Pandoc Export compile step. Refreshed on layout-ready and after assets are
- * downloaded via `refreshPandocTemplates`.
- */
-const pandocTemplates = writable([]);
 // DERIVED STORES
 /**
  * Derived store of all projects—drafts grouped by title.
@@ -20996,7 +20963,7 @@ function insertDraftIntoFrontmatter(app, path, draft) {
             });
         }
         catch (error) {
-            console.error("[PaperOut] insertDraftIntoFrontmatter: processFrontMatter error:", error);
+            console.error("[Longform] insertDraftIntoFrontmatter: processFrontMatter error:", error);
         }
     });
 }
@@ -21039,8 +21006,6 @@ var CompileStepOptionType;
     CompileStepOptionType[CompileStepOptionType["Text"] = 1] = "Text";
     /** Key-value text */
     CompileStepOptionType[CompileStepOptionType["MultilineText"] = 2] = "MultilineText";
-    /** A single-select dropdown. Choices come from `choices` or `dynamicChoices`. */
-    CompileStepOptionType[CompileStepOptionType["Dropdown"] = 3] = "Dropdown";
 })(CompileStepOptionType || (CompileStepOptionType = {}));
 function makeBuiltinStep(v, isScript = false) {
     return Object.assign(Object.assign({}, v), { description: Object.assign(Object.assign({}, v.description), { canonicalID: v.id, isScript: isScript }), optionValues: v.description.options.reduce((agg, opt) => {
@@ -21048,7 +21013,7 @@ function makeBuiltinStep(v, isScript = false) {
         }, {}) });
 }
 function typeMismatchError(expected, got, context) {
-    return new Error(`[PaperOut] A compile step received a type it did not expect. It expected "${expected}", but got "${got}" with step kind "${context.kind}"`);
+    return new Error(`[Longform] A compile step received a type it did not expect. It expected "${expected}", but got "${got}" with step kind "${context.kind}"`);
 }
 const PLACEHOLDER_MISSING_STEP = {
     id: "placeholder-missing-step",
@@ -21190,8 +21155,7 @@ function calculateWorkflow(workflow, isMultiScene) {
         calculatedKinds,
     ];
 }
-function compile(app, draft, workflow, kinds, statusCallback, options) {
-    var _a;
+function compile(app, draft, workflow, kinds, statusCallback) {
     return __awaiter(this, void 0, void 0, function* () {
         let currentInput;
         if (draft.format === "single") {
@@ -21233,7 +21197,7 @@ function compile(app, draft, workflow, kinds, statusCallback, options) {
             const kind = index < kinds.length ? kinds[index] : null;
             if (kind === null) {
                 const error = `No step kind data for step at position ${index}.`;
-                console.error(`[PaperOut] ${error}`);
+                console.error(`[Longform] ${error}`);
                 statusCallback({
                     kind: "CompileStatusError",
                     error,
@@ -21249,10 +21213,8 @@ function compile(app, draft, workflow, kinds, statusCallback, options) {
                 utilities: {
                     normalizePath: obsidian.normalizePath,
                 },
-                suppressOpenAfter: options === null || options === void 0 ? void 0 : options.suppressOpenAfter,
-                projectRoot: options === null || options === void 0 ? void 0 : options.projectRoot,
             };
-            console.log(`[PaperOut] Running compile step ${step.description.name} with context:`, context);
+            console.log(`[Longform] Running compile step ${step.description.name} with context:`, context);
             statusCallback({
                 kind: "CompileStatusStep",
                 stepIndex: index,
@@ -21273,16 +21235,15 @@ function compile(app, draft, workflow, kinds, statusCallback, options) {
                 }
             }
             catch (error) {
-                console.error("[PaperOut]", error);
-                const detail = error instanceof Error ? (_a = error.stack) !== null && _a !== void 0 ? _a : error.message : String(error);
+                console.error("[Longform]", error);
                 statusCallback({
                     kind: "CompileStatusError",
-                    error: `Step "${step.description.name}" failed:\n\n${detail}`,
+                    error: `${error}`,
                 });
                 return;
             }
         }
-        console.log(`[PaperOut] Compile workflow "${workflow.name}" finished with final result:`, currentInput);
+        console.log(`[Longform] Compile workflow "${workflow.name}" finished with final result:`, currentInput);
         statusCallback({
             kind: "CompileStatusSuccess",
         });
@@ -21322,138 +21283,6 @@ const DEFAULT_WORKFLOWS = {
                 optionValues: {
                     target: "manuscript.md",
                     "open-after": true,
-                },
-            },
-        ],
-    },
-    // ── PaperBell academic pipelines (see docs/PANDOC_EXPORT.md, 回复信手稿引用规范) ──
-    // Manuscript & SI keep HTML comments (remove-html-comments:false) so <!--ms:-->
-    // reference markers survive to the harvest pass; Pandoc drops the comments in the
-    // PDF anyway. Response/Cover Letter set run-pandoc-export's preset explicitly.
-    "PaperBell Manuscript": {
-        name: "PaperBell Manuscript",
-        description: "Compile the main manuscript to PDF, then harvest line/figure numbers so a response letter can cite it.",
-        steps: [
-            { id: "strip-frontmatter", optionValues: {} },
-            { id: "concatenate-text", optionValues: { separator: "\\n\\n" } },
-            {
-                id: "remove-comments",
-                optionValues: {
-                    "remove-markdown-comments": true,
-                    "remove-html-comments": false,
-                },
-            },
-            {
-                id: "replace-json-placeholders",
-                optionValues: {
-                    "json-file": "metadata.json, results.json",
-                    "start-delim": "{{",
-                    "end-delim": "}}",
-                    "error-on-missing": false,
-                },
-            },
-            {
-                id: "add-zenodo-frontmatter",
-                optionValues: {
-                    "metadata-file": "metadata.json",
-                    "error-on-missing-file": true,
-                },
-            },
-            { id: "write-to-note", optionValues: { target: "$1_$2.md", "open-after": true } },
-            {
-                id: "run-pandoc-export",
-                optionValues: {
-                    template: "",
-                    "dry-run": false,
-                    "open-after": true,
-                    filename: "{acronym}_{date}",
-                },
-            },
-            { id: "harvest-manuscript-lines", optionValues: { enabled: true } },
-        ],
-    },
-    "PaperBell Supplementary": {
-        name: "PaperBell Supplementary",
-        description: "Compile the Supplementary Information (S-numbered figures/tables) to PDF and harvest its line/figure numbers.",
-        steps: [
-            { id: "strip-frontmatter", optionValues: {} },
-            { id: "concatenate-text", optionValues: { separator: "\\n\\n" } },
-            {
-                id: "remove-comments",
-                optionValues: {
-                    "remove-markdown-comments": true,
-                    "remove-html-comments": false,
-                },
-            },
-            {
-                id: "replace-json-placeholders",
-                optionValues: {
-                    "json-file": "metadata.json, results.json",
-                    "start-delim": "{{",
-                    "end-delim": "}}",
-                    "error-on-missing": false,
-                },
-            },
-            {
-                id: "add-zenodo-frontmatter",
-                optionValues: {
-                    "metadata-file": "metadata.json",
-                    "error-on-missing-file": true,
-                },
-            },
-            {
-                id: "supplementary-info",
-                optionValues: { abstract: true, "summarize-sections": true },
-            },
-            { id: "write-to-note", optionValues: { target: "$1_$2.md", "open-after": true } },
-            {
-                id: "run-pandoc-export",
-                optionValues: {
-                    template: "",
-                    "dry-run": false,
-                    "open-after": true,
-                    filename: "{acronym}_SI_{date}",
-                },
-            },
-            { id: "harvest-manuscript-lines", optionValues: { enabled: true } },
-        ],
-    },
-    "PaperBell Response Letter": {
-        name: "PaperBell Response Letter",
-        description: "Compile a response letter that cites the manuscript/SI (```manuscript / @id) with synced text, line numbers, and figure numbers from the latest Manuscript/SI compile.",
-        steps: [
-            { id: "strip-frontmatter", optionValues: {} },
-            { id: "concatenate-text", optionValues: { separator: "\\n\\n" } },
-            {
-                id: "add-zenodo-frontmatter",
-                optionValues: {
-                    "metadata-file": "metadata.json",
-                    "error-on-missing-file": false,
-                },
-            },
-            { id: "write-to-note", optionValues: { target: "$1_Response.md", "open-after": true } },
-            {
-                id: "run-pandoc-export",
-                optionValues: {
-                    template: "response-letter",
-                    "dry-run": false,
-                    "open-after": true,
-                    filename: "{acronym}_Response_{date}",
-                },
-            },
-        ],
-    },
-    "PaperBell Cover Letter": {
-        name: "PaperBell Cover Letter",
-        description: "Export a single-file cover letter to PDF via the cover_letter preset (moderncv letterhead). Keeps the note's own to/date/manuscript/enclosure frontmatter; journal/title/corresponding author come from metadata.json via cover_letter.lua.",
-        steps: [
-            {
-                id: "run-pandoc-export",
-                optionValues: {
-                    template: "cover_letter",
-                    "dry-run": false,
-                    "open-after": true,
-                    filename: "{acronym}_Cover_{date}",
                 },
             },
         ],
@@ -21789,28 +21618,6 @@ const StripFrontmatterStep = makeBuiltinStep({
     },
 });
 
-/**
- * The per-draft name used by the `$2` placeholder in the Save-as-Note output path.
- * Uses the draft's explicit `draftTitle` when set, otherwise falls back to the
- * index file's basename (without the `.md` extension) so the name is always
- * distinct across the drafts of a project.
- */
-function draftOutputName(draft) {
-    var _a, _b;
-    const indexBasename = ((_a = draft.vaultPath.split("/").pop()) !== null && _a !== void 0 ? _a : "").replace(/\.md$/, "");
-    return (_b = draft.draftTitle) !== null && _b !== void 0 ? _b : indexBasename;
-}
-/**
- * Substitutes the Save-as-Note output-path placeholders for a given draft:
- *   - `$1` → the project title (shared across a project's drafts)
- *   - `$2` → this draft's name (see {@link draftOutputName})
- * All occurrences of each token are replaced.
- */
-function applyTargetPlaceholders(target, draft) {
-    const draftName = draftOutputName(draft);
-    return target.split("$2").join(draftName).split("$1").join(draft.title);
-}
-
 const WriteToNoteStep = makeBuiltinStep({
     id: "write-to-note",
     description: {
@@ -21821,7 +21628,7 @@ const WriteToNoteStep = makeBuiltinStep({
             {
                 id: "target",
                 name: "Output path",
-                description: "Path for the created manuscript note. Paths starting with '/' are relative to your vault root; otherwise relative to your project. $1 is replaced with your project's title; $2 is replaced with this draft's name (e.g. \"compiled/$2.md\" gives each draft its own file).",
+                description: "Path for the created manuscript note. Paths starting with '/' are relative to your vault root; otherwise relative to your project. $1 will be replaced with your project's title.",
                 type: CompileStepOptionType.Text,
                 default: "manuscript.md",
             },
@@ -21840,17 +21647,18 @@ const WriteToNoteStep = makeBuiltinStep({
                 throw new Error("Cannot write non-manuscript as note.");
             }
             else {
-                const target = applyTargetPlaceholders(context.optionValues["target"], context.draft);
+                let target = context.optionValues["target"];
+                target = target.replace("$1", context.draft.title);
                 const openAfter = context.optionValues["open-after"];
                 if (!target || target.length == 0) {
                     throw new Error("Invalid path for Save as Note.");
                 }
                 const filePath = resolvePath(context.projectPath, target);
                 yield writeToFile(context.app, filePath, input.contents);
-                if (openAfter && !context.suppressOpenAfter) {
-                    console.log("[PaperOut] Attempting to open:", filePath);
+                if (openAfter) {
+                    console.log("[Longform] Attempting to open:", filePath);
                     context.app.workspace.openLinkText(filePath, "/", true).catch((err) => {
-                        console.error("[PaperOut] Could not open", filePath, err);
+                        console.error("[Longform] Could not open", filePath, err);
                     });
                 }
                 return input;
@@ -21861,7 +21669,7 @@ const WriteToNoteStep = makeBuiltinStep({
 function writeToFile(app, filePath, contents) {
     return __awaiter(this, void 0, void 0, function* () {
         yield ensureContainingFolderExists(app, filePath);
-        console.log("[PaperOut] Writing to:", filePath);
+        console.log("[Longform] Writing to:", filePath);
         yield app.vault.adapter.write(filePath, contents);
     });
 }
@@ -21919,7 +21727,7 @@ function resolveRelativeFilePath(projectPathComponents, filePathComponents, atSt
             // move up one folder
             if (projectPathComponents.length === 0) {
                 // we moved up too many folders and ran out.
-                throw new Error("[PaperOut] Invalid path for Save as Note.");
+                throw new Error("[Longform] Invalid path for Save as Note.");
             }
             // remove the lowest-level folder from the project path to move up,
             // and take this first component off the top of the filePathComponents
@@ -21929,7 +21737,7 @@ function resolveRelativeFilePath(projectPathComponents, filePathComponents, atSt
             // relative to current folder
             if (!atStartOfFilePath) {
                 // illegal path like: ././filename.md
-                throw new Error("[PaperOut] Invalid path for Save as Note.");
+                throw new Error("[Longform] Invalid path for Save as Note.");
             }
             // stay here, but remove the first filepath component
             return resolveRelativeFilePath(projectPathComponents, filePathComponents.slice(1), false);
@@ -22010,7 +21818,6 @@ function buildPandocYaml(metadata) {
         return affiliationIndex.length;
     };
     const authorsOut = metadata.creators.map((creator) => {
-        var _a;
         const explicit = authorAffiliations[creator.name];
         const affilNames = explicit && explicit.length > 0
             ? explicit
@@ -22021,7 +21828,6 @@ function buildPandocYaml(metadata) {
             name: creator.name,
             affiliationIndices: affilNames.map(indexFor),
             corresponding: correspondingSet.has(creator.name),
-            email: ((_a = creator.email) !== null && _a !== void 0 ? _a : "").trim(),
         };
     });
     const lines = [];
@@ -22034,10 +21840,7 @@ function buildPandocYaml(metadata) {
             lines.push(`    affiliation: [${a.affiliationIndices.join(", ")}]`);
         }
         if (a.corresponding) {
-            // The LaTeX template prints this value as the "Corresponding author: …"
-            // line, so emit the author's email when available; fall back to the "yes"
-            // flag (still truthy for the author-name marker) when no email is given.
-            lines.push(`    corresponding: ${yamlString(a.email || "yes")}`);
+            lines.push(`    corresponding: ${yamlString("yes")}`);
         }
     }
     if (affiliationIndex.length > 0) {
@@ -22080,59 +21883,6 @@ function yamlString(s) {
     return `"${String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
-/** The folder containing an index note, derived from its vault path. */
-function draftParentFolder(vaultPath) {
-    return vaultPath.split("/").slice(0, -1).join("/");
-}
-/**
- * The lowest common ancestor folder shared by a set of folder paths, computed
- * segment-wise. Returns "" (the vault root) when there is no shared prefix.
- */
-function lowestCommonAncestorFolder(folders) {
-    if (folders.length === 0)
-        return "";
-    const split = folders.map((f) => f.split("/").filter((s) => s.length > 0));
-    let common = split[0];
-    for (const segs of split.slice(1)) {
-        let i = 0;
-        while (i < common.length && i < segs.length && common[i] === segs[i]) {
-            i++;
-        }
-        common = common.slice(0, i);
-    }
-    return common.join("/");
-}
-/**
- * The "project root" for a set of drafts: the lowest common ancestor of every
- * draft's folder. Shared resources (e.g. metadata.json) are searched for between
- * a draft's own folder and this root, inclusive.
- */
-function projectRootPath(projectDrafts) {
-    return lowestCommonAncestorFolder(projectDrafts.map((d) => draftParentFolder(d.vaultPath)));
-}
-/**
- * Ordered candidate paths for a named resource, searched from `startDir` upward
- * to `rootDir` (inclusive). At each level both `<dir>/<baseName>` and
- * `<dir>/source/<baseName>` are produced. When `rootDir` is not an ancestor of
- * (or equal to) `startDir`, only `startDir` is searched — so callers that don't
- * know a project root degrade to the original single-folder behavior.
- */
-function projectResourceCandidatePaths(startDir, rootDir, baseName) {
-    const startSegs = startDir.split("/").filter((s) => s.length > 0);
-    const rootSegs = (rootDir !== null && rootDir !== void 0 ? rootDir : "").split("/").filter((s) => s.length > 0);
-    const rootIsAncestor = rootSegs.length <= startSegs.length &&
-        rootSegs.every((s, i) => s === startSegs[i]);
-    const minLen = rootIsAncestor ? rootSegs.length : startSegs.length;
-    const candidates = [];
-    for (let len = startSegs.length; len >= minLen; len--) {
-        const dir = startSegs.slice(0, len).join("/");
-        const prefix = dir.length > 0 ? `${dir}/` : "";
-        candidates.push(`${prefix}${baseName}`);
-        candidates.push(`${prefix}source/${baseName}`);
-    }
-    return candidates;
-}
-
 const AddZenodoFrontmatterStep = makeBuiltinStep({
     id: "add-zenodo-frontmatter",
     description: {
@@ -22143,7 +21893,7 @@ const AddZenodoFrontmatterStep = makeBuiltinStep({
             {
                 id: "metadata-file",
                 name: "Metadata file",
-                description: "Filename of the Zenodo deposition metadata JSON. Searched for in the draft's folder (or its 'source/' subfolder) and any parent folder up to the project root, so multiple drafts can share one file. Trailing '.json' is optional.",
+                description: "Filename of the Zenodo deposition metadata JSON in your project folder (or its 'source/' subfolder). Trailing '.json' is optional.",
                 type: CompileStepOptionType.Text,
                 default: "metadata.json",
             },
@@ -22157,7 +21907,7 @@ const AddZenodoFrontmatterStep = makeBuiltinStep({
         ],
     },
     compile(input, context) {
-        var _a, _b, _c;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             if (context.kind !== CompileStepKind.Manuscript) {
                 throw new Error("Cannot add frontmatter to non-manuscript.");
@@ -22167,7 +21917,10 @@ const AddZenodoFrontmatterStep = makeBuiltinStep({
             const baseName = metaFileName.endsWith(".json")
                 ? metaFileName
                 : `${metaFileName}.json`;
-            const candidatePaths = projectResourceCandidatePaths(context.projectPath, (_c = context.projectRoot) !== null && _c !== void 0 ? _c : context.projectPath, baseName);
+            const candidatePaths = [
+                `${context.projectPath}/${baseName}`,
+                `${context.projectPath}/source/${baseName}`,
+            ];
             let file = null;
             let foundPath = "";
             for (const path of candidatePaths) {
@@ -22201,10 +21954,11 @@ const AddZenodoFrontmatterStep = makeBuiltinStep({
 });
 
 /**
- * Tokenize a dot/bracket path expression into its segments.
- * Supports `a.b.c` and `a.b[0].c` mixed notation.
+ * Resolve a dot/bracket path expression against a value.
+ * Supports `a.b.c` and `a.b[0].c` mixed notation. Returns `undefined`
+ * for any segment that does not resolve.
  */
-function tokenizePath(pathExpr) {
+function getByPath(root, pathExpr) {
     const tokens = [];
     let buf = "";
     for (let i = 0; i < pathExpr.length; i++) {
@@ -22234,15 +21988,6 @@ function tokenizePath(pathExpr) {
     }
     if (buf)
         tokens.push(buf);
-    return tokens;
-}
-/**
- * Resolve a dot/bracket path expression against a value.
- * Supports `a.b.c` and `a.b[0].c` mixed notation. Returns `undefined`
- * for any segment that does not resolve.
- */
-function getByPath(root, pathExpr) {
-    const tokens = tokenizePath(pathExpr);
     let cur = root;
     for (const t of tokens) {
         if (cur === null || cur === undefined)
@@ -22263,96 +22008,6 @@ function getByPath(root, pathExpr) {
     }
     return cur;
 }
-/**
- * Set a value at a dot/bracket path on `root`, mutating and returning it.
- *
- * Intermediate object keys that are missing are created as plain objects so a
- * brand-new top-level variable (e.g. `{{deadline}}`) can be defined. Existing
- * scalar leaves are overwritten. Returns `false` (and makes no change) when the
- * path traverses through an array index or a non-object value that can't be
- * safely created/updated — callers should surface a "use the full editor"
- * message in that case.
- */
-function setByPath(root, pathExpr, value) {
-    const tokens = tokenizePath(pathExpr);
-    if (tokens.length === 0)
-        return false;
-    // Only support object-key paths for in-place editing; array creation/indexing
-    // is out of scope for the lightweight double-click editor.
-    if (tokens.some((t) => /^\d+$/.test(t)))
-        return false;
-    let cur = root;
-    for (let i = 0; i < tokens.length - 1; i++) {
-        const t = tokens[i];
-        const next = cur[t];
-        if (next === undefined || next === null) {
-            const created = {};
-            cur[t] = created;
-            cur = created;
-        }
-        else if (typeof next === "object" && !Array.isArray(next)) {
-            cur = next;
-        }
-        else {
-            // would have to overwrite a scalar/array with an object — refuse
-            return false;
-        }
-    }
-    cur[tokens[tokens.length - 1]] = value;
-    return true;
-}
-/**
- * Render a resolved JSON value the way placeholders are substituted: `null`
- * becomes the empty string, objects/arrays are JSON-stringified, everything
- * else is coerced with `String`. Shared by the compile step and live rendering
- * so previewed and compiled output agree.
- */
-function formatPlaceholderValue(value) {
-    if (value === null || value === undefined)
-        return "";
-    if (typeof value === "object") {
-        try {
-            return JSON.stringify(value);
-        }
-        catch (_a) {
-            return String(value);
-        }
-    }
-    return String(value);
-}
-/**
- * Parse the `json-file` option into a list of filenames. Accepts a single name
- * or several separated by commas, semicolons, or newlines. A trailing `.json`
- * is optional on each entry and normalized on. Order is preserved: later files
- * win on key conflicts when merged.
- */
-function parseJsonFileList(raw) {
-    return String(raw !== null && raw !== void 0 ? raw : "")
-        .split(/[,;\n]/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((name) => (name.endsWith(".json") ? name : `${name}.json`));
-}
-/** True for a non-null, non-array object literal. */
-function isPlainObject$2(v) {
-    return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-/**
- * Deep-merge two parsed JSON values. Plain objects are merged key-by-key
- * (recursing on shared keys); everything else (scalars, arrays) from `b`
- * overrides `a`. `undefined` in `b` leaves `a` untouched. Used to combine
- * several data files (e.g. metadata.json + results.json) into one namespace.
- */
-function deepMerge(a, b) {
-    if (isPlainObject$2(a) && isPlainObject$2(b)) {
-        const out = Object.assign({}, a);
-        for (const key of Object.keys(b)) {
-            out[key] = key in a ? deepMerge(a[key], b[key]) : b[key];
-        }
-        return out;
-    }
-    return b === undefined ? a : b;
-}
 /** Build a global regex matching `<start> path <end>` placeholders. */
 function buildPlaceholderRegex(startDelim, endDelim) {
     const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -22368,10 +22023,10 @@ const ReplaceJsonPlaceholdersStep = makeBuiltinStep({
         options: [
             {
                 id: "json-file",
-                name: "JSON file(s)",
-                description: "Filename(s) of the JSON data file(s). Separate several with commas — they are merged into one namespace, with later files winning on key conflicts (e.g. 'metadata.json, results.json'). Each is searched for in the draft's folder (or its 'source/' subfolder) and any parent folder up to the project root. Trailing '.json' is optional.",
+                name: "JSON file",
+                description: "Filename of the JSON data file in your project folder (or its 'source/' subfolder). Trailing '.json' is optional.",
                 type: CompileStepOptionType.Text,
-                default: "metadata.json, results.json",
+                default: "results.json",
             },
             {
                 id: "start-delim",
@@ -22397,52 +22052,42 @@ const ReplaceJsonPlaceholdersStep = makeBuiltinStep({
         ],
     },
     compile(input, context) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
             if (context.kind !== CompileStepKind.Manuscript) {
                 throw new Error("Cannot replace placeholders on non-manuscript.");
             }
-            const fileList = parseJsonFileList(String((_a = context.optionValues["json-file"]) !== null && _a !== void 0 ? _a : "metadata.json, results.json"));
+            const jsonFileName = String((_a = context.optionValues["json-file"]) !== null && _a !== void 0 ? _a : "results.json").trim();
             const startDelim = String((_b = context.optionValues["start-delim"]) !== null && _b !== void 0 ? _b : "{{");
             const endDelim = String((_c = context.optionValues["end-delim"]) !== null && _c !== void 0 ? _c : "}}");
             const errorOnMissing = Boolean(context.optionValues["error-on-missing"]);
-            if (fileList.length === 0) {
-                throw new Error("[Replace JSON Placeholders] No JSON file configured.");
+            const baseName = jsonFileName.endsWith(".json")
+                ? jsonFileName
+                : `${jsonFileName}.json`;
+            const candidatePaths = [
+                `${context.projectPath}/${baseName}`,
+                `${context.projectPath}/source/${baseName}`,
+            ];
+            let file = null;
+            let foundPath = "";
+            for (const path of candidatePaths) {
+                const f = context.app.vault.getAbstractFileByPath(path);
+                if (f instanceof obsidian.TFile) {
+                    file = f;
+                    foundPath = path;
+                    break;
+                }
             }
-            // Resolve, read, and merge each file into one namespace. Files listed later
-            // win on key conflicts. A listed file that isn't found is skipped (unless
-            // none of them are found, which is an error).
-            let data = {};
-            const foundNames = [];
-            const searchedFor = [];
-            for (const baseName of fileList) {
-                const candidatePaths = projectResourceCandidatePaths(context.projectPath, (_d = context.projectRoot) !== null && _d !== void 0 ? _d : context.projectPath, baseName);
-                searchedFor.push(`${baseName} (${candidatePaths.join(" or ")})`);
-                let file = null;
-                let foundPath = "";
-                for (const path of candidatePaths) {
-                    const f = context.app.vault.getAbstractFileByPath(path);
-                    if (f instanceof obsidian.TFile) {
-                        file = f;
-                        foundPath = path;
-                        break;
-                    }
-                }
-                if (!file)
-                    continue;
-                const raw = yield context.app.vault.cachedRead(file);
-                let parsed;
-                try {
-                    parsed = JSON.parse(raw);
-                }
-                catch (e) {
-                    throw new Error(`[Replace JSON Placeholders] Invalid JSON in ${foundPath}: ${e.message}`);
-                }
-                data = deepMerge(data, parsed);
-                foundNames.push(foundPath);
+            if (!file) {
+                throw new Error(`[Replace JSON Placeholders] JSON file not found at ${candidatePaths.join(" or ")}`);
             }
-            if (foundNames.length === 0) {
-                throw new Error(`[Replace JSON Placeholders] None of the configured JSON files were found. Searched for: ${searchedFor.join("; ")}`);
+            const raw = yield context.app.vault.cachedRead(file);
+            let data;
+            try {
+                data = JSON.parse(raw);
+            }
+            catch (e) {
+                throw new Error(`[Replace JSON Placeholders] Invalid JSON in ${foundPath}: ${e.message}`);
             }
             const pattern = buildPlaceholderRegex(startDelim, endDelim);
             const replaced = input.contents.replace(pattern, (match, rawPath) => {
@@ -22454,932 +22099,19 @@ const ReplaceJsonPlaceholdersStep = makeBuiltinStep({
                     }
                     return match;
                 }
-                return formatPlaceholderValue(value);
+                if (value === null)
+                    return "";
+                if (typeof value === "object") {
+                    try {
+                        return JSON.stringify(value);
+                    }
+                    catch (_a) {
+                        return String(value);
+                    }
+                }
+                return String(value);
             });
             return { contents: replaced };
-        });
-    },
-});
-
-/**
- * Default vault-relative folder the Pandoc assets are downloaded into. Used as
- * the fallback when the "Pandoc assets folder" setting is empty.
- */
-const DEFAULT_ASSETS_DIR = "PaperBell/pandoc";
-/**
- * Directories to add to PATH for the pandoc subprocess. Obsidian's GUI process
- * does not inherit the login shell PATH, so pandoc/xelatex/pandoc-crossref are
- * otherwise not found (spawn ENOENT).
- */
-const COMMON_BIN_DIRS = [
-    "/opt/homebrew/bin",
-    "/usr/local/bin",
-    "/usr/bin",
-    "/bin",
-    "/Library/TeX/texbin", // MacTeX: xelatex
-];
-function homeBinDirs(home) {
-    return [
-        path__namespace.join(home, ".local", "bin"),
-        path__namespace.join(home, ".cargo", "bin"),
-        path__namespace.join(home, "bin"),
-    ];
-}
-/** All directories to search for binaries / prepend to PATH. */
-function binSearchDirs(home) {
-    return COMMON_BIN_DIRS.concat(homeBinDirs(home));
-}
-/**
- * Build a PATH string with the common binary dirs prepended (deduplicated),
- * so a spawned pandoc can find itself and its own subprocesses (xelatex,
- * pandoc-crossref) regardless of the GUI process's inherited PATH.
- */
-function buildExecPath(currentPath, home) {
-    const parts = binSearchDirs(home).concat((currentPath || "").split(":"));
-    const seen = new Set();
-    const merged = [];
-    for (const p of parts) {
-        if (p && !seen.has(p)) {
-            seen.add(p);
-            merged.push(p);
-        }
-    }
-    return merged.join(":");
-}
-/**
- * Resolve a binary to an absolute path: honor an explicit path, else search the
- * given dirs. `exists` is injected for testability. Returns null if not found.
- */
-function resolveBinary(name, exists, dirs) {
-    if (!name)
-        return null;
-    if (name.includes("/"))
-        return exists(name) ? name : null;
-    for (const d of dirs) {
-        const p = path__namespace.join(d, name);
-        if (exists(p))
-            return p;
-    }
-    return null;
-}
-function expandHome(p, home) {
-    if (!p)
-        return p;
-    if (p === "~")
-        return home;
-    if (p.startsWith("~/"))
-        return home + p.slice(1);
-    return p;
-}
-/**
- * Resolve a user-supplied path: absolute / `~` as-is, otherwise relative to the
- * vault base path.
- */
-function resolveUserPath(p, base, home) {
-    if (!p)
-        return p;
-    if (p.startsWith("/") || p.startsWith("~")) {
-        return path__namespace.resolve(expandHome(p, home));
-    }
-    return path__namespace.join(base, p);
-}
-/**
- * Parse the leading `--- ... ---` YAML block for the flat scalar keys the export
- * needs (acronym/date/csl/template/supplementary). Not a full YAML parser — only
- * reads the keys buildPandocYaml emits.
- */
-function parseExportFrontmatter(contents) {
-    const out = {};
-    const m = /^---\n([\s\S]*?)\n---/.exec(contents);
-    if (!m)
-        return out;
-    for (const line of m[1].split("\n")) {
-        const kv = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
-        if (!kv)
-            continue;
-        let val = kv[2].trim();
-        if (val === "")
-            continue;
-        if ((val.startsWith('"') && val.endsWith('"')) ||
-            (val.startsWith("'") && val.endsWith("'"))) {
-            val = val.slice(1, -1);
-        }
-        if (val === "true")
-            out[kv[1]] = true;
-        else if (val === "false")
-            out[kv[1]] = false;
-        else
-            out[kv[1]] = val;
-    }
-    return out;
-}
-/**
- * Does the manuscript body contain real bibliography citations (`[@key]` or a
- * bare `@key`)? Used to decide whether a bibliography is required — without one,
- * citeproc emits `\citeproc` commands the LaTeX template can't typeset and the
- * PDF fails. The leading YAML frontmatter is ignored, and pandoc-crossref
- * references (`@fig:`, `@tbl:`, `@eq:`, `@sec:`, `@lst:`, `@thm:`) are excluded,
- * as is `a@b.com`-style text (an `@` preceded by an alphanumeric).
- */
-function hasCitations(contents) {
-    const body = contents.replace(/^---\n[\s\S]*?\n---/, "");
-    return /(?:^|[^A-Za-z0-9_@])@(?!(?:fig|tbl|eq|sec|lst|thm)s?:)[A-Za-z0-9_][\w:.#$-]*/u.test(body);
-}
-/**
- * Substitute `{var}` tokens in an output file-name pattern from `vars` (e.g.
- * `{acronym}_{date}` → `PBMIN_2026-07-01`). Unknown tokens are left literally so
- * a typo stays visible in the resulting name rather than silently vanishing.
- */
-function renderFilenamePattern(pattern, vars) {
-    return pattern.replace(/\{(\w+)\}/g, (m, key) => Object.prototype.hasOwnProperty.call(vars, key) ? vars[key] : m);
-}
-/**
- * Make a string safe as a file name: drop path separators and characters
- * illegal on common filesystems, collapse whitespace, and strip leading dots
- * (no accidental hidden files). Falls back to "manuscript" if nothing is left.
- */
-function sanitizeExportFilename(name) {
-    const cleaned = String(name)
-        .replace(/[/\\]+/g, "-")
-        // eslint-disable-next-line no-control-regex
-        .replace(/[:*?"<>|\u0000-\u001f]+/g, "-") // illegal / control chars (spaces kept)
-        .replace(/\s+/g, " ") // collapse whitespace runs
-        .replace(/^[.\-\s]+|[.\-\s]+$/g, "") // trim surrounding dots/dashes/space
-        .trim();
-    return cleaned || "manuscript";
-}
-/**
- * Resolve the export PDF file name: render the user's pattern (or fall back to
- * `fallbackName` when the pattern is blank), sanitize it, and ensure exactly one
- * `.pdf` extension.
- */
-function buildExportFilename(pattern, vars, fallbackName) {
-    const rendered = pattern.trim()
-        ? renderFilenamePattern(pattern.trim(), vars)
-        : fallbackName;
-    const base = sanitizeExportFilename(rendered);
-    return /\.pdf$/i.test(base) ? base : base + ".pdf";
-}
-/**
- * Determine a single common top-level directory shared by every entry (e.g. the
- * `repo-main/` wrapper GitHub adds to source zipballs), so it can be stripped on
- * extraction. Returns "" when entries live at the archive root (a clean release
- * asset with `defaults/`, `csl/`, … at the top).
- */
-function commonTopDir(paths) {
-    if (paths.length === 0)
-        return "";
-    const first = paths[0].split("/")[0] + "/";
-    return paths.every((p) => p.startsWith(first)) ? first : "";
-}
-/** Build the pandoc argument vector, mirroring PaperBell spec §11. */
-function buildPandocArgs(p) {
-    const args = [
-        p.inputFile,
-        "--defaults=" + p.defaultsFile,
-        "--csl=" + p.cslFile,
-        "--resource-path=" + p.projectAbs,
-        "--resource-path=" + path__namespace.join(p.projectAbs, "figs"),
-        "--resource-path=" + path__namespace.join(p.projectAbs, "..", "figs"),
-    ];
-    if (p.bibliography) {
-        args.push("--bibliography=" + p.bibliography);
-    }
-    args.push("-o", p.outputPath);
-    return args;
-}
-
-function line(ok, label, detail) {
-    return `[${ok ? "✓" : "✗"}] ${label}` + (detail ? `\n       ${detail}` : "");
-}
-const RunPandocExportStep = makeBuiltinStep({
-    id: "run-pandoc-export",
-    description: {
-        name: "Run Pandoc Export",
-        description: "Exports the compiled manuscript to PDF via Pandoc (PaperBell pipeline). Desktop only. Run after Add Zenodo Frontmatter. Uses the bundled Pandoc assets by default — run the 'Set up Pandoc export' command to check prerequisites.",
-        availableKinds: [CompileStepKind.Manuscript],
-        options: [
-            {
-                id: "template",
-                name: "Template / preset",
-                description: "Which downloaded Pandoc preset (defaults/*.yaml) to export with — e.g. a Manuscript vs. an SI layout. Leave blank to use the template from your project metadata (_longform.template).",
-                type: CompileStepOptionType.Dropdown,
-                dynamicChoices: "pandoc-templates",
-                emptyLabel: "(use metadata template)",
-                default: "",
-            },
-            {
-                id: "filename",
-                name: "File name",
-                description: "Name for the exported PDF. Variables: {title}, {acronym}, {date}, {csl}, {template}, {draft}. E.g. {acronym}_{date} → PBMIN_2026-07-01.pdf. The .pdf extension is added automatically. Leave blank to use the compiled manuscript's name.",
-                type: CompileStepOptionType.Text,
-                default: "",
-            },
-            {
-                id: "dry-run",
-                name: "Dry run",
-                description: "If checked, log the preflight checklist and the pandoc command instead of running it.",
-                type: CompileStepOptionType.Boolean,
-                default: false,
-            },
-            {
-                id: "open-after",
-                name: "Open PDF after export",
-                description: "If checked, open the resulting PDF with the system viewer.",
-                type: CompileStepOptionType.Boolean,
-                default: true,
-            },
-        ],
-    },
-    compile(input, context) {
-        var _a, _b, _c, _d, _e, _f;
-        return __awaiter(this, void 0, void 0, function* () {
-            if (context.kind !== CompileStepKind.Manuscript) {
-                throw new Error("Cannot run Pandoc export on non-manuscript.");
-            }
-            const adapter = context.app.vault.adapter;
-            if (!(adapter instanceof obsidian.FileSystemAdapter)) {
-                throw new Error("Pandoc export only works on Obsidian desktop (cannot resolve an absolute path).");
-            }
-            const base = adapter.getBasePath();
-            const home = os__namespace.homedir();
-            const settings = get_store_value(pluginSettings);
-            // Assets folder: setting, else the default download location. Downloaded
-            // from a separate assets repo via "Set up Pandoc export"; not bundled.
-            const assetsSetting = ((_a = settings.pandocAssetsFolder) !== null && _a !== void 0 ? _a : "").trim() || DEFAULT_ASSETS_DIR;
-            const assetsAbs = resolveUserPath(assetsSetting, base, home);
-            const defaultsDir = path__namespace.join(assetsAbs, "defaults");
-            const cslDir = path__namespace.join(assetsAbs, "csl");
-            const cwd = assetsAbs; // so ${.}/.. and relative refs resolve inside assets
-            const projectAbs = path__namespace.join(base, context.projectPath);
-            const fm = parseExportFrontmatter(input.contents);
-            const acronym = String(fm.acronym || context.draft.title || "manuscript");
-            const date = String(fm.date || new Date().toISOString().slice(0, 10));
-            // The step's template dropdown overrides the project metadata template when set.
-            const optionTemplate = String((_b = context.optionValues["template"]) !== null && _b !== void 0 ? _b : "").trim();
-            const template = optionTemplate || String(fm.template || "undefined");
-            const csl = String(fm.csl || "nature");
-            const dirs = binSearchDirs(home);
-            const pandocBin = resolveBinary(((_c = settings.pandocBinary) !== null && _c !== void 0 ? _c : "pandoc").trim() || "pandoc", fs__namespace.existsSync, dirs);
-            const xelatexBin = resolveBinary("xelatex", fs__namespace.existsSync, dirs);
-            const crossrefBin = resolveBinary("pandoc-crossref", fs__namespace.existsSync, dirs);
-            const defaultsFile = path__namespace.join(defaultsDir, template + ".yaml");
-            const cslFile = path__namespace.join(cslDir, csl + ".csl");
-            const assetsOk = fs__namespace.existsSync(assetsAbs);
-            const defaultsOk = fs__namespace.existsSync(defaultsFile);
-            const cslOk = fs__namespace.existsSync(cslFile);
-            const bibliography = resolveBibliography(settings, context, base, home);
-            const needsBib = hasCitations(input.contents);
-            const bibOk = !needsBib || !!bibliography;
-            const checklist = [
-                line(!!pandocBin, "pandoc — " + (pandocBin || "not found"), pandocBin
-                    ? ""
-                    : "Install pandoc, or set the Pandoc binary in PaperOut To-Authors settings. Run 'Set up Pandoc export' for help."),
-                line(assetsOk, "Pandoc assets folder — " + assetsAbs, assetsOk
-                    ? ""
-                    : "Assets not found. Run 'Set up Pandoc export' → Download assets, or set 'Pandoc assets folder' in settings."),
-                line(defaultsOk, "defaults file — " + defaultsFile, defaultsOk
-                    ? ""
-                    : `template is "${template}" (metadata _longform.template). Add defaults/${template}.yaml or fix the template.`),
-                line(cslOk, "CSL style — " + cslFile, cslOk
-                    ? ""
-                    : `csl is "${csl}" (metadata _longform.csl). Install the "${csl}" CSL from the asset marketplace, add csl/${csl}.csl, or fix the csl.`),
-                line(bibOk, "bibliography — " + (bibliography || (needsBib ? "not found" : "not needed")), bibOk
-                    ? ""
-                    : "Your manuscript has [@citations] but no .bib was found. Add references.bib to the project, or set a Bibliography path in settings."),
-                line(!!xelatexBin, "xelatex — " + (xelatexBin || "not found"), xelatexBin ? "" : "Needed to build the PDF. Install MacTeX / TeX Live."),
-                line(!!crossrefBin, "pandoc-crossref — " + (crossrefBin || "not found"), crossrefBin ? "" : "Needed for @fig / cross-references if your defaults use it."),
-            ];
-            const hardOk = !!pandocBin && assetsOk && defaultsOk && cslOk && bibOk;
-            if (!hardOk) {
-                throw new Error("Pandoc export can't run yet — here's what it needs:\n\n" +
-                    checklist.join("\n") +
-                    "\n\nTip: run the 'Set up Pandoc export' command from the command palette for guided setup.");
-            }
-            // Output path. The directory comes from the "Pandoc output folder" setting
-            // (default = the project folder); the file name comes from the step's
-            // "File name" pattern ({title}/{acronym}/{date}/…), or the compiled
-            // manuscript's name when blank. A setting that ends in .pdf is still honored
-            // as a full output path, but only when no File name pattern is given.
-            let outputFolder = ((_d = settings.pandocOutputFolder) !== null && _d !== void 0 ? _d : "").trim();
-            if (outputFolder.indexOf("<") !== -1)
-                outputFolder = "";
-            const settingIsFullPath = !!outputFolder && outputFolder.toLowerCase().endsWith(".pdf");
-            const filenamePattern = String((_e = context.optionValues["filename"]) !== null && _e !== void 0 ? _e : "");
-            const draftName = context.draft.draftTitle || context.draft.title || "manuscript";
-            let outputPath;
-            if (settingIsFullPath && !filenamePattern.trim()) {
-                outputPath = resolveUserPath(outputFolder, base, home);
-            }
-            else {
-                const outDirAbs = settingIsFullPath
-                    ? path__namespace.dirname(resolveUserPath(outputFolder, base, home))
-                    : outputFolder
-                        ? resolveUserPath(outputFolder, base, home)
-                        : projectAbs;
-                const filename = buildExportFilename(filenamePattern, { title: String(fm.title || draftName), acronym, date, csl, template, draft: draftName }, draftName);
-                outputPath = path__namespace.join(outDirAbs, filename);
-            }
-            const inputFile = path__namespace.join(projectAbs, ".longform-pandoc-export.md");
-            const args = buildPandocArgs({
-                inputFile,
-                defaultsFile,
-                cslFile,
-                projectAbs,
-                outputPath,
-                bibliography,
-            });
-            const env = Object.assign(Object.assign({}, process.env), { PATH: buildExecPath((_f = process.env.PATH) !== null && _f !== void 0 ? _f : "", home) });
-            const dryRun = context.optionValues["dry-run"] === true;
-            if (dryRun) {
-                console.log("[Pandoc Export] DRY RUN — checklist:\n" +
-                    checklist.join("\n") +
-                    "\n\nWould run (cwd=" +
-                    cwd +
-                    "):\n" +
-                    [pandocBin].concat(args).join(" "));
-                return input;
-            }
-            // Ensure the output directory exists. Matters when exporting to a root
-            // folder outside the vault (settings' "Pandoc output folder") that may not
-            // have been created yet — otherwise pandoc's -o fails with a cryptic error.
-            const outputDir = path__namespace.dirname(outputPath);
-            try {
-                fs__namespace.mkdirSync(outputDir, { recursive: true });
-            }
-            catch (e) {
-                throw new Error("Could not create the Pandoc output folder:\n  " +
-                    outputDir +
-                    "\n\n" +
-                    e.message +
-                    "\n\nCheck the 'Pandoc output folder' setting in PaperOut To-Authors → Compile → Pandoc export.");
-            }
-            fs__namespace.writeFileSync(inputFile, input.contents, "utf8");
-            try {
-                yield new Promise((resolve, reject) => {
-                    child_process.execFile(pandocBin, args, { cwd, env }, (err, _stdout, stderr) => {
-                        if (err) {
-                            reject(new Error("pandoc failed:\n\n" +
-                                (stderr || err.message) +
-                                "\n\nCommand:\n" +
-                                [pandocBin].concat(args).join(" ")));
-                        }
-                        else {
-                            resolve();
-                        }
-                    });
-                });
-            }
-            finally {
-                try {
-                    fs__namespace.unlinkSync(inputFile);
-                }
-                catch (e) {
-                    // ignore cleanup errors
-                }
-            }
-            console.log("[Pandoc Export] Wrote", outputPath);
-            const openAfter = context.optionValues["open-after"] !== false && !context.suppressOpenAfter;
-            if (openAfter) {
-                try {
-                    // Electron shell; resolved at runtime, desktop only.
-                    window
-                        .require("electron")
-                        .shell.openPath(outputPath);
-                }
-                catch (e) {
-                    console.warn("[Pandoc Export] Could not open PDF:", e);
-                }
-            }
-            return input;
-        });
-    },
-});
-/**
- * Resolve a bibliography for `--bibliography`: the configured path if set and
- * present, else the nearest `references.bib`/`mybib.bib` searched from the
- * draft folder up to the project root. Returns null when none is found.
- */
-function resolveBibliography(settings, context, base, home) {
-    var _a, _b;
-    const configured = ((_a = settings.pandocBibliography) !== null && _a !== void 0 ? _a : "").trim();
-    if (configured) {
-        const abs = resolveUserPath(configured, base, home);
-        return fs__namespace.existsSync(abs) ? abs : null;
-    }
-    const root = (_b = context.projectRoot) !== null && _b !== void 0 ? _b : context.projectPath;
-    for (const name of ["references.bib", "mybib.bib"]) {
-        for (const rel of projectResourceCandidatePaths(context.projectPath, root, name)) {
-            const abs = path__namespace.join(base, rel);
-            if (fs__namespace.existsSync(abs))
-                return abs;
-        }
-    }
-    return null;
-}
-
-/** Keep only alphanumerics ("S1" stays, "\relax 1" → "1"). */
-function alnum(s) {
-    return s.replace(/[^A-Za-z0-9]/g, "");
-}
-/**
- * Parse a xelatex `.aux` for the labels our pipeline emits:
- *  - `\newlabel{msl-<id>}{{<line>}{<page>}…}` from lineno `\linelabel`s
- *    (injected by manuscript_linelabel.lua / block_ids.lua under `-M mslabels`);
- *    ids ending `-end` carry the end line, others the start line.
- *  - `\newlabel{fig:<label>}{{<num>}…}` / `\newlabel{tbl:<label>}{{<num>}…}`.
- */
-function parseAuxLabels(aux, onWarn) {
-    var _a, _b, _c;
-    const partial = {};
-    const mslRe = /\\newlabel\{msl-([\w-]+?)\}\{\{(\d+)\}\{(\d+)\}/g;
-    let m;
-    while ((m = mslRe.exec(aux)) !== null) {
-        const rawId = m[1];
-        const lineNo = parseInt(m[2], 10);
-        const page = parseInt(m[3], 10);
-        const isEnd = rawId.endsWith("-end");
-        const id = isEnd ? rawId.slice(0, -"-end".length) : rawId;
-        const entry = (_a = partial[id]) !== null && _a !== void 0 ? _a : { page };
-        if (isEnd)
-            entry.eline = lineNo;
-        else
-            entry.sline = lineNo;
-        entry.page = page;
-        partial[id] = entry;
-    }
-    const lines = {};
-    for (const id of Object.keys(partial)) {
-        const e = partial[id];
-        // A lone start/end means one `\linelabel` never reached the .aux — usually a
-        // filter regression (e.g. a paragraph-start `<!--ms:id-->` parsed as a block
-        // RawBlock and dropped, which manuscript_linelabel.lua's relocate() now
-        // handles). We still fill the missing side so the span yields a range, but we
-        // warn — a silent fill produces `sline == eline`, matching the vault
-        // `manuscript-lines.sh` one-sided guard. See docs: 回复信手稿引用规范 §4.
-        if ((e.sline == null) !== (e.eline == null)) {
-            onWarn === null || onWarn === void 0 ? void 0 : onWarn(`manuscript ref "${id}": only a ${e.sline != null ? "start" : "end"} ` +
-                `line label reached the .aux; start and end will be identical.`);
-        }
-        const sline = (_b = e.sline) !== null && _b !== void 0 ? _b : e.eline;
-        const eline = (_c = e.eline) !== null && _c !== void 0 ? _c : e.sline;
-        if (sline != null && eline != null) {
-            lines[id] = { sline, eline, page: e.page };
-        }
-    }
-    const figures = parseNumberLabels(aux, "fig");
-    const tables = parseNumberLabels(aux, "tbl");
-    return { lines, figures, tables };
-}
-function parseNumberLabels(aux, kind) {
-    const out = {};
-    const re = new RegExp("\\\\newlabel\\{(" + kind + ":[\\w:.-]+)\\}\\{\\{([^{}]+)\\}", "g");
-    let m;
-    while ((m = re.exec(aux)) !== null) {
-        const num = alnum(m[2]);
-        if (num)
-            out[m[1]] = num;
-    }
-    return out;
-}
-/**
- * A `<!--ms:id-->` marker inside a figure caption produces no lineno label
- * (`\linelabel` in `\caption` is dropped), so record the figure's number for
- * that id instead. Scans the compiled markdown for
- * `![caption …<!--ms:id-->… ](img){#fig:label}` and maps id → figure number.
- */
-function captionSpanFigs(markdown, figures) {
-    const out = {};
-    // Image line: ![CAP](PATH){#fig:LABEL} — CAP is non-greedy up to the closing
-    // ] that precedes the (path){#fig:...}. Tolerant of parentheses in the path.
-    const imgRe = /!\[([^\]]*(?:<!--ms:[\w-]+-->)[^\]]*)\]\([^\n]*?\)\{#(fig:[\w:.-]+)\}/g;
-    let m;
-    while ((m = imgRe.exec(markdown)) !== null) {
-        const caption = m[1];
-        const label = m[2];
-        const num = figures[label];
-        if (!num)
-            continue;
-        const idRe = /<!--ms:([\w-]+)-->/g;
-        let idMatch;
-        while ((idMatch = idRe.exec(caption)) !== null) {
-            out[idMatch[1]] = { fig: num };
-        }
-    }
-    return out;
-}
-/**
- * Merge freshly-harvested entries into an existing sidecar object. Incoming keys
- * win; existing keys not present in `incoming` are kept — so a Manuscript run and
- * an SI run accumulate their disjoint labels rather than clobbering each other.
- */
-function mergeSidecar(existing, incoming) {
-    return Object.assign(Object.assign({}, existing), incoming);
-}
-/** Which line sidecar this pass writes to. Supplementary drafts get their own. */
-function lineSidecarName(isSupplementary) {
-    return isSupplementary ? "si-lines.json" : "manuscript-lines.json";
-}
-/**
- * Is this compiled manuscript the Supplementary Information? The authoritative
- * signal is the `supplementary: true` frontmatter key that the Supplementary
- * Information step injects — replacing the vault's three divergent heuristics.
- */
-function isSupplementaryFrontmatter(frontmatter) {
-    return frontmatter["supplementary"] === true;
-}
-/**
- * pandoc args for the capture pass: same defaults/csl/resource-paths as the real
- * export, but `-M mslabels=true` (turns `<!--ms:-->` into `\linelabel`s) and a
- * standalone LaTeX output (`-t latex -s`) whose .aux we harvest — no PDF here.
- */
-function buildCaptureArgs(p) {
-    const args = [
-        p.inputFile,
-        "--defaults=" + p.defaultsFile,
-        "-M",
-        "mslabels=true",
-        "--csl=" + p.cslFile,
-        "--resource-path=" + p.projectAbs,
-        "--resource-path=" + path__namespace.join(p.projectAbs, "figs"),
-        "--resource-path=" + path__namespace.join(p.projectAbs, "..", "figs"),
-    ];
-    if (p.bibliography) {
-        args.push("--bibliography=" + p.bibliography);
-    }
-    args.push("-t", "latex", "-s", "-o", p.texOutput);
-    return args;
-}
-/**
- * TEXINPUTS value so xelatex finds figures/templates when building the capture
- * .tex outside the project folder. Trailing empty entry keeps the default paths.
- */
-function buildTexInputs(projectAbs, assetsAbs) {
-    return [
-        projectAbs,
-        path__namespace.join(projectAbs, "figs"),
-        path__namespace.join(projectAbs, "..", "figs"),
-        path__namespace.join(assetsAbs, "templates"),
-        "", // keep default TEXINPUTS search
-    ].join(path__namespace.delimiter);
-}
-
-/** Read a JSON sidecar, tolerating a missing/invalid file (→ {}). */
-function readJsonSafe(p) {
-    try {
-        return JSON.parse(fs__namespace.readFileSync(p, "utf8"));
-    }
-    catch (_a) {
-        return {};
-    }
-}
-/** Write a sidecar with sorted keys + trailing newline (stable diffs). */
-function writeJsonSorted(p, obj) {
-    const sorted = {};
-    for (const k of Object.keys(obj).sort())
-        sorted[k] = obj[k];
-    fs__namespace.writeFileSync(p, JSON.stringify(sorted, null, 2) + "\n", "utf8");
-}
-function run(bin, args, cwd, env) {
-    return new Promise((resolve) => {
-        child_process.execFile(bin, args, { cwd, env }, (err, _stdout, stderr) => {
-            resolve({ ok: !err, stderr: stderr || (err ? err.message : "") });
-        });
-    });
-}
-const HarvestManuscriptLinesStep = makeBuiltinStep({
-    id: "harvest-manuscript-lines",
-    description: {
-        name: "Harvest Manuscript Line Numbers",
-        description: "After the manuscript PDF is built, runs a second Pandoc→XeLaTeX pass with mslabels to capture line/figure/table numbers for <!--ms:id--> spans into sidecar JSON, so a response letter can cite the manuscript with correct Page/Line. Desktop only; leaves the manuscript unchanged. Requires the manuscript's remove-comments step to keep HTML comments (so ms: markers survive).",
-        availableKinds: [CompileStepKind.Manuscript],
-        options: [
-            {
-                id: "enabled",
-                name: "Enabled",
-                description: "Uncheck to skip line-number harvesting (e.g. while drafting, to save the extra XeLaTeX pass).",
-                type: CompileStepOptionType.Boolean,
-                default: true,
-            },
-        ],
-    },
-    compile(input, context) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (context.kind !== CompileStepKind.Manuscript) {
-                throw new Error("Cannot harvest line numbers on non-manuscript.");
-            }
-            if (context.optionValues["enabled"] === false)
-                return input;
-            const adapter = context.app.vault.adapter;
-            if (!(adapter instanceof obsidian.FileSystemAdapter)) {
-                // Desktop-only; silently pass through on mobile (harvesting is optional).
-                return input;
-            }
-            // Harvesting is auxiliary to the PDF export: never fail the whole compile —
-            // surface problems as a Notice and pass the manuscript through unchanged.
-            try {
-                yield harvest(input, context, adapter.getBasePath());
-            }
-            catch (e) {
-                new obsidian.Notice("Harvest line numbers failed (response-letter refs may be stale): " +
-                    e.message, 10000);
-                console.error("[Harvest Lines]", e);
-            }
-            return input;
-        });
-    },
-});
-function harvest(input, context, base) {
-    var _a, _b, _c;
-    return __awaiter(this, void 0, void 0, function* () {
-        const home = os__namespace.homedir();
-        const settings = get_store_value(pluginSettings);
-        const assetsSetting = ((_a = settings.pandocAssetsFolder) !== null && _a !== void 0 ? _a : "").trim() || DEFAULT_ASSETS_DIR;
-        const assetsAbs = resolveUserPath(assetsSetting, base, home);
-        const defaultsDir = path__namespace.join(assetsAbs, "defaults");
-        const cslDir = path__namespace.join(assetsAbs, "csl");
-        const projectAbs = path__namespace.join(base, context.projectPath);
-        const fm = parseExportFrontmatter(input.contents);
-        const template = String(fm.template || "undefined");
-        const csl = String(fm.csl || "nature");
-        const isSI = isSupplementaryFrontmatter(fm);
-        const dirs = binSearchDirs(home);
-        const pandocBin = resolveBinary(((_b = settings.pandocBinary) !== null && _b !== void 0 ? _b : "pandoc").trim() || "pandoc", fs__namespace.existsSync, dirs);
-        const xelatexBin = resolveBinary("xelatex", fs__namespace.existsSync, dirs);
-        if (!pandocBin || !xelatexBin) {
-            throw new Error("pandoc or xelatex not found on PATH.");
-        }
-        const defaultsFile = path__namespace.join(defaultsDir, template + ".yaml");
-        const cslFile = path__namespace.join(cslDir, csl + ".csl");
-        if (!fs__namespace.existsSync(defaultsFile) || !fs__namespace.existsSync(cslFile)) {
-            throw new Error(`missing preset/csl (${template}.yaml / ${csl}.csl).`);
-        }
-        const bibliography = resolveBibliography(settings, context, base, home);
-        const env = Object.assign(Object.assign({}, process.env), { PATH: buildExecPath((_c = process.env.PATH) !== null && _c !== void 0 ? _c : "", home) });
-        const tmpDir = fs__namespace.mkdtempSync(path__namespace.join(os__namespace.tmpdir(), "longform-mslines-"));
-        const inputFile = path__namespace.join(projectAbs, ".longform-mslines-harvest.md");
-        const texOutput = path__namespace.join(tmpDir, "mslines.tex");
-        try {
-            fs__namespace.writeFileSync(inputFile, input.contents, "utf8");
-            // Pass 1: pandoc → standalone .tex with mslabels turned on.
-            const pandocArgs = buildCaptureArgs({
-                inputFile,
-                defaultsFile,
-                cslFile,
-                projectAbs,
-                texOutput,
-                bibliography,
-            });
-            const p = yield run(pandocBin, pandocArgs, assetsAbs, env);
-            if (!p.ok || !fs__namespace.existsSync(texOutput)) {
-                throw new Error("pandoc capture pass failed: " + p.stderr.slice(0, 300));
-            }
-            // Pass 2+3: xelatex twice for a stable .aux (labels resolve on the 2nd run).
-            const xelatexEnv = Object.assign(Object.assign({}, env), { TEXINPUTS: buildTexInputs(projectAbs, assetsAbs) });
-            const xArgs = [
-                "-interaction=nonstopmode",
-                "-halt-on-error=false",
-                "-file-line-error",
-                "mslines.tex",
-            ];
-            yield run(xelatexBin, xArgs, tmpDir, xelatexEnv);
-            yield run(xelatexBin, xArgs, tmpDir, xelatexEnv);
-            const auxPath = path__namespace.join(tmpDir, "mslines.aux");
-            if (!fs__namespace.existsSync(auxPath)) {
-                throw new Error("XeLaTeX produced no .aux (see the manuscript for errors).");
-            }
-            const aux = fs__namespace.readFileSync(auxPath, "utf8");
-            const { lines, figures, tables } = parseAuxLabels(aux, (msg) => console.warn(`[PaperOut] harvest-manuscript-lines: ${msg}`));
-            // Caption-embedded spans get their figure number (no lineno label in captions).
-            const captionFigs = captionSpanFigs(input.contents, figures);
-            const allLines = Object.assign(Object.assign({}, lines), captionFigs);
-            // Merge into the project's sidecars (main & SI accumulate disjoint labels).
-            const linesFile = path__namespace.join(projectAbs, lineSidecarName(isSI));
-            writeJsonSorted(linesFile, mergeSidecar(readJsonSafe(linesFile), allLines));
-            const figFile = path__namespace.join(projectAbs, "figure-numbers.json");
-            writeJsonSorted(figFile, mergeSidecar(readJsonSafe(figFile), figures));
-            const tblFile = path__namespace.join(projectAbs, "table-numbers.json");
-            writeJsonSorted(tblFile, mergeSidecar(readJsonSafe(tblFile), tables));
-            new obsidian.Notice(`Harvested ${Object.keys(allLines).length} span(s), ${Object.keys(figures).length} figure(s)${isSI ? " (SI)" : ""}.`);
-        }
-        finally {
-            try {
-                fs__namespace.unlinkSync(inputFile);
-            }
-            catch (_d) {
-                /* ignore */
-            }
-            try {
-                fs__namespace.rmSync(tmpDir, { recursive: true, force: true });
-            }
-            catch (_e) {
-                /* ignore */
-            }
-        }
-    });
-}
-
-/**
- * Helpers for the "Supplementary Information" compile step, which turns a
- * compiled manuscript into an SI document. Kept pure (no Obsidian/Node imports)
- * so they can be unit-tested directly.
- */
-/**
- * Raw-LaTeX block prepended to an SI document's body so figures and tables are
- * numbered with an "S" prefix (S1, S2, …). Because each SI is compiled to its
- * own PDF the counters start at zero, so no counter reset is needed — only the
- * display format is redefined. This is the only mechanism that produces S-
- * numbering; neither the template nor the Lua filters do it on their own.
- */
-const SUPPLEMENTARY_PREAMBLE = [
-    "```{=latex}",
-    '%% Supplementary numbering: prefix figures/tables with "S" (S1, S2, …). SI-only',
-    "\\renewcommand{\\thefigure}{S\\arabic{figure}}",
-    "\\renewcommand{\\thetable}{S\\arabic{table}}",
-    "```",
-].join("\n");
-/** Quote a value as a YAML double-quoted string, escaping `\` and `"`. */
-function yamlDouble(s) {
-    return `"${String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
-}
-/** Split leading `--- … ---` frontmatter from the body. `yaml` is null if none. */
-function splitFrontmatter(contents) {
-    // Consume the closing `---`, its newline, and the single blank-line separator
-    // that add-zenodo-frontmatter writes (`---\n<yaml>---\n\n<body>`), so the body
-    // starts at real content.
-    const m = /^---\n([\s\S]*?)\n---\n?\n?/.exec(contents);
-    if (!m)
-        return { yaml: null, body: contents };
-    return { yaml: m[1], body: contents.slice(m[0].length) };
-}
-/** Read a flat scalar key's value from a YAML block, unquoting if needed. */
-function getYamlScalar(yaml, key) {
-    const m = new RegExp(`^${key}:\\s*(.*)$`, "m").exec(yaml);
-    if (!m)
-        return null;
-    let v = m[1].trim();
-    if ((v.startsWith('"') && v.endsWith('"')) ||
-        (v.startsWith("'") && v.endsWith("'"))) {
-        v = v.slice(1, -1).replace(/\\(["\\])/g, "$1");
-    }
-    return v;
-}
-/**
- * Replace a flat scalar key's line with `key: "value"`, appending the key if it
- * is not already present. Newlines in the value are collapsed to spaces so the
- * result stays a valid single-line double-quoted scalar.
- */
-function setYamlScalar(yaml, key, value) {
-    const flat = String(value).replace(/\s*\n\s*/g, " ").trim();
-    const re = new RegExp(`^${key}:\\s`);
-    const lines = yaml.split("\n");
-    let found = false;
-    const out = lines.map((l) => {
-        if (!found && re.test(l)) {
-            found = true;
-            return `${key}: ${yamlDouble(flat)}`;
-        }
-        return l;
-    });
-    if (!found)
-        out.push(`${key}: ${yamlDouble(flat)}`);
-    return out.join("\n");
-}
-/**
- * Remove a top-level YAML key and any indented child lines that belong to it
- * (e.g. a `keywords:` list). No-op if the key is absent.
- */
-function removeYamlBlock(yaml, key) {
-    const keyRe = new RegExp(`^${key}:(\\s|$)`);
-    const out = [];
-    let skipping = false;
-    for (const l of yaml.split("\n")) {
-        if (skipping) {
-            if (/^\s/.test(l))
-                continue; // indented child → still part of the block
-            skipping = false; // dedented → block ended; fall through to keep this line
-        }
-        if (keyRe.test(l)) {
-            skipping = true;
-            continue;
-        }
-        out.push(l);
-    }
-    return out.join("\n");
-}
-/**
- * Extract the titles of a document's top-level sections: the headings at the
- * shallowest heading level present (so `#` when the doc uses `#`, else `##`, …).
- * Headings inside fenced code blocks are ignored.
- */
-function extractSectionTitles(body) {
-    const headings = [];
-    let inFence = false;
-    let fenceChar = "";
-    for (const line of body.split("\n")) {
-        const fence = /^\s*(`{3,}|~{3,})/.exec(line);
-        if (fence) {
-            const ch = fence[1][0];
-            if (!inFence) {
-                inFence = true;
-                fenceChar = ch;
-            }
-            else if (ch === fenceChar) {
-                inFence = false;
-            }
-            continue;
-        }
-        if (inFence)
-            continue;
-        const h = /^(#{1,6})\s+(.*\S)\s*$/.exec(line);
-        if (h) {
-            const text = h[2].replace(/\s+#+\s*$/, "").trim(); // drop trailing ### markers
-            if (text)
-                headings.push({ level: h[1].length, text });
-        }
-    }
-    if (headings.length === 0)
-        return [];
-    const min = Math.min(...headings.map((h) => h.level));
-    return headings.filter((h) => h.level === min).map((h) => h.text);
-}
-/** One-line abstract listing the SI's section titles (no AI, no metadata). */
-function summarizeSections(titles) {
-    const base = "This document provides supplementary information for the main manuscript";
-    return titles.length === 0
-        ? `${base}.`
-        : `${base}, comprising: ${titles.join("; ")}.`;
-}
-/**
- * Transform a compiled manuscript into a Supplementary Information document:
- *
- * 1. Prepend the S-numbering raw-LaTeX block (figures/tables → S1, S2, …).
- * 2. Retitle it `Supplementary Information for "<original title>"`.
- * 3. Drop the `keywords:` block.
- * 4. Replace the abstract with the manual one, else an auto-summary of the
- *    section titles, else empty.
- *
- * When the input has no frontmatter, only step 1 is applied (there is nothing to
- * retitle) so the step still produces valid S-numbered output.
- */
-function transformToSupplementary(contents, opts = {}) {
-    var _a;
-    const { yaml, body } = splitFrontmatter(contents);
-    const manual = ((_a = opts.abstract) !== null && _a !== void 0 ? _a : "").trim();
-    const summarize = opts.summarizeSections !== false;
-    const abstract = manual
-        ? manual
-        : summarize
-            ? summarizeSections(extractSectionTitles(body))
-            : "";
-    if (yaml === null) {
-        return `${SUPPLEMENTARY_PREAMBLE}\n\n${body}`;
-    }
-    let y = yaml;
-    const title = getYamlScalar(y, "title");
-    if (title !== null) {
-        y = setYamlScalar(y, "title", `Supplementary Information for "${title}"`);
-    }
-    y = removeYamlBlock(y, "keywords");
-    y = setYamlScalar(y, "abstract", abstract);
-    return `---\n${y}\n---\n\n${SUPPLEMENTARY_PREAMBLE}\n\n${body}`;
-}
-
-const SupplementaryInfoStep = makeBuiltinStep({
-    id: "supplementary-info",
-    description: {
-        name: "Supplementary Information",
-        description: 'Turns the compiled manuscript into a Supplementary Information (SI) document: prefixes figures/tables with "S" (S1, S2, …), retitles it \'Supplementary Information for "<title>"\', drops keywords, and replaces the abstract. Add it after Add Zenodo Frontmatter (and before Save as Note / Run Pandoc Export) in an SI-only workflow.',
-        availableKinds: [CompileStepKind.Manuscript],
-        options: [
-            {
-                id: "abstract",
-                name: "Abstract",
-                description: "Custom abstract for the SI. Leave blank to auto-generate a one-line summary listing the document's top-level section headings (no AI, no metadata.json).",
-                type: CompileStepOptionType.MultilineText,
-                default: "",
-            },
-            {
-                id: "summarize-sections",
-                name: "Auto-summarize sections",
-                description: "When the Abstract above is blank, build the abstract from the top-level section headings. Uncheck to leave the abstract empty instead (e.g. to fill it in later).",
-                type: CompileStepOptionType.Boolean,
-                default: true,
-            },
-        ],
-    },
-    compile(input, context) {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            if (context.kind !== CompileStepKind.Manuscript) {
-                throw new Error("Cannot run Supplementary Information on a non-manuscript.");
-            }
-            return {
-                contents: transformToSupplementary(input.contents, {
-                    abstract: String((_a = context.optionValues["abstract"]) !== null && _a !== void 0 ? _a : ""),
-                    summarizeSections: context.optionValues["summarize-sections"] !== false,
-                }),
-            };
         });
     },
 });
@@ -23393,45 +22125,42 @@ const BUILTIN_STEPS = [
     RemoveLinksStep,
     RemoveStrikethroughsStep,
     ReplaceJsonPlaceholdersStep,
-    RunPandocExportStep,
-    HarvestManuscriptLinesStep,
     StripFrontmatterStep,
-    SupplementaryInfoStep,
     WriteToNoteStep,
 ];
 
 /* src/view/compile/add-step-modal/AddStepModal.svelte generated by Svelte v3.49.0 */
 
-function add_css$h(target) {
+function add_css$f(target) {
 	append_styles(target, "svelte-muo6j5", ".longform-steps-grid.svelte-muo6j5.svelte-muo6j5{display:grid;grid-template-columns:1fr 1fr;gap:var(--size-4-4);grid-auto-rows:auto}.longform-compile-step.svelte-muo6j5.svelte-muo6j5{cursor:pointer;grid-column:auto;grid-row:auto;background-color:var(--background-secondary);border:var(--size-2-1) solid var(--background-modifier-border);border-radius:var(--size-4-4);padding:var(--size-4-2)}.longform-compile-step.svelte-muo6j5.svelte-muo6j5:hover{border:var(--size-2-1) solid var(--text-accent);background-color:var(--background-modifier-form-field)}.longform-compile-step.svelte-muo6j5 h3.svelte-muo6j5{padding:var(--size-4-2) 0;margin:0}.longform-compile-step.svelte-muo6j5 .longform-step-kind-pill.svelte-muo6j5{background-color:var(--text-accent);color:var(--text-on-accent);border-radius:var(--radius-l);font-size:var(--font-smallest);font-weight:bold;padding:var(--size-4-1);margin-right:var(--size-4-1);height:var(--size-4-5)}");
 }
 
-function get_each_context$9(ctx, list, i) {
+function get_each_context$7(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[8] = list[i];
 	return child_ctx;
 }
 
-function get_each_context_1$4(ctx, list, i) {
+function get_each_context_1$1(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[11] = list[i];
 	return child_ctx;
 }
 
-function get_each_context_2$1(ctx, list, i) {
+function get_each_context_2(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[8] = list[i];
 	return child_ctx;
 }
 
-function get_each_context_3$1(ctx, list, i) {
+function get_each_context_3(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[11] = list[i];
 	return child_ctx;
 }
 
 // (31:10) {#each step.description.availableKinds as kind}
-function create_each_block_3$1(ctx) {
+function create_each_block_3(ctx) {
 	let span;
 	let t_value = formatStepKind(/*kind*/ ctx[11]) + "";
 	let t;
@@ -23456,7 +22185,7 @@ function create_each_block_3$1(ctx) {
 }
 
 // (27:4) {#each BUILTIN_STEPS as step}
-function create_each_block_2$1(ctx) {
+function create_each_block_2(ctx) {
 	let div1;
 	let h3;
 	let t0_value = /*step*/ ctx[8].description.name + "";
@@ -23474,7 +22203,7 @@ function create_each_block_2$1(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value_3.length; i += 1) {
-		each_blocks[i] = create_each_block_3$1(get_each_context_3$1(ctx, each_value_3, i));
+		each_blocks[i] = create_each_block_3(get_each_context_3(ctx, each_value_3, i));
 	}
 
 	function click_handler() {
@@ -23530,12 +22259,12 @@ function create_each_block_2$1(ctx) {
 				let i;
 
 				for (i = 0; i < each_value_3.length; i += 1) {
-					const child_ctx = get_each_context_3$1(ctx, each_value_3, i);
+					const child_ctx = get_each_context_3(ctx, each_value_3, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block_3$1(child_ctx);
+						each_blocks[i] = create_each_block_3(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(div0, t2);
 					}
@@ -23558,7 +22287,7 @@ function create_each_block_2$1(ctx) {
 }
 
 // (41:2) {#if $userScriptSteps}
-function create_if_block$f(ctx) {
+function create_if_block$d(ctx) {
 	let h2;
 	let t1;
 	let div;
@@ -23566,7 +22295,7 @@ function create_if_block$f(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
+		each_blocks[i] = create_each_block$7(get_each_context$7(ctx, each_value, i));
 	}
 
 	return {
@@ -23597,12 +22326,12 @@ function create_if_block$f(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$9(ctx, each_value, i);
+					const child_ctx = get_each_context$7(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$9(child_ctx);
+						each_blocks[i] = create_each_block$7(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(div, null);
 					}
@@ -23625,7 +22354,7 @@ function create_if_block$f(ctx) {
 }
 
 // (48:12) {#each step.description.availableKinds as kind}
-function create_each_block_1$4(ctx) {
+function create_each_block_1$1(ctx) {
 	let span;
 	let t_value = formatStepKind(/*kind*/ ctx[11]) + "";
 	let t;
@@ -23656,7 +22385,7 @@ function create_each_block_1$4(ctx) {
 }
 
 // (44:6) {#each $userScriptSteps as step}
-function create_each_block$9(ctx) {
+function create_each_block$7(ctx) {
 	let div1;
 	let h3;
 	let t0_value = /*step*/ ctx[8].description.name + "";
@@ -23674,7 +22403,7 @@ function create_each_block$9(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value_1.length; i += 1) {
-		each_blocks[i] = create_each_block_1$4(get_each_context_1$4(ctx, each_value_1, i));
+		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
 	}
 
 	function click_handler_1() {
@@ -23731,12 +22460,12 @@ function create_each_block$9(ctx) {
 				let i;
 
 				for (i = 0; i < each_value_1.length; i += 1) {
-					const child_ctx = get_each_context_1$4(ctx, each_value_1, i);
+					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block_1$4(child_ctx);
+						each_blocks[i] = create_each_block_1$1(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(div0, t2);
 					}
@@ -23760,7 +22489,7 @@ function create_each_block$9(ctx) {
 	};
 }
 
-function create_fragment$i(ctx) {
+function create_fragment$g(ctx) {
 	let div1;
 	let p;
 	let t1;
@@ -23772,10 +22501,10 @@ function create_fragment$i(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value_2.length; i += 1) {
-		each_blocks[i] = create_each_block_2$1(get_each_context_2$1(ctx, each_value_2, i));
+		each_blocks[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
 	}
 
-	let if_block = /*$userScriptSteps*/ ctx[0] && create_if_block$f(ctx);
+	let if_block = /*$userScriptSteps*/ ctx[0] && create_if_block$d(ctx);
 
 	return {
 		c() {
@@ -23818,12 +22547,12 @@ function create_fragment$i(ctx) {
 				let i;
 
 				for (i = 0; i < each_value_2.length; i += 1) {
-					const child_ctx = get_each_context_2$1(ctx, each_value_2, i);
+					const child_ctx = get_each_context_2(ctx, each_value_2, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block_2$1(child_ctx);
+						each_blocks[i] = create_each_block_2(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(div0, null);
 					}
@@ -23840,7 +22569,7 @@ function create_fragment$i(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$f(ctx);
+					if_block = create_if_block$d(ctx);
 					if_block.c();
 					if_block.m(div1, null);
 				}
@@ -23859,7 +22588,7 @@ function create_fragment$i(ctx) {
 	};
 }
 
-function instance$i($$self, $$props, $$invalidate) {
+function instance$g($$self, $$props, $$invalidate) {
 	let $workflows;
 	let $selectedDraft;
 	let $currentWorkflow;
@@ -23893,7 +22622,7 @@ function instance$i($$self, $$props, $$invalidate) {
 class AddStepModal extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$i, create_fragment$i, safe_not_equal, {}, add_css$h);
+		init(this, options, instance$g, create_fragment$g, safe_not_equal, {}, add_css$f);
 	}
 }
 
@@ -23979,481 +22708,22 @@ class ConfirmActionModal extends obsidian.Modal {
 const ICON_NAME = "longform";
 const ICON_SVG = '<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0)"><path d="M56.8466 47.4236C57.1415 48.0004 57.7282 48.3336 58.3349 48.3336C58.5882 48.3336 58.8481 48.2752 59.0899 48.152C59.1882 48.102 68.9983 43.1186 73.8365 41.5903C74.7133 41.312 75.1998 40.3753 74.9215 39.4987C74.6447 38.622 73.7148 38.1337 72.8299 38.4104C67.7332 40.0221 57.99 44.9721 57.5767 45.1821C56.7566 45.5987 56.43 46.6022 56.8466 47.4236Z" fill="currentColor"/><path d="M58.3351 28.334C58.5884 28.334 58.8484 28.2756 59.0902 28.1523C59.1884 28.1023 68.9985 23.119 73.8367 21.5907C74.7135 21.3123 75.2 20.3756 74.9217 19.4991C74.6449 18.6223 73.715 18.134 72.8301 18.4108C67.7334 20.0225 57.9902 24.9725 57.5769 25.1824C56.757 25.599 56.4302 26.6023 56.8468 27.424C57.1417 28.0006 57.7284 28.334 58.3351 28.334Z" fill="currentColor"/><path d="M98.3326 25.0006C97.4109 25.0006 96.666 25.7473 96.666 26.6672V91.6667C96.666 94.4233 94.4227 96.6666 91.6661 96.6666H51.6664V92.8317C54.0964 91.9817 60.4263 90.0001 66.6663 90.0001C81.1845 90.0001 91.0428 93.2151 91.1411 93.2483C91.6426 93.4149 92.2028 93.3317 92.6411 93.0182C93.076 92.7049 93.3327 92.2016 93.3327 91.6665V18.334C93.3327 17.5524 92.7911 16.8757 92.0276 16.7073C92.0276 16.7073 90.721 16.4157 88.4876 16.0055C87.5858 15.8389 86.7144 16.4389 86.5476 17.3423C86.381 18.2489 86.9792 19.1172 87.8843 19.2838C88.736 19.4405 89.4493 19.5788 89.9993 19.6889V89.4517C86.2226 88.4616 77.8361 86.6667 66.6661 86.6667C59.4044 86.6667 52.2713 89.0517 50.0645 89.86C48.1027 88.9935 42.1729 86.6667 34.9995 86.6667C23.5195 86.6667 14.063 88.5601 9.99973 89.5218V19.6239C13.328 18.8055 23.158 16.6673 34.9995 16.6673C41.0762 16.6673 46.2877 18.5589 48.3328 19.4139V85.0001C48.3328 85.6001 48.6561 86.1552 49.1777 86.4501C49.6994 86.7468 50.3428 86.7384 50.8578 86.4284C51.0228 86.3302 67.536 76.4668 82.1925 71.5819C82.8741 71.3536 83.3325 70.7186 83.3325 70.0002V1.66738C83.3325 1.12071 83.0642 0.608992 82.6142 0.297471C82.1675 -0.0142452 81.5943 -0.0859243 81.0792 0.105871C67.7444 5.10739 54.2513 13.504 54.1162 13.5874C53.3361 14.0757 53.0978 15.104 53.5861 15.8841C54.0728 16.6641 55.1011 16.9024 55.8828 16.4141C56.006 16.3358 67.7444 9.03256 79.9992 4.10428V68.8071C68.6225 72.7604 56.7443 79.2154 51.666 82.1052V18.334C51.666 17.7024 51.3094 17.1257 50.7443 16.8425C50.4576 16.7009 43.6278 13.3341 34.9995 13.3341C19.9397 13.3341 8.36146 16.5925 7.87474 16.7323C7.15971 16.9356 6.66635 17.5907 6.66635 18.334V91.6669C6.66635 92.1885 6.91303 92.6819 7.32807 92.9969C7.62142 93.2186 7.97474 93.3337 8.33314 93.3337C8.48646 93.3337 8.63978 93.312 8.78977 93.2686C8.90481 93.237 20.4297 90.0003 34.9995 90.0003C41.0928 90.0003 46.2994 91.8969 48.3328 92.7485V96.6668H8.33314C5.57652 96.6668 3.33318 94.4235 3.33318 91.6669V26.6674C3.33318 25.7475 2.5865 25.0008 1.66659 25.0008C0.746674 25.0008 0 25.7475 0 26.6674V91.6669C0 96.2618 3.73825 100 8.33333 100H91.6661C96.261 100 99.9994 96.262 99.9994 91.6669V26.6674C99.9992 25.7473 99.2543 25.0006 98.3326 25.0006Z" fill="currentColor"/><path d="M56.8466 37.4237C57.1415 38.0005 57.7282 38.3337 58.3349 38.3337C58.5882 38.3337 58.8481 38.2753 59.0899 38.152C59.1882 38.102 68.9983 33.1187 73.8365 31.5904C74.7133 31.3121 75.1998 30.3753 74.9215 29.4988C74.6447 28.622 73.7148 28.1338 72.8299 28.4105C67.7332 30.0222 57.99 34.9722 57.5767 35.1821C56.7566 35.5987 56.43 36.6023 56.8466 37.4237Z" fill="currentColor"/><path d="M56.8466 57.4236C57.1415 58.0003 57.7282 58.3335 58.3349 58.3335C58.5882 58.3335 58.8481 58.2751 59.0899 58.1519C59.1882 58.1019 68.9983 53.1185 73.8365 51.5902C74.7133 51.3119 75.1998 50.3752 74.9215 49.4986C74.6447 48.6219 73.7148 48.1336 72.8299 48.4104C67.7332 50.0221 57.99 54.972 57.5767 55.182C56.7566 55.5986 56.43 56.6021 56.8466 57.4236Z" fill="currentColor"/><path d="M40.3801 30.9306C30.0886 28.5156 18.3936 31.5923 17.902 31.724C17.0137 31.9623 16.4854 32.8755 16.7237 33.7656C16.9237 34.5105 17.5969 35.0005 18.3321 35.0005C18.4754 35.0005 18.6203 34.9822 18.7655 34.9439C18.8772 34.9122 30.1371 31.9505 39.6204 34.1755C40.512 34.3839 41.4137 33.8288 41.6237 32.9322C41.8334 32.0373 41.2768 31.1406 40.3801 30.9306Z" fill="currentColor"/><path d="M40.3801 40.9305C30.0886 38.5173 18.3936 41.5923 17.902 41.7239C17.0137 41.9622 16.4854 42.8756 16.7237 43.7655C16.9237 44.5104 17.5969 45.0004 18.3321 45.0004C18.4754 45.0004 18.6203 44.9821 18.7655 44.9438C18.8772 44.9121 30.1371 41.9504 39.6204 44.1754C40.512 44.3838 41.4137 43.8288 41.6237 42.9321C41.8334 42.0372 41.2768 41.1405 40.3801 40.9305Z" fill="currentColor"/><path d="M56.8466 67.4235C57.1415 68.0003 57.7282 68.3335 58.3349 68.3335C58.5882 68.3335 58.8481 68.2751 59.0899 68.1518C59.1882 68.1018 68.9983 63.1185 73.8365 61.5902C74.7133 61.3118 75.1998 60.3751 74.9215 59.4986C74.6447 58.622 73.7148 58.1335 72.8299 58.4103C67.7332 60.022 57.99 64.972 57.5767 65.1819C56.7566 65.5985 56.43 66.602 56.8466 67.4235Z" fill="currentColor"/><path d="M40.3801 50.9305C30.0886 48.5172 18.3936 51.5904 17.902 51.7238C17.0137 51.9621 16.4854 52.8756 16.7237 53.7654C16.9237 54.5103 17.5969 55.0021 18.3321 55.0021C18.4754 55.0021 18.6203 54.9822 18.7655 54.9437C18.8772 54.9121 30.1371 51.9504 39.6204 54.1753C40.512 54.3837 41.4137 53.8287 41.6237 52.932C41.8334 52.0371 41.2768 51.1404 40.3801 50.9305Z" fill="currentColor"/><path d="M40.3801 70.9303C30.0886 68.5153 18.3936 71.592 17.902 71.7237C17.0137 71.9619 16.4854 72.8754 16.7237 73.7653C16.9237 74.5102 17.5969 75.002 18.3321 75.002C18.4754 75.002 18.6203 74.982 18.7655 74.9436C18.8772 74.9119 30.1371 71.9502 39.6204 74.1752C40.512 74.3818 41.4137 73.8285 41.6237 72.9319C41.8334 72.0369 41.2768 71.1403 40.3801 70.9303Z" fill="currentColor"/><path d="M40.3801 60.9304C30.0886 58.5154 18.3936 61.5903 17.902 61.7237C17.0137 61.962 16.4854 62.8755 16.7237 63.7653C16.9237 64.5102 17.5969 65.002 18.3321 65.002C18.4754 65.002 18.6203 64.9821 18.7655 64.9436C18.8772 64.912 30.1371 61.9503 39.6204 64.1753C40.512 64.3837 41.4137 63.8286 41.6237 62.9319C41.8334 62.037 41.2768 61.1403 40.3801 60.9304Z" fill="currentColor"/></g><defs><clipPath id="clip0"><rect width="100" height="100" fill="white"/></clipPath></defs></svg>';
 
-/**
- * English message catalog — the source of truth for message keys. `zh.ts` must
- * provide the same keys (enforced by `Messages` typing in `index.ts`).
- *
- * `{name}`-style placeholders are filled by the translator's `vars` argument.
- */
-const en = {
-    // ── Commands (command palette) ──────────────────────────────────────────
-    "cmd.compileCurrent": "Compile current project with current workflow",
-    "cmd.compileProject": "Compile project…",
-    "cmd.setupPandoc": "Set up Pandoc export",
-    "cmd.openCurrentProject": "Open current note’s project",
-    "cmd.previousScene": "Previous scene",
-    "cmd.previousSceneAtIndent": "Previous scene at indent level",
-    "cmd.nextScene": "Next scene",
-    "cmd.nextSceneAtIndent": "Next scene at indent level",
-    "cmd.indentScene": "Indent scene",
-    "cmd.unindentScene": "Unindent scene",
-    "cmd.jumpToProject": "Jump to project",
-    "cmd.jumpToScene": "Jump to scene in current project",
-    "cmd.openPane": "Open PaperOut pane",
-    "cmd.revealProject": "Reveal current project in navigation",
-    "cmd.focusNewScene": "Focus new scene field",
-    "cmd.insertMultiScene": "Insert multi-scene frontmatter",
-    "cmd.insertSingleScene": "Insert single-scene frontmatter",
-    "cmd.startSession": "Start new writing session",
-    "cmd.markManuscriptSpan": "Mark manuscript reference span",
-    "cmd.insertManuscriptRef": "Insert manuscript reference",
-    "cmd.newPaperProject": "New PaperBell paper project…",
-    "cmd.openMarket": "Browse Pandoc asset marketplace",
-    // ── Notices & menus ─────────────────────────────────────────────────────
-    "notice.pdfExport": "PaperOut To-Authors: PDF export is available. Run “Set up Pandoc export” from the command palette to check prerequisites.",
-    "notice.goalMet": "Writing goal met!",
-    "menu.createProject": "Create PaperOut Project",
-    "menu.newPaperProject": "New PaperBell paper project…",
-    // ── New paper scaffold ──────────────────────────────────────────────────
-    "scaffold.title": "New PaperBell paper project",
-    "scaffold.desc": "Scaffolds a full paper project — Main Manuscript, Supplementary, and Response Letter drafts with starter content, metadata, references, and example figure/table assets — in a new folder named after the title.",
-    "scaffold.nameLabel": "Project title",
-    "scaffold.nameDesc": "Names the project folder and Longform project. Avoid : \\ and /.",
-    "scaffold.acronymLabel": "Acronym",
-    "scaffold.acronymDesc": "Short code used for the PDF name and labels. Defaults to the title’s initials; editable later in metadata.json.",
-    "scaffold.create": "Create project",
-    "scaffold.invalidName": "Enter a project title without : \\ or / characters.",
-    "scaffold.created": "Created PaperBell project “{title}”.",
-    "scaffold.failed": "Could not create project: {error}",
-    // ── Compile matrix ──────────────────────────────────────────────────────
-    "matrix.title": "Compile All Drafts",
-    "matrix.drafts": "drafts",
-    "matrix.dryRun": "Dry run",
-    "matrix.openPdf": "Open PDFs",
-    "matrix.harvest": "Harvest lines",
-    "matrix.run": "Run",
-    "matrix.running": "Running…",
-    "matrix.skipped": "skipped",
-    "matrix.viewError": "View error",
-    "matrix.errorTitle": "Error",
-    "matrix.copyError": "Copy",
-    "matrix.errorCopied": "Error copied to clipboard.",
-    "matrix.finished": "Finished",
-    "matrix.workflow": "Compile workflow",
-    "matrix.clickStepHint": "Click a step to view or edit it.",
-    "matrix.noOptions": "This step has no options.",
-    "matrix.reorderHint": "Drag rows to set the compile order (top → bottom).",
-    // ── Pandoc asset marketplace ────────────────────────────────────────────
-    "market.title": "Pandoc asset marketplace",
-    "market.items": "items",
-    "market.search": "Search assets…",
-    "market.reload": "Reload",
-    "market.desktopNote": "You can browse and download on mobile, but the template list and PDF export need the desktop app.",
-    "market.loadError": "Couldn’t load the marketplace index.",
-    "market.empty": "No assets match your search.",
-    "market.bundles": "Bundles",
-    "market.assets": "Individual assets",
-    "market.assetsIncluded": "assets included",
-    "market.requires": "Requires",
-    "market.systemDeps": "System tools",
-    "market.unverified": "Unverified — its Lua runs on your machine.",
-    "market.back": "Back",
-    "market.clickForDetails": "Click for details & usage",
-    "market.readmeError": "Couldn’t load this asset’s docs.",
-    "market.noReadme": "This asset has no usage docs yet.",
-    // ── Set up Pandoc export ────────────────────────────────────────────────
-    "setup.title": "Set up Pandoc export",
-    "setup.intro": "PDF export needs three system tools plus the PaperBell Pandoc toolchain (filters, templates, CSL). Get the toolchain from the asset marketplace below, or paste a toolchain .zip URL.",
-    "setup.notFound": "not found",
-    "setup.pdfEngine": "PDF engine",
-    "setup.assets": "Pandoc assets",
-    "setup.assetsOk": "defaults/ and csl/ found.",
-    "setup.assetsMissing": "Not downloaded yet. Install from the marketplace, or set the assets URL below.",
-    "setup.market.name": "Asset marketplace",
-    "setup.market.desc": "Browse and install recipes, filters, templates, and CSL styles — the easy way.",
-    "setup.market.button": "Browse marketplace…",
-    "setup.url.name": "Assets URL (advanced)",
-    "setup.url.desc": "Link to a toolchain .zip (a release asset). The marketplace above is the easier way.",
-    "setup.download.name": "Download / update assets",
-    "setup.download.desc": "Downloads and extracts the toolchain into {folder}. Your edits there survive plugin updates.",
-    "setup.download.button": "Download assets",
-    "setup.recheck": "Recheck",
-    "setup.copyReport": "Copy report",
-    "setup.copied": "Copied!",
-    "setup.done": "Done",
-    "setup.downloading": "Downloading Pandoc assets…",
-    "setup.downloaded": "Downloaded {count} asset files to {dest}.",
-    "setup.downloadFailed": "Assets download failed: {error}",
-    "market.install": "Install",
-    "market.update": "Update",
-    "market.installed": "Installed",
-    "market.reinstall": "Reinstall",
-    "market.uninstall": "Uninstall",
-    "market.uninstalling": "Uninstalling",
-    "market.uninstalled": "Uninstalled",
-    "market.confirmUninstall": "Remove “{name}”? Its files will be deleted from the assets folder (you can reinstall it later).",
-    "market.installing": "Installing…",
-    "market.installedNotice": "Installed",
-    "market.failed": "Failed:",
-    // ── Explorer pane ───────────────────────────────────────────────────────
-    "explorer.paneTitle": "PaperOut To-Authors",
-    "explorer.tab.scenes": "Scenes",
-    "explorer.tab.project": "Project",
-    "explorer.tab.compile": "Compile",
-    "explorer.migration.body1": "PaperOut To-Authors has been upgraded and requires a migration to a new format. Deprecated index files will be deleted, and some scene files may move. It’s recommended to back up your vault before migrating.",
-    "explorer.migration.body2Prefix": "You can view the docs and an explanation of what this migration does ",
-    "explorer.migration.body2Link": "here",
-    "explorer.migration.button": "Migrate",
-    "explorer.syncWaiting": "Waiting for Obsidian Sync to complete...",
-    // ── Settings: Language ──────────────────────────────────────────────────
-    "settings.language.heading": "Language",
-    "settings.language.name": "Display language",
-    "settings.language.desc": "Language for the PaperOut To-Authors interface. “Auto” follows PaperBell (when connected) or Obsidian’s language.",
-    "settings.language.auto": "Auto (follow PaperBell / Obsidian)",
-    "settings.language.en": "English",
-    "settings.language.zh": "中文",
-    // ── Settings: Composition ───────────────────────────────────────────────
-    "settings.composition.heading": "Composition",
-    "settings.sceneTemplate.name": "New scene template",
-    "settings.sceneTemplate.desc": "This file will be used as a template when creating new scenes via the New Scene… field. If you use a templating plugin (Templater or the core plugin) it will be used to process this template. This setting applies to all projects and can be overridden per-project in the Project > Project Metadata settings in the PaperOut pane.",
-    "settings.numberScenes.name": "Show scene numbers in Scenes tab",
-    "settings.numberScenes.desc": "If on, shows numbers for scenes with subscenes separated by periods, e.g. 1.1.2. Create subscenes by dragging a scene to an indent under an existing scene, or use an indent command.",
-    "settings.writeProperty.name": "Write scene index to frontmatter",
-    "settings.writeProperty.desc": "If enabled, will add a scene index, and scene number, to the frontmatter of scene files.",
-    // ── Settings: Compile ───────────────────────────────────────────────────
-    "settings.compile.heading": "Compile",
-    "settings.pandocExport.name": "Pandoc export",
-    "settings.pandocExport.desc": "Settings for the ‘Run Pandoc Export’ compile step. The Pandoc toolchain (filters, templates, CSL) is downloaded on demand, so most fields can stay empty.",
-    "settings.pandocExport.button": "Set up Pandoc export…",
-    "settings.market.name": "Pandoc asset marketplace",
-    "settings.market.desc": "Browse, download, and install Pandoc recipes, filters, templates, and CSL styles from the assets repository.",
-    "settings.market.button": "Browse marketplace…",
-    "settings.market.url.name": "Marketplace index URL",
-    "settings.market.url.desc": "Link to the assets repository’s index.json. Leave empty for the built-in default.",
-    "settings.pandocUrl.name": "Pandoc assets URL",
-    "settings.pandocUrl.desc": "Link to the Pandoc toolchain .zip (filters/templates/CSL). Used by ‘Set up Pandoc export → Download assets’.",
-    "settings.pandocFolder.name": "Pandoc assets folder",
-    "settings.pandocFolder.desc": "Folder containing defaults/ and csl/. Leave empty for the default download location (PaperBell/pandoc). Absolute or vault-relative.",
-    "settings.pandocOutput.name": "Pandoc output folder",
-    "settings.pandocOutput.desc": "Folder to write <acronym>_<date>.pdf into. Vault-relative, or an absolute path to export outside your vault (e.g. ~/Papers — ~ expands to your home folder; it’s created if missing). Leave empty to write next to the compiled manuscript.",
-    "settings.bibliography.name": "Bibliography",
-    "settings.bibliography.desc": "Path to a .bib for citations. Leave empty to auto-detect references.bib / mybib.bib in the project.",
-    "settings.pandocBinary.name": "Pandoc binary",
-    "settings.pandocBinary.desc": "Path to the pandoc executable, or just ‘pandoc’. Common Homebrew/MacTeX dirs are added to PATH automatically.",
-    "settings.userScriptFolder.name": "User script step folder",
-    "settings.userScriptFolder.desc": ".js files in this folder will be available as User Script Steps in the Compile panel.",
-    "settings.userSteps.loaded": "Loaded {count} step{plural}:",
-    "settings.userSteps.none": "No steps loaded.",
-    "settings.userSteps.desc": "User Script Steps are automatically loaded from this folder. Changes to .js files in this folder are synced with PaperOut To-Authors after a slight delay. If your script does not appear here or in the Compile tab, you may have an error in your script — check the dev console for it.",
-    // ── Settings: Word Counts & Sessions ────────────────────────────────────
-    "settings.wordCounts.heading": "Word Counts & Sessions",
-    "settings.showWordCount.name": "Show word counts in status bar",
-    "settings.showWordCount.desc": "Click the status item to show the focused note’s project.",
-    "settings.newSessionDaily.name": "Start new writing sessions each day",
-    "settings.newSessionDaily.desc": "You can always manually start a new session by running the Start New Writing Session command. Turning this off will cause writing sessions to carry over across multiple days until you manually start a new one.",
-    "settings.sessionGoal.name": "Session word count goal",
-    "settings.sessionGoal.desc": "A number of words to target for a given writing session.",
-    "settings.goalAppliesTo.name": "Goal applies to",
-    "settings.goalAppliesTo.desc": "You can set your word count goal to target all your writing, or you can make each project or scene have its own discrete goal.",
-    "settings.goalAppliesTo.all": "words written across all projects",
-    "settings.goalAppliesTo.project": "each project individually",
-    "settings.goalAppliesTo.note": "each scene or single-scene project",
-    "settings.notifyOnGoal.name": "Notify on goal reached",
-    "settings.countDeletions.name": "Count deletions against goal",
-    "settings.countDeletions.desc": "If on, deleting words will count as negative words written. You cannot go below zero for a session.",
-    "settings.sessionsToKeep.name": "Sessions to keep",
-    "settings.sessionsToKeep.desc": "Number of sessions to store locally.",
-    "settings.storeSession.name": "Store session data",
-    "settings.storeSession.desc": "Where your writing session data is stored. By default, data is stored alongside other settings in the plugin’s data.json file. You may instead store it in a separate .json file in the plugin folder, or in a file in your vault. You may want to do this for selective sync or git reasons.",
-    "settings.storeSession.data": "with plugin settings",
-    "settings.storeSession.pluginFolder": "as a .json file in the plugin folder",
-    "settings.storeSession.file": "as a file in your vault",
-    "settings.sessionFile.name": "Session storage file",
-    "settings.sessionFile.desc": "Location in your vault to store session JSON. Created if it does not exist, overwritten if it does.",
-    // ── Settings: Troubleshooting ───────────────────────────────────────────
-    "settings.troubleshooting.heading": "Troubleshooting",
-    "settings.waitForSync.name": "Wait for Obsidian Sync",
-    "settings.waitForSync.desc": "Prevent PaperOut To-Authors from running until Obsidian Sync completes its first sync. If you are using Sync, you may want to enable this if you experience issues with scenes disappearing or falsely being shown as new.",
-    "settings.fallbackWait.name": "Enable fallback wait",
-    "settings.fallbackWait.desc": "If sync status cannot be detected, wait for the time specified below before looking for scenes.",
-    "settings.fallbackWaitTime.name": "Fallback wait time",
-    "settings.fallbackWaitTime.desc": "Time to wait in seconds if sync status cannot be detected.",
-    // ── Settings: PaperBell ─────────────────────────────────────────────────
-    "settings.paperbell.heading": "PaperBell",
-    "settings.paperbell.connectedWithName": "Connected to PaperBell — {name}{plan}.",
-    "settings.paperbell.connected": "Connected to PaperBell.",
-    "settings.paperbell.account.name": "Account & shared settings",
-    "settings.paperbell.account.desc": "Fetch your PaperBell account and shared config (language, AI). PaperBell asks for your consent the first time.",
-    "settings.paperbell.button.connect": "Connect",
-    "settings.paperbell.button.refresh": "Refresh",
-    "settings.paperbell.aiAvailable": "AI features are available through PaperBell — no API key is stored in this plugin.",
-    "settings.paperbell.notConnected": "PaperBell is not connected. Install and enable the PaperBell plugin to follow its language and enable AI features. This plugin works fully without it.",
-    // ── Settings: Credits ───────────────────────────────────────────────────
-    "settings.credits.heading": "Credits",
-    "settings.credits.body": 'PaperOut To-Authors — part of the PaperBell suite, a fork of <a href="https://github.com/kevboh/longform">Longform</a>, originally written by <a href="https://kevinbarrett.org">Kevin Barrett</a>. Maintained by <a href="https://github.com/PaperBell-Org">PaperBell-Org</a>.',
-    "settings.credits.source": 'Read the source code and report issues at <a href="https://github.com/PaperBell-Org">https://github.com/PaperBell-Org</a>.',
-    "settings.credits.icon": 'Icon made by <a href="https://www.flaticon.com/authors/zlatko-najdenovski" title="Zlatko Najdenovski">Zlatko Najdenovski</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>.',
-};
-
-/** Simplified Chinese catalog. Must cover every key in `en` (enforced by `Messages`). */
-const zh$1 = {
-    // ── 命令(命令面板) ──────────────────────────────────────────────────
-    "cmd.compileCurrent": "用当前工作流编译当前项目",
-    "cmd.compileProject": "编译项目…",
-    "cmd.setupPandoc": "设置 Pandoc 导出",
-    "cmd.openCurrentProject": "打开当前笔记所属项目",
-    "cmd.previousScene": "上一个场景",
-    "cmd.previousSceneAtIndent": "同缩进层级的上一个场景",
-    "cmd.nextScene": "下一个场景",
-    "cmd.nextSceneAtIndent": "同缩进层级的下一个场景",
-    "cmd.indentScene": "增加场景缩进",
-    "cmd.unindentScene": "减少场景缩进",
-    "cmd.jumpToProject": "跳转到项目",
-    "cmd.jumpToScene": "在当前项目中跳转到场景",
-    "cmd.openPane": "打开 PaperOut 面板",
-    "cmd.revealProject": "在文件树中定位当前项目",
-    "cmd.focusNewScene": "聚焦新建场景输入框",
-    "cmd.insertMultiScene": "插入多场景 frontmatter",
-    "cmd.insertSingleScene": "插入单场景 frontmatter",
-    "cmd.startSession": "开始新的写作会话",
-    "cmd.markManuscriptSpan": "标记手稿引用片段",
-    "cmd.insertManuscriptRef": "插入手稿引用",
-    "cmd.newPaperProject": "新建 PaperBell 论文项目…",
-    "cmd.openMarket": "浏览 Pandoc 资产市场",
-    // ── 通知与菜单 ────────────────────────────────────────────────────────
-    "notice.pdfExport": "PaperOut To-Authors:已支持 PDF 导出。在命令面板运行“设置 Pandoc 导出”以检查前置条件。",
-    "notice.goalMet": "已达成写作目标!",
-    "menu.createProject": "新建 PaperOut 项目",
-    "menu.newPaperProject": "新建 PaperBell 论文项目…",
-    // ── 新建论文脚手架 ────────────────────────────────────────────────────
-    "scaffold.title": "新建 PaperBell 论文项目",
-    "scaffold.desc": "一键搭好完整论文项目——正稿、补充材料(SI)、回复信三个草稿,连同起步内容、元数据、参考文献,以及示例图/表资源,统统放进以标题命名的新文件夹。",
-    "scaffold.nameLabel": "项目标题",
-    "scaffold.nameDesc": "作为项目文件夹名与 Longform 项目名。请勿包含 : \\ 和 / 。",
-    "scaffold.acronymLabel": "缩写",
-    "scaffold.acronymDesc": "用于 PDF 文件名和标签的短代码。默认取标题首字母,之后可在 metadata.json 中修改。",
-    "scaffold.create": "创建项目",
-    "scaffold.invalidName": "请输入不含 : \\ 或 / 的项目标题。",
-    "scaffold.created": "已创建 PaperBell 项目“{title}”。",
-    "scaffold.failed": "创建项目失败:{error}",
-    // ── 批量编译看板 ──────────────────────────────────────────────────────
-    "matrix.title": "批量编译",
-    "matrix.drafts": "个草稿",
-    "matrix.dryRun": "干跑",
-    "matrix.openPdf": "打开 PDF",
-    "matrix.harvest": "抓行号",
-    "matrix.run": "运行",
-    "matrix.running": "运行中…",
-    "matrix.skipped": "已跳过",
-    "matrix.viewError": "查看错误",
-    "matrix.errorTitle": "错误详情",
-    "matrix.copyError": "复制",
-    "matrix.errorCopied": "错误已复制到剪贴板。",
-    "matrix.finished": "已完成",
-    "matrix.workflow": "编译工作流",
-    "matrix.clickStepHint": "点击步骤圆点可查看或编辑该步骤。",
-    "matrix.noOptions": "该步骤没有可配置项。",
-    "matrix.reorderHint": "拖动行来设定编译顺序(从上到下)。",
-    // ── Pandoc 资产市场 ──────────────────────────────────────────────────
-    "market.title": "Pandoc 资产市场",
-    "market.items": "项",
-    "market.search": "搜索资产…",
-    "market.reload": "重新加载",
-    "market.desktopNote": "移动端可浏览与下载,但模板列表和 PDF 导出需要桌面端。",
-    "market.loadError": "无法加载市场目录。",
-    "market.empty": "没有匹配搜索的资产。",
-    "market.bundles": "套件",
-    "market.assets": "单个资产",
-    "market.assetsIncluded": "个资产",
-    "market.requires": "依赖",
-    "market.systemDeps": "系统工具",
-    "market.unverified": "未经审核 —— 其 Lua 会在你本机运行。",
-    "market.back": "返回",
-    "market.clickForDetails": "点击查看说明与用法",
-    "market.readmeError": "无法加载该资产的说明文档。",
-    "market.noReadme": "该资产暂无使用说明。",
-    // ── 设置 Pandoc 导出 ──────────────────────────────────────────────────
-    "setup.title": "设置 Pandoc 导出",
-    "setup.intro": "PDF 导出需要三个系统工具,外加 PaperBell 的 Pandoc 工具链(过滤器、模板、CSL)。可在下方的资产市场安装工具链,或粘贴一个工具链 .zip 链接。",
-    "setup.notFound": "未找到",
-    "setup.pdfEngine": "PDF 引擎",
-    "setup.assets": "Pandoc 资产",
-    "setup.assetsOk": "已找到 defaults/ 与 csl/。",
-    "setup.assetsMissing": "尚未下载。可从资产市场安装,或在下方填写资产 URL。",
-    "setup.market.name": "资产市场",
-    "setup.market.desc": "浏览并安装配方、过滤器、模板与 CSL 样式 —— 更省心的方式。",
-    "setup.market.button": "浏览资产市场…",
-    "setup.url.name": "资产 URL(高级)",
-    "setup.url.desc": "指向工具链 .zip(release 资产)的链接。上面的资产市场更方便。",
-    "setup.download.name": "下载 / 更新资产",
-    "setup.download.desc": "把工具链下载并解压到 {folder}。你在那里的修改不会被插件更新覆盖。",
-    "setup.download.button": "下载资产",
-    "setup.recheck": "重新检查",
-    "setup.copyReport": "复制报告",
-    "setup.copied": "已复制!",
-    "setup.done": "完成",
-    "setup.downloading": "正在下载 Pandoc 资产…",
-    "setup.downloaded": "已下载 {count} 个资产文件到 {dest}。",
-    "setup.downloadFailed": "资产下载失败:{error}",
-    "market.install": "安装",
-    "market.update": "更新",
-    "market.installed": "已安装",
-    "market.reinstall": "重装",
-    "market.uninstall": "卸载",
-    "market.uninstalling": "正在卸载",
-    "market.uninstalled": "已卸载",
-    "market.confirmUninstall": "删除「{name}」?其文件会从资产目录中移除(之后可重新安装)。",
-    "market.installing": "安装中…",
-    "market.installedNotice": "已安装",
-    "market.failed": "失败:",
-    // ── 资源管理器面板 ────────────────────────────────────────────────────
-    "explorer.paneTitle": "PaperOut To-Authors",
-    "explorer.tab.scenes": "场景",
-    "explorer.tab.project": "项目",
-    "explorer.tab.compile": "编译",
-    "explorer.migration.body1": "PaperOut To-Authors 已升级,需要迁移到新的数据格式。过期的索引文件会被删除,部分场景文件可能会移动位置。建议在迁移前先备份你的库。",
-    "explorer.migration.body2Prefix": "你可以查看文档,了解此次迁移做了什么:",
-    "explorer.migration.body2Link": "点此查看",
-    "explorer.migration.button": "开始迁移",
-    "explorer.syncWaiting": "正在等待 Obsidian Sync 完成同步…",
-    // ── 设置:语言 ────────────────────────────────────────────────────────
-    "settings.language.heading": "语言",
-    "settings.language.name": "显示语言",
-    "settings.language.desc": "PaperOut To-Authors 界面使用的语言。“自动”会跟随 PaperBell(已连接时)或 Obsidian 的语言。",
-    "settings.language.auto": "自动(跟随 PaperBell / Obsidian)",
-    "settings.language.en": "English",
-    "settings.language.zh": "中文",
-    // ── 设置:写作 ────────────────────────────────────────────────────────
-    "settings.composition.heading": "写作",
-    "settings.sceneTemplate.name": "新场景模板",
-    "settings.sceneTemplate.desc": "通过“新建场景…”输入框创建新场景时,会使用此文件作为模板。如果你使用模板插件(Templater 或核心模板插件),它会用于处理该模板。此设置对所有项目生效,可在 PaperOut 面板的“项目 > 项目元数据”里按项目单独覆盖。",
-    "settings.numberScenes.name": "在“场景”标签页显示场景编号",
-    "settings.numberScenes.desc": "开启后,带子场景的场景会用点号分隔显示编号,如 1.1.2。把场景拖到已有场景下方的缩进层级,或使用缩进命令,即可创建子场景。",
-    "settings.writeProperty.name": "将场景索引写入 frontmatter",
-    "settings.writeProperty.desc": "开启后,会把场景索引和场景编号写入场景文件的 frontmatter。",
-    // ── 设置:编译 ────────────────────────────────────────────────────────
-    "settings.compile.heading": "编译",
-    "settings.pandocExport.name": "Pandoc 导出",
-    "settings.pandocExport.desc": "“运行 Pandoc 导出”编译步骤的设置。Pandoc 工具链(过滤器、模板、CSL)按需下载,因此大多数字段可以留空。",
-    "settings.pandocExport.button": "设置 Pandoc 导出…",
-    "settings.market.name": "Pandoc 资产市场",
-    "settings.market.desc": "从资产仓库浏览、下载并安装 Pandoc 配方、过滤器、模板与 CSL 样式。",
-    "settings.market.button": "浏览资产市场…",
-    "settings.market.url.name": "市场目录 URL",
-    "settings.market.url.desc": "指向资产仓库 index.json 的链接。留空则使用内置默认。",
-    "settings.pandocUrl.name": "Pandoc 资源包 URL",
-    "settings.pandocUrl.desc": "指向 Pandoc 工具链 .zip(过滤器/模板/CSL)的链接。“设置 Pandoc 导出 → 下载资源”会用到它。",
-    "settings.pandocFolder.name": "Pandoc 资源文件夹",
-    "settings.pandocFolder.desc": "包含 defaults/ 和 csl/ 的文件夹。留空则使用默认下载位置(PaperBell/pandoc)。可填绝对路径或库内相对路径。",
-    "settings.pandocOutput.name": "Pandoc 输出文件夹",
-    "settings.pandocOutput.desc": "写入 <缩写>_<日期>.pdf 的文件夹。可填库内相对路径,或填绝对路径以导出到库外(如 ~/Papers —— ~ 展开为你的用户主目录;若不存在会自动创建)。留空则写在编译产物旁边。",
-    "settings.bibliography.name": "参考文献库",
-    "settings.bibliography.desc": "用于引用的 .bib 文件路径。留空则在项目中自动探测 references.bib / mybib.bib。",
-    "settings.pandocBinary.name": "Pandoc 可执行文件",
-    "settings.pandocBinary.desc": "pandoc 可执行文件的路径,或直接填 “pandoc”。常见的 Homebrew/MacTeX 目录会自动加入 PATH。",
-    "settings.userScriptFolder.name": "用户脚本步骤文件夹",
-    "settings.userScriptFolder.desc": "此文件夹中的 .js 文件会作为“用户脚本步骤”出现在编译面板中。",
-    "settings.userSteps.loaded": "已加载 {count} 个步骤:",
-    "settings.userSteps.none": "未加载任何步骤。",
-    "settings.userSteps.desc": "用户脚本步骤会从此文件夹自动加载。此文件夹中 .js 文件的改动会在稍有延迟后与 PaperOut To-Authors 同步。如果你的脚本没有出现在这里或编译标签页中,可能是脚本有错误 —— 请查看开发者控制台。",
-    // ── 设置:字数与写作会话 ──────────────────────────────────────────────
-    "settings.wordCounts.heading": "字数与写作会话",
-    "settings.showWordCount.name": "在状态栏显示字数",
-    "settings.showWordCount.desc": "点击状态栏项目可显示当前聚焦笔记所属的项目。",
-    "settings.newSessionDaily.name": "每天开始新的写作会话",
-    "settings.newSessionDaily.desc": "你随时可以通过运行“开始新的写作会话”命令来手动开启新会话。关闭此项后,写作会话会跨多天延续,直到你手动开启新的会话。",
-    "settings.sessionGoal.name": "会话字数目标",
-    "settings.sessionGoal.desc": "单次写作会话要达成的字数目标。",
-    "settings.goalAppliesTo.name": "目标作用范围",
-    "settings.goalAppliesTo.desc": "你可以让字数目标针对你的全部写作,也可以让每个项目或每个场景各自拥有独立的目标。",
-    "settings.goalAppliesTo.all": "所有项目的总字数",
-    "settings.goalAppliesTo.project": "每个项目单独计算",
-    "settings.goalAppliesTo.note": "每个场景或单场景项目",
-    "settings.notifyOnGoal.name": "达成目标时通知",
-    "settings.countDeletions.name": "删除的字数计入目标",
-    "settings.countDeletions.desc": "开启后,删除字数会计为负的写作字数。单次会话不会低于零。",
-    "settings.sessionsToKeep.name": "保留的会话数",
-    "settings.sessionsToKeep.desc": "本地存储的会话数量。",
-    "settings.storeSession.name": "存储会话数据",
-    "settings.storeSession.desc": "写作会话数据的存储位置。默认与其它设置一起存放在插件的 data.json 文件中。你也可以改为存放在插件文件夹内单独的 .json 文件里,或库内的某个文件中 —— 出于选择性同步或 git 的考虑,你可能会这么做。",
-    "settings.storeSession.data": "随插件设置一起存储",
-    "settings.storeSession.pluginFolder": "作为插件文件夹内的 .json 文件",
-    "settings.storeSession.file": "作为库内的一个文件",
-    "settings.sessionFile.name": "会话存储文件",
-    "settings.sessionFile.desc": "库内存储会话 JSON 的位置。不存在则创建,存在则覆盖。",
-    // ── 设置:故障排查 ────────────────────────────────────────────────────
-    "settings.troubleshooting.heading": "故障排查",
-    "settings.waitForSync.name": "等待 Obsidian Sync",
-    "settings.waitForSync.desc": "在 Obsidian Sync 完成首次同步前,阻止 PaperOut To-Authors 运行。如果你使用 Sync,并遇到场景消失或被误判为新场景的问题,可以开启此项。",
-    "settings.fallbackWait.name": "启用兜底等待",
-    "settings.fallbackWait.desc": "若无法检测到同步状态,则在查找场景前先等待下方指定的时间。",
-    "settings.fallbackWaitTime.name": "兜底等待时间",
-    "settings.fallbackWaitTime.desc": "无法检测到同步状态时的等待秒数。",
-    // ── 设置:PaperBell ───────────────────────────────────────────────────
-    "settings.paperbell.heading": "PaperBell",
-    "settings.paperbell.connectedWithName": "已连接到 PaperBell —— {name}{plan}。",
-    "settings.paperbell.connected": "已连接到 PaperBell。",
-    "settings.paperbell.account.name": "账户与共享设置",
-    "settings.paperbell.account.desc": "获取你的 PaperBell 账户与共享配置(语言、AI)。首次获取时 PaperBell 会请求你的授权。",
-    "settings.paperbell.button.connect": "连接",
-    "settings.paperbell.button.refresh": "刷新",
-    "settings.paperbell.aiAvailable": "AI 功能通过 PaperBell 提供 —— 本插件不存储任何 API 密钥。",
-    "settings.paperbell.notConnected": "尚未连接 PaperBell。安装并启用 PaperBell 插件即可跟随其语言并启用 AI 功能。不装它,本插件也能完整使用。",
-    // ── 设置:致谢 ────────────────────────────────────────────────────────
-    "settings.credits.heading": "致谢",
-    "settings.credits.body": 'PaperOut To-Authors —— PaperBell 套件的一部分,基于 <a href="https://github.com/kevboh/longform">Longform</a> 分支开发,原作者为 <a href="https://kevinbarrett.org">Kevin Barrett</a>。由 <a href="https://github.com/PaperBell-Org">PaperBell-Org</a> 维护。',
-    "settings.credits.source": '源代码与问题反馈请见 <a href="https://github.com/PaperBell-Org">https://github.com/PaperBell-Org</a>。',
-    "settings.credits.icon": '图标来自 <a href="https://www.flaticon.com/authors/zlatko-najdenovski" title="Zlatko Najdenovski">Zlatko Najdenovski</a>,取自 <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>。',
-};
-
-const catalogs = { en, zh: zh$1 };
-/** The active UI locale. Driven by `controller.ts`; defaults to English. */
-const locale = writable("en");
-function format$1(template, vars) {
-    if (!vars)
-        return template;
-    return template.replace(/\{(\w+)\}/g, (whole, key) => key in vars ? String(vars[key]) : whole);
-}
-function lookup(loc, key, vars) {
-    var _a, _b, _c;
-    const message = (_c = (_b = (_a = catalogs[loc]) === null || _a === void 0 ? void 0 : _a[key]) !== null && _b !== void 0 ? _b : en[key]) !== null && _c !== void 0 ? _c : key;
-    return format$1(message, vars);
-}
-/**
- * Imperative translator for non-reactive contexts (.ts: command names, notices).
- * Reads the current locale at call time.
- */
-function translate(key, vars) {
-    return lookup(get_store_value(locale), key, vars);
-}
-/**
- * Reactive translator store for Svelte components: `{$t("key")}` re-renders when
- * the locale changes.
- */
-const t = derived(locale, ($locale) => (key, vars) => lookup($locale, key, vars));
-
 /* src/view/compile/CompileStepView.svelte generated by Svelte v3.49.0 */
 
-function add_css$g(target) {
-	append_styles(target, "svelte-1cn3ejz", ".longform-compile-step.svelte-1cn3ejz.svelte-1cn3ejz{background-color:var(--background-modifier-border);border:1px solid var(--background-modifier-border);border-radius:var(--radius-s);padding:0;margin:var(--size-4-4) 0}.longform-compile-step-title-outer.svelte-1cn3ejz.svelte-1cn3ejz{display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start}.longform-compile-step-title-container.svelte-1cn3ejz.svelte-1cn3ejz{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;font-size:var(--font-ui-smaller)}.longform-compile-step-title-container.svelte-1cn3ejz h4.svelte-1cn3ejz{display:inline-block;margin:var(--size-4-1) var(--size-4-2) var(--size-4-1) 0;padding:0}.longform-compile-step-title-container.svelte-1cn3ejz .longform-step-kind-pill.svelte-1cn3ejz{display:flex;justify-content:center;align-items:center;background-color:color-mix(in srgb, var(--text-accent) 50%, var(--background-modifier-border) 50%);color:var(--text-on-accent);border-radius:var(--radius-l);font-size:var(--font-smallest);font-weight:bold;padding:var(--size-4-1) var(--size-4-2);margin-right:var(--size-4-1);height:var(--h1-line-height)}.longform-compile-step-number.svelte-1cn3ejz.svelte-1cn3ejz{color:var(--text-faint);display:inline-block;width:var(--size-4-6);padding-left:var(--size-4-1)}.longform-remove-step-button.svelte-1cn3ejz.svelte-1cn3ejz{display:flex;width:var(--size-4-5);height:100%;margin:1px;align-items:center;justify-content:center;font-weight:bold;background:var(--background-modifier-error)}.longform-compile-step.svelte-1cn3ejz p.svelte-1cn3ejz{margin:0;background:var(--background-primary)}.longform-compile-step-description.svelte-1cn3ejz.svelte-1cn3ejz{font-size:var(--font-smallest);color:var(--text-muted);padding:var(--size-4-2) var(--size-4-1) var(--size-4-2) var(--size-4-6)}.longform-compile-step-options.svelte-1cn3ejz.svelte-1cn3ejz{padding:var(--size-4-2) 0;background:var(--background-primary)}.longform-compile-step-options.svelte-1cn3ejz>div.svelte-1cn3ejz{margin:0 var(--size-4-2) 0 var(--size-4-6)\n  }.longform-compile-step-option.svelte-1cn3ejz.svelte-1cn3ejz{margin:0 var(--size-4-4) var(--size-4-4) 0}.longform-compile-step-option.svelte-1cn3ejz label.svelte-1cn3ejz{display:block;font-weight:600;font-size:var(--font-smallest)}.longform-compile-step-checkbox-container.svelte-1cn3ejz.svelte-1cn3ejz{display:flex;flex-direction:row;align-items:center;justify-content:flex-start}.longform-compile-step-option.svelte-1cn3ejz input[type=\"text\"].svelte-1cn3ejz{margin:0 0 var(--size-4-1) 0;width:100%}.longform-compile-step-option.svelte-1cn3ejz select.svelte-1cn3ejz{margin:0 0 var(--size-4-1) 0;width:100%}.longform-compile-step-option.svelte-1cn3ejz textarea.svelte-1cn3ejz{color:var(--text-accent);margin:0 0 var(--size-4-1) 0;width:100%;resize:vertical}.longform-compile-step-option.svelte-1cn3ejz input[type=\"checkbox\"].svelte-1cn3ejz{margin:0 var(--size-4-2) var(--size-2-1) 0}.longform-compile-step-option.svelte-1cn3ejz input.svelte-1cn3ejz:focus{color:var(--text-accent-hover)}.longform-compile-step-option-description.svelte-1cn3ejz.svelte-1cn3ejz{font-size:var(--font-smallest);line-height:1em;color:var(--text-faint)}.longform-compile-step-error-container.svelte-1cn3ejz.svelte-1cn3ejz{margin-top:var(--size-4-2)}.longform-compile-step-error.svelte-1cn3ejz.svelte-1cn3ejz{color:var(--text-error);font-size:var(--font-smallest);line-height:1em}");
+function add_css$e(target) {
+	append_styles(target, "svelte-yprjpc", ".longform-compile-step.svelte-yprjpc.svelte-yprjpc{background-color:var(--background-modifier-border);border:1px solid var(--background-modifier-border);border-radius:var(--radius-s);padding:0;margin:var(--size-4-4) 0}.longform-compile-step-title-outer.svelte-yprjpc.svelte-yprjpc{display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start}.longform-compile-step-title-container.svelte-yprjpc.svelte-yprjpc{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;font-size:var(--font-ui-smaller)}.longform-compile-step-title-container.svelte-yprjpc h4.svelte-yprjpc{display:inline-block;margin:var(--size-4-1) var(--size-4-2) var(--size-4-1) 0;padding:0}.longform-compile-step-title-container.svelte-yprjpc .longform-step-kind-pill.svelte-yprjpc{display:flex;justify-content:center;align-items:center;background-color:color-mix(in srgb, var(--text-accent) 50%, var(--background-modifier-border) 50%);color:var(--text-on-accent);border-radius:var(--radius-l);font-size:var(--font-smallest);font-weight:bold;padding:var(--size-4-1) var(--size-4-2);margin-right:var(--size-4-1);height:var(--h1-line-height)}.longform-compile-step-number.svelte-yprjpc.svelte-yprjpc{color:var(--text-faint);display:inline-block;width:var(--size-4-6);padding-left:var(--size-4-1)}.longform-remove-step-button.svelte-yprjpc.svelte-yprjpc{display:flex;width:var(--size-4-5);height:100%;margin:1px;align-items:center;justify-content:center;font-weight:bold;background:var(--background-modifier-error)}.longform-compile-step.svelte-yprjpc p.svelte-yprjpc{margin:0;background:var(--background-primary)}.longform-compile-step-description.svelte-yprjpc.svelte-yprjpc{font-size:var(--font-smallest);color:var(--text-muted);padding:var(--size-4-2) var(--size-4-1) var(--size-4-2) var(--size-4-6)}.longform-compile-step-options.svelte-yprjpc.svelte-yprjpc{padding:var(--size-4-2) 0;background:var(--background-primary)}.longform-compile-step-options.svelte-yprjpc>div.svelte-yprjpc{margin:0 var(--size-4-2) 0 var(--size-4-6)\n  }.longform-compile-step-option.svelte-yprjpc.svelte-yprjpc{margin:0 var(--size-4-4) var(--size-4-4) 0}.longform-compile-step-option.svelte-yprjpc label.svelte-yprjpc{display:block;font-weight:600;font-size:var(--font-smallest)}.longform-compile-step-checkbox-container.svelte-yprjpc.svelte-yprjpc{display:flex;flex-direction:row;align-items:center;justify-content:flex-start}.longform-compile-step-option.svelte-yprjpc input[type=\"text\"].svelte-yprjpc{margin:0 0 var(--size-4-1) 0;width:100%}.longform-compile-step-option.svelte-yprjpc textarea.svelte-yprjpc{color:var(--text-accent);margin:0 0 var(--size-4-1) 0;width:100%;resize:vertical}.longform-compile-step-option.svelte-yprjpc input[type=\"checkbox\"].svelte-yprjpc{margin:0 var(--size-4-2) var(--size-2-1) 0}.longform-compile-step-option.svelte-yprjpc input.svelte-yprjpc:focus{color:var(--text-accent-hover)}.longform-compile-step-option-description.svelte-yprjpc.svelte-yprjpc{font-size:var(--font-smallest);line-height:1em;color:var(--text-faint)}.longform-compile-step-error-container.svelte-yprjpc.svelte-yprjpc{margin-top:var(--size-4-2)}.longform-compile-step-error.svelte-yprjpc.svelte-yprjpc{color:var(--text-error);font-size:var(--font-smallest);line-height:1em}");
 }
 
-function get_each_context$8(ctx, list, i) {
+function get_each_context$6(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[11] = list[i];
-	child_ctx[12] = list;
-	child_ctx[13] = i;
+	child_ctx[9] = list[i];
+	child_ctx[10] = list;
+	child_ctx[11] = i;
 	return child_ctx;
 }
 
-function get_each_context_1$3(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[14] = list[i];
-	return child_ctx;
-}
-
-// (32:2) {:else}
-function create_else_block$7(ctx) {
+// (31:2) {:else}
+function create_else_block$5(ctx) {
 	let div1;
 	let div0;
 	let h4;
@@ -24473,9 +22743,9 @@ function create_else_block$7(ctx) {
 	let if_block2_anchor;
 	let mounted;
 	let dispose;
-	let if_block0 = /*calculatedKind*/ ctx[2] !== null && create_if_block_6$4(ctx);
-	let if_block1 = /*step*/ ctx[0].description.options.length > 0 && create_if_block_2$9(ctx);
-	let if_block2 = /*error*/ ctx[3] && create_if_block_1$b(ctx);
+	let if_block0 = /*calculatedKind*/ ctx[2] !== null && create_if_block_5$3(ctx);
+	let if_block1 = /*step*/ ctx[0].description.options.length > 0 && create_if_block_2$7(ctx);
+	let if_block2 = /*error*/ ctx[3] && create_if_block_1$9(ctx);
 
 	return {
 		c() {
@@ -24498,12 +22768,12 @@ function create_else_block$7(ctx) {
 			t8 = space();
 			if (if_block2) if_block2.c();
 			if_block2_anchor = empty();
-			attr(span, "class", "longform-compile-step-number svelte-1cn3ejz");
-			attr(h4, "class", "svelte-1cn3ejz");
-			attr(div0, "class", "longform-compile-step-title-container svelte-1cn3ejz");
-			attr(button, "class", "longform-remove-step-button svelte-1cn3ejz");
-			attr(div1, "class", "longform-compile-step-title-outer svelte-1cn3ejz");
-			attr(p, "class", "longform-compile-step-description svelte-1cn3ejz");
+			attr(span, "class", "longform-compile-step-number svelte-yprjpc");
+			attr(h4, "class", "svelte-yprjpc");
+			attr(div0, "class", "longform-compile-step-title-container svelte-yprjpc");
+			attr(button, "class", "longform-remove-step-button svelte-yprjpc");
+			attr(div1, "class", "longform-compile-step-title-outer svelte-yprjpc");
+			attr(p, "class", "longform-compile-step-description svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, div1, anchor);
@@ -24526,7 +22796,7 @@ function create_else_block$7(ctx) {
 			insert(target, if_block2_anchor, anchor);
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*removeStep*/ ctx[5]);
+				dispose = listen(button, "click", /*removeStep*/ ctx[4]);
 				mounted = true;
 			}
 		},
@@ -24538,7 +22808,7 @@ function create_else_block$7(ctx) {
 				if (if_block0) {
 					if_block0.p(ctx, dirty);
 				} else {
-					if_block0 = create_if_block_6$4(ctx);
+					if_block0 = create_if_block_5$3(ctx);
 					if_block0.c();
 					if_block0.m(div0, null);
 				}
@@ -24553,7 +22823,7 @@ function create_else_block$7(ctx) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 				} else {
-					if_block1 = create_if_block_2$9(ctx);
+					if_block1 = create_if_block_2$7(ctx);
 					if_block1.c();
 					if_block1.m(t8.parentNode, t8);
 				}
@@ -24566,7 +22836,7 @@ function create_else_block$7(ctx) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 				} else {
-					if_block2 = create_if_block_1$b(ctx);
+					if_block2 = create_if_block_1$9(ctx);
 					if_block2.c();
 					if_block2.m(if_block2_anchor.parentNode, if_block2_anchor);
 				}
@@ -24591,8 +22861,8 @@ function create_else_block$7(ctx) {
 	};
 }
 
-// (16:2) {#if step.description.canonicalID === PLACEHOLDER_MISSING_STEP.description.canonicalID}
-function create_if_block$e(ctx) {
+// (15:2) {#if step.description.canonicalID === PLACEHOLDER_MISSING_STEP.description.canonicalID}
+function create_if_block$c(ctx) {
 	let div1;
 	let div0;
 	let t1;
@@ -24606,21 +22876,21 @@ function create_if_block$e(ctx) {
 		c() {
 			div1 = element("div");
 			div0 = element("div");
-			div0.innerHTML = `<h4 class="svelte-1cn3ejz">Invalid Step</h4>`;
+			div0.innerHTML = `<h4 class="svelte-yprjpc">Invalid Step</h4>`;
 			t1 = space();
 			button = element("button");
 			button.textContent = "X";
 			t3 = space();
 			div2 = element("div");
 
-			div2.innerHTML = `<p class="longform-compile-step-error svelte-1cn3ejz">This workflow contains a step that could not be loaded. Please delete
+			div2.innerHTML = `<p class="longform-compile-step-error svelte-yprjpc">This workflow contains a step that could not be loaded. Please delete
         the step to be able to run this workflow. If you’re on mobile, this may
         be a user script step that did not load.</p>`;
 
-			attr(div0, "class", "longform-compile-step-title-container svelte-1cn3ejz");
-			attr(button, "class", "longform-remove-step-button svelte-1cn3ejz");
-			attr(div1, "class", "longform-compile-step-title-outer svelte-1cn3ejz");
-			attr(div2, "class", "longform-compile-step-error-container svelte-1cn3ejz");
+			attr(div0, "class", "longform-compile-step-title-container svelte-yprjpc");
+			attr(button, "class", "longform-remove-step-button svelte-yprjpc");
+			attr(div1, "class", "longform-compile-step-title-outer svelte-yprjpc");
+			attr(div2, "class", "longform-compile-step-error-container svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, div1, anchor);
@@ -24631,7 +22901,7 @@ function create_if_block$e(ctx) {
 			insert(target, div2, anchor);
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*removeStep*/ ctx[5]);
+				dispose = listen(button, "click", /*removeStep*/ ctx[4]);
 				mounted = true;
 			}
 		},
@@ -24646,8 +22916,8 @@ function create_if_block$e(ctx) {
 	};
 }
 
-// (36:8) {#if calculatedKind !== null}
-function create_if_block_6$4(ctx) {
+// (35:8) {#if calculatedKind !== null}
+function create_if_block_5$3(ctx) {
 	let div;
 	let t_value = formatStepKind(/*calculatedKind*/ ctx[2]) + "";
 	let t;
@@ -24657,7 +22927,7 @@ function create_if_block_6$4(ctx) {
 		c() {
 			div = element("div");
 			t = text(t_value);
-			attr(div, "class", "longform-step-kind-pill svelte-1cn3ejz");
+			attr(div, "class", "longform-step-kind-pill svelte-yprjpc");
 			attr(div, "title", div_title_value = explainStepKind(/*calculatedKind*/ ctx[2]));
 		},
 		m(target, anchor) {
@@ -24677,15 +22947,15 @@ function create_if_block_6$4(ctx) {
 	};
 }
 
-// (52:4) {#if step.description.options.length > 0}
-function create_if_block_2$9(ctx) {
+// (51:4) {#if step.description.options.length > 0}
+function create_if_block_2$7(ctx) {
 	let div1;
 	let div0;
 	let each_value = /*step*/ ctx[0].description.options;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
+		each_blocks[i] = create_each_block$6(get_each_context$6(ctx, each_value, i));
 	}
 
 	return {
@@ -24697,8 +22967,8 @@ function create_if_block_2$9(ctx) {
 				each_blocks[i].c();
 			}
 
-			attr(div0, "class", "svelte-1cn3ejz");
-			attr(div1, "class", "longform-compile-step-options svelte-1cn3ejz");
+			attr(div0, "class", "svelte-yprjpc");
+			attr(div1, "class", "longform-compile-step-options svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, div1, anchor);
@@ -24709,17 +22979,17 @@ function create_if_block_2$9(ctx) {
 			}
 		},
 		p(ctx, dirty) {
-			if (dirty & /*step, CompileStepOptionType, $pandocTemplates*/ 17) {
+			if (dirty & /*step, CompileStepOptionType*/ 1) {
 				each_value = /*step*/ ctx[0].description.options;
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$8(ctx, each_value, i);
+					const child_ctx = get_each_context$6(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$8(child_ctx);
+						each_blocks[i] = create_each_block$6(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(div0, null);
 					}
@@ -24739,21 +23009,21 @@ function create_if_block_2$9(ctx) {
 	};
 }
 
-// (83:14) {:else}
-function create_else_block_1$3(ctx) {
+// (71:14) {:else}
+function create_else_block_1$2(ctx) {
 	let div;
 	let input;
 	let input_id_value;
 	let t0;
 	let label;
-	let t1_value = /*option*/ ctx[11].name + "";
+	let t1_value = /*option*/ ctx[9].name + "";
 	let t1;
 	let label_for_value;
 	let mounted;
 	let dispose;
 
 	function input_change_handler() {
-		/*input_change_handler*/ ctx[9].call(input, /*option*/ ctx[11]);
+		/*input_change_handler*/ ctx[7].call(input, /*option*/ ctx[9]);
 	}
 
 	return {
@@ -24763,17 +23033,17 @@ function create_else_block_1$3(ctx) {
 			t0 = space();
 			label = element("label");
 			t1 = text(t1_value);
-			attr(input, "id", input_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id);
+			attr(input, "id", input_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id);
 			attr(input, "type", "checkbox");
-			attr(input, "class", "svelte-1cn3ejz");
-			attr(label, "for", label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id);
-			attr(label, "class", "svelte-1cn3ejz");
-			attr(div, "class", "longform-compile-step-checkbox-container svelte-1cn3ejz");
+			attr(input, "class", "svelte-yprjpc");
+			attr(label, "for", label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id);
+			attr(label, "class", "svelte-yprjpc");
+			attr(div, "class", "longform-compile-step-checkbox-container svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
 			append(div, input);
-			input.checked = /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id];
+			input.checked = /*step*/ ctx[0].optionValues[/*option*/ ctx[9].id];
 			append(div, t0);
 			append(div, label);
 			append(label, t1);
@@ -24786,17 +23056,17 @@ function create_else_block_1$3(ctx) {
 		p(new_ctx, dirty) {
 			ctx = new_ctx;
 
-			if (dirty & /*step, $pandocTemplates*/ 17 && input_id_value !== (input_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id)) {
+			if (dirty & /*step*/ 1 && input_id_value !== (input_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id)) {
 				attr(input, "id", input_id_value);
 			}
 
-			if (dirty & /*step, $pandocTemplates*/ 17) {
-				input.checked = /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id];
+			if (dirty & /*step*/ 1) {
+				input.checked = /*step*/ ctx[0].optionValues[/*option*/ ctx[9].id];
 			}
 
-			if (dirty & /*step*/ 1 && t1_value !== (t1_value = /*option*/ ctx[11].name + "")) set_data(t1, t1_value);
+			if (dirty & /*step*/ 1 && t1_value !== (t1_value = /*option*/ ctx[9].name + "")) set_data(t1, t1_value);
 
-			if (dirty & /*step, $pandocTemplates*/ 17 && label_for_value !== (label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id)) {
+			if (dirty & /*step*/ 1 && label_for_value !== (label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id)) {
 				attr(label, "for", label_for_value);
 			}
 		},
@@ -24808,134 +23078,10 @@ function create_else_block_1$3(ctx) {
 	};
 }
 
-// (72:71) 
-function create_if_block_5$5(ctx) {
+// (64:76) 
+function create_if_block_4$3(ctx) {
 	let label;
-	let t0_value = /*option*/ ctx[11].name + "";
-	let t0;
-	let label_for_value;
-	let t1;
-	let select;
-	let option;
-	let t2_value = (/*option*/ ctx[11].emptyLabel ?? "(default)") + "";
-	let t2;
-	let select_id_value;
-	let mounted;
-	let dispose;
-
-	let each_value_1 = /*option*/ ctx[11].dynamicChoices === "pandoc-templates"
-	? /*$pandocTemplates*/ ctx[4]
-	: /*option*/ ctx[11].choices ?? [];
-
-	let each_blocks = [];
-
-	for (let i = 0; i < each_value_1.length; i += 1) {
-		each_blocks[i] = create_each_block_1$3(get_each_context_1$3(ctx, each_value_1, i));
-	}
-
-	function select_change_handler() {
-		/*select_change_handler*/ ctx[8].call(select, /*option*/ ctx[11]);
-	}
-
-	return {
-		c() {
-			label = element("label");
-			t0 = text(t0_value);
-			t1 = space();
-			select = element("select");
-			option = element("option");
-			t2 = text(t2_value);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			attr(label, "for", label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id);
-			attr(label, "class", "svelte-1cn3ejz");
-			option.__value = "";
-			option.value = option.__value;
-			attr(select, "id", select_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id);
-			attr(select, "class", "svelte-1cn3ejz");
-			if (/*step*/ ctx[0].optionValues[/*option*/ ctx[11].id] === void 0) add_render_callback(select_change_handler);
-		},
-		m(target, anchor) {
-			insert(target, label, anchor);
-			append(label, t0);
-			insert(target, t1, anchor);
-			insert(target, select, anchor);
-			append(select, option);
-			append(option, t2);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(select, null);
-			}
-
-			select_option(select, /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id]);
-
-			if (!mounted) {
-				dispose = listen(select, "change", select_change_handler);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty & /*step*/ 1 && t0_value !== (t0_value = /*option*/ ctx[11].name + "")) set_data(t0, t0_value);
-
-			if (dirty & /*step, $pandocTemplates*/ 17 && label_for_value !== (label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id)) {
-				attr(label, "for", label_for_value);
-			}
-
-			if (dirty & /*step*/ 1 && t2_value !== (t2_value = (/*option*/ ctx[11].emptyLabel ?? "(default)") + "")) set_data(t2, t2_value);
-
-			if (dirty & /*step, $pandocTemplates*/ 17) {
-				each_value_1 = /*option*/ ctx[11].dynamicChoices === "pandoc-templates"
-				? /*$pandocTemplates*/ ctx[4]
-				: /*option*/ ctx[11].choices ?? [];
-
-				let i;
-
-				for (i = 0; i < each_value_1.length; i += 1) {
-					const child_ctx = get_each_context_1$3(ctx, each_value_1, i);
-
-					if (each_blocks[i]) {
-						each_blocks[i].p(child_ctx, dirty);
-					} else {
-						each_blocks[i] = create_each_block_1$3(child_ctx);
-						each_blocks[i].c();
-						each_blocks[i].m(select, null);
-					}
-				}
-
-				for (; i < each_blocks.length; i += 1) {
-					each_blocks[i].d(1);
-				}
-
-				each_blocks.length = each_value_1.length;
-			}
-
-			if (dirty & /*step, $pandocTemplates*/ 17 && select_id_value !== (select_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id)) {
-				attr(select, "id", select_id_value);
-			}
-
-			if (dirty & /*step, $pandocTemplates*/ 17) {
-				select_option(select, /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id]);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(label);
-			if (detaching) detach(t1);
-			if (detaching) detach(select);
-			destroy_each(each_blocks, detaching);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (65:76) 
-function create_if_block_4$5(ctx) {
-	let label;
-	let t0_value = /*option*/ ctx[11].name + "";
+	let t0_value = /*option*/ ctx[9].name + "";
 	let t0;
 	let label_for_value;
 	let t1;
@@ -24945,7 +23091,7 @@ function create_if_block_4$5(ctx) {
 	let dispose;
 
 	function textarea_input_handler() {
-		/*textarea_input_handler*/ ctx[7].call(textarea, /*option*/ ctx[11]);
+		/*textarea_input_handler*/ ctx[6].call(textarea, /*option*/ ctx[9]);
 	}
 
 	return {
@@ -24954,18 +23100,18 @@ function create_if_block_4$5(ctx) {
 			t0 = text(t0_value);
 			t1 = space();
 			textarea = element("textarea");
-			attr(label, "for", label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id);
-			attr(label, "class", "svelte-1cn3ejz");
-			attr(textarea, "id", textarea_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id);
+			attr(label, "for", label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id);
+			attr(label, "class", "svelte-yprjpc");
+			attr(textarea, "id", textarea_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id);
 			attr(textarea, "placeholder", "key: value");
-			attr(textarea, "class", "svelte-1cn3ejz");
+			attr(textarea, "class", "svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, label, anchor);
 			append(label, t0);
 			insert(target, t1, anchor);
 			insert(target, textarea, anchor);
-			set_input_value(textarea, /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id]);
+			set_input_value(textarea, /*step*/ ctx[0].optionValues[/*option*/ ctx[9].id]);
 
 			if (!mounted) {
 				dispose = listen(textarea, "input", textarea_input_handler);
@@ -24974,18 +23120,18 @@ function create_if_block_4$5(ctx) {
 		},
 		p(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*step*/ 1 && t0_value !== (t0_value = /*option*/ ctx[11].name + "")) set_data(t0, t0_value);
+			if (dirty & /*step*/ 1 && t0_value !== (t0_value = /*option*/ ctx[9].name + "")) set_data(t0, t0_value);
 
-			if (dirty & /*step, $pandocTemplates*/ 17 && label_for_value !== (label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id)) {
+			if (dirty & /*step*/ 1 && label_for_value !== (label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id)) {
 				attr(label, "for", label_for_value);
 			}
 
-			if (dirty & /*step, $pandocTemplates*/ 17 && textarea_id_value !== (textarea_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id)) {
+			if (dirty & /*step*/ 1 && textarea_id_value !== (textarea_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id)) {
 				attr(textarea, "id", textarea_id_value);
 			}
 
-			if (dirty & /*step, $pandocTemplates*/ 17) {
-				set_input_value(textarea, /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id]);
+			if (dirty & /*step*/ 1) {
+				set_input_value(textarea, /*step*/ ctx[0].optionValues[/*option*/ ctx[9].id]);
 			}
 		},
 		d(detaching) {
@@ -24998,10 +23144,10 @@ function create_if_block_4$5(ctx) {
 	};
 }
 
-// (57:14) {#if option.type === CompileStepOptionType.Text}
-function create_if_block_3$5(ctx) {
+// (56:14) {#if option.type === CompileStepOptionType.Text}
+function create_if_block_3$3(ctx) {
 	let label;
-	let t0_value = /*option*/ ctx[11].name + "";
+	let t0_value = /*option*/ ctx[9].name + "";
 	let t0;
 	let label_for_value;
 	let t1;
@@ -25012,7 +23158,7 @@ function create_if_block_3$5(ctx) {
 	let dispose;
 
 	function input_input_handler() {
-		/*input_input_handler*/ ctx[6].call(input, /*option*/ ctx[11]);
+		/*input_input_handler*/ ctx[5].call(input, /*option*/ ctx[9]);
 	}
 
 	return {
@@ -25021,19 +23167,19 @@ function create_if_block_3$5(ctx) {
 			t0 = text(t0_value);
 			t1 = space();
 			input = element("input");
-			attr(label, "for", label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id);
-			attr(label, "class", "svelte-1cn3ejz");
-			attr(input, "id", input_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id);
+			attr(label, "for", label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id);
+			attr(label, "class", "svelte-yprjpc");
+			attr(input, "id", input_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id);
 			attr(input, "type", "text");
-			attr(input, "placeholder", input_placeholder_value = /*option*/ ctx[11].default.replace(/\n/g, "\\n"));
-			attr(input, "class", "svelte-1cn3ejz");
+			attr(input, "placeholder", input_placeholder_value = /*option*/ ctx[9].default.replace(/\n/g, "\\n"));
+			attr(input, "class", "svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, label, anchor);
 			append(label, t0);
 			insert(target, t1, anchor);
 			insert(target, input, anchor);
-			set_input_value(input, /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id]);
+			set_input_value(input, /*step*/ ctx[0].optionValues[/*option*/ ctx[9].id]);
 
 			if (!mounted) {
 				dispose = listen(input, "input", input_input_handler);
@@ -25042,22 +23188,22 @@ function create_if_block_3$5(ctx) {
 		},
 		p(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*step*/ 1 && t0_value !== (t0_value = /*option*/ ctx[11].name + "")) set_data(t0, t0_value);
+			if (dirty & /*step*/ 1 && t0_value !== (t0_value = /*option*/ ctx[9].name + "")) set_data(t0, t0_value);
 
-			if (dirty & /*step, $pandocTemplates*/ 17 && label_for_value !== (label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id)) {
+			if (dirty & /*step*/ 1 && label_for_value !== (label_for_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id)) {
 				attr(label, "for", label_for_value);
 			}
 
-			if (dirty & /*step, $pandocTemplates*/ 17 && input_id_value !== (input_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[11].id)) {
+			if (dirty & /*step*/ 1 && input_id_value !== (input_id_value = /*step*/ ctx[0].id + "-" + /*option*/ ctx[9].id)) {
 				attr(input, "id", input_id_value);
 			}
 
-			if (dirty & /*step, $pandocTemplates*/ 17 && input_placeholder_value !== (input_placeholder_value = /*option*/ ctx[11].default.replace(/\n/g, "\\n"))) {
+			if (dirty & /*step*/ 1 && input_placeholder_value !== (input_placeholder_value = /*option*/ ctx[9].default.replace(/\n/g, "\\n"))) {
 				attr(input, "placeholder", input_placeholder_value);
 			}
 
-			if (dirty & /*step, $pandocTemplates*/ 17 && input.value !== /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id]) {
-				set_input_value(input, /*step*/ ctx[0].optionValues[/*option*/ ctx[11].id]);
+			if (dirty & /*step*/ 1 && input.value !== /*step*/ ctx[0].optionValues[/*option*/ ctx[9].id]) {
+				set_input_value(input, /*step*/ ctx[0].optionValues[/*option*/ ctx[9].id]);
 			}
 		},
 		d(detaching) {
@@ -25070,52 +23216,19 @@ function create_if_block_3$5(ctx) {
 	};
 }
 
-// (79:18) {#each option.dynamicChoices === "pandoc-templates" ? $pandocTemplates : option.choices ?? [] as choice}
-function create_each_block_1$3(ctx) {
-	let option;
-	let t_value = /*choice*/ ctx[14] + "";
-	let t;
-	let option_value_value;
-
-	return {
-		c() {
-			option = element("option");
-			t = text(t_value);
-			option.__value = option_value_value = /*choice*/ ctx[14];
-			option.value = option.__value;
-		},
-		m(target, anchor) {
-			insert(target, option, anchor);
-			append(option, t);
-		},
-		p(ctx, dirty) {
-			if (dirty & /*step, $pandocTemplates*/ 17 && t_value !== (t_value = /*choice*/ ctx[14] + "")) set_data(t, t_value);
-
-			if (dirty & /*step, $pandocTemplates*/ 17 && option_value_value !== (option_value_value = /*choice*/ ctx[14])) {
-				option.__value = option_value_value;
-				option.value = option.__value;
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(option);
-		}
-	};
-}
-
-// (55:10) {#each step.description.options as option}
-function create_each_block$8(ctx) {
+// (54:10) {#each step.description.options as option}
+function create_each_block$6(ctx) {
 	let div;
 	let t0;
 	let p;
-	let t1_value = /*option*/ ctx[11].description + "";
+	let t1_value = /*option*/ ctx[9].description + "";
 	let t1;
 	let t2;
 
 	function select_block_type_1(ctx, dirty) {
-		if (/*option*/ ctx[11].type === CompileStepOptionType.Text) return create_if_block_3$5;
-		if (/*option*/ ctx[11].type === CompileStepOptionType.MultilineText) return create_if_block_4$5;
-		if (/*option*/ ctx[11].type === CompileStepOptionType.Dropdown) return create_if_block_5$5;
-		return create_else_block_1$3;
+		if (/*option*/ ctx[9].type === CompileStepOptionType.Text) return create_if_block_3$3;
+		if (/*option*/ ctx[9].type === CompileStepOptionType.MultilineText) return create_if_block_4$3;
+		return create_else_block_1$2;
 	}
 
 	let current_block_type = select_block_type_1(ctx);
@@ -25129,8 +23242,8 @@ function create_each_block$8(ctx) {
 			p = element("p");
 			t1 = text(t1_value);
 			t2 = space();
-			attr(p, "class", "longform-compile-step-option-description svelte-1cn3ejz");
-			attr(div, "class", "longform-compile-step-option svelte-1cn3ejz");
+			attr(p, "class", "longform-compile-step-option-description svelte-yprjpc");
+			attr(div, "class", "longform-compile-step-option svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -25153,7 +23266,7 @@ function create_each_block$8(ctx) {
 				}
 			}
 
-			if (dirty & /*step*/ 1 && t1_value !== (t1_value = /*option*/ ctx[11].description + "")) set_data(t1, t1_value);
+			if (dirty & /*step*/ 1 && t1_value !== (t1_value = /*option*/ ctx[9].description + "")) set_data(t1, t1_value);
 		},
 		d(detaching) {
 			if (detaching) detach(div);
@@ -25162,8 +23275,8 @@ function create_each_block$8(ctx) {
 	};
 }
 
-// (101:4) {#if error}
-function create_if_block_1$b(ctx) {
+// (89:4) {#if error}
+function create_if_block_1$9(ctx) {
 	let div;
 	let p;
 	let t;
@@ -25173,8 +23286,8 @@ function create_if_block_1$b(ctx) {
 			div = element("div");
 			p = element("p");
 			t = text(/*error*/ ctx[3]);
-			attr(p, "class", "longform-compile-step-error svelte-1cn3ejz");
-			attr(div, "class", "longform-compile-step-error-container svelte-1cn3ejz");
+			attr(p, "class", "longform-compile-step-error svelte-yprjpc");
+			attr(div, "class", "longform-compile-step-error-container svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -25190,12 +23303,12 @@ function create_if_block_1$b(ctx) {
 	};
 }
 
-function create_fragment$h(ctx) {
+function create_fragment$f(ctx) {
 	let div;
 
 	function select_block_type(ctx, dirty) {
-		if (/*step*/ ctx[0].description.canonicalID === PLACEHOLDER_MISSING_STEP.description.canonicalID) return create_if_block$e;
-		return create_else_block$7;
+		if (/*step*/ ctx[0].description.canonicalID === PLACEHOLDER_MISSING_STEP.description.canonicalID) return create_if_block$c;
+		return create_else_block$5;
 	}
 
 	let current_block_type = select_block_type(ctx);
@@ -25205,7 +23318,7 @@ function create_fragment$h(ctx) {
 		c() {
 			div = element("div");
 			if_block.c();
-			attr(div, "class", "longform-compile-step svelte-1cn3ejz");
+			attr(div, "class", "longform-compile-step svelte-yprjpc");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -25233,9 +23346,7 @@ function create_fragment$h(ctx) {
 	};
 }
 
-function instance$h($$self, $$props, $$invalidate) {
-	let $pandocTemplates;
-	component_subscribe($$self, pandocTemplates, $$value => $$invalidate(4, $pandocTemplates = $$value));
+function instance$f($$self, $$props, $$invalidate) {
 	let { step } = $$props;
 	let { ordinal } = $$props;
 	let { calculatedKind } = $$props;
@@ -25256,11 +23367,6 @@ function instance$h($$self, $$props, $$invalidate) {
 		$$invalidate(0, step);
 	}
 
-	function select_change_handler(option) {
-		step.optionValues[option.id] = select_value(this);
-		$$invalidate(0, step);
-	}
-
 	function input_change_handler(option) {
 		step.optionValues[option.id] = this.checked;
 		$$invalidate(0, step);
@@ -25278,11 +23384,9 @@ function instance$h($$self, $$props, $$invalidate) {
 		ordinal,
 		calculatedKind,
 		error,
-		$pandocTemplates,
 		removeStep,
 		input_input_handler,
 		textarea_input_handler,
-		select_change_handler,
 		input_change_handler
 	];
 }
@@ -25294,8 +23398,8 @@ class CompileStepView extends SvelteComponent {
 		init(
 			this,
 			options,
-			instance$h,
-			create_fragment$h,
+			instance$f,
+			create_fragment$f,
 			safe_not_equal,
 			{
 				step: 0,
@@ -25303,7 +23407,7 @@ class CompileStepView extends SvelteComponent {
 				calculatedKind: 2,
 				error: 3
 			},
-			add_css$g
+			add_css$e
 		);
 	}
 }
@@ -28092,7 +26196,7 @@ _extends(Remove, {
 
 /* src/view/sortable/SortableList.svelte generated by Svelte v3.49.0 */
 
-function get_each_context$7(ctx, list, i) {
+function get_each_context$5(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[9] = list[i];
 	return child_ctx;
@@ -28102,7 +26206,7 @@ const get_default_slot_changes = dirty => ({ item: dirty & /*items*/ 1 });
 const get_default_slot_context = ctx => ({ item: /*item*/ ctx[9] });
 
 // (87:2) {#each items as item (item.id)}
-function create_each_block$7(key_1, ctx) {
+function create_each_block$5(key_1, ctx) {
 	let li;
 	let t;
 	let li_data_id_value;
@@ -28174,7 +26278,7 @@ function create_each_block$7(key_1, ctx) {
 	};
 }
 
-function create_fragment$g(ctx) {
+function create_fragment$e(ctx) {
 	let ul;
 	let each_blocks = [];
 	let each_1_lookup = new Map();
@@ -28184,9 +26288,9 @@ function create_fragment$g(ctx) {
 	const get_key = ctx => /*item*/ ctx[9].id;
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		let child_ctx = get_each_context$7(ctx, each_value, i);
+		let child_ctx = get_each_context$5(ctx, each_value, i);
 		let key = get_key(child_ctx);
-		each_1_lookup.set(key, each_blocks[i] = create_each_block$7(key, child_ctx));
+		each_1_lookup.set(key, each_blocks[i] = create_each_block$5(key, child_ctx));
 	}
 
 	return {
@@ -28213,7 +26317,7 @@ function create_fragment$g(ctx) {
 			if (dirty & /*items, $$scope*/ 33) {
 				each_value = /*items*/ ctx[0];
 				group_outros();
-				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, outro_and_destroy_block, create_each_block$7, null, get_each_context$7);
+				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, outro_and_destroy_block, create_each_block$5, null, get_each_context$5);
 				check_outros();
 			}
 
@@ -28295,7 +26399,7 @@ function IndentPlugin() {
 // @ts-ignore
 Sortable.mount(new IndentPlugin());
 
-function instance$g($$self, $$props, $$invalidate) {
+function instance$e($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { items = [] } = $$props;
 	let { sortableOptions = {} } = $$props;
@@ -28386,2460 +26490,12 @@ class SortableList extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$g, create_fragment$g, safe_not_equal, {
+		init(this, options, instance$e, create_fragment$e, safe_not_equal, {
 			items: 0,
 			sortableOptions: 3,
 			trackIndents: 4
 		});
 	}
-}
-
-/**
- * Return a NEW workflow (cloned steps + optionValues) with the batch overrides
- * applied to the matching steps. The input workflow is never mutated, so a run's
- * overrides don't touch the user's saved workflows.
- */
-function applyBatchOverrides(workflow, o) {
-    const steps = workflow.steps.map((step) => {
-        var _a;
-        const ov = Object.assign({}, step.optionValues);
-        const id = (_a = step.description.canonicalID) !== null && _a !== void 0 ? _a : step.id;
-        if (id === "run-pandoc-export") {
-            if (o.dryRun !== undefined)
-                ov["dry-run"] = o.dryRun;
-            if (o.openAfter !== undefined)
-                ov["open-after"] = o.openAfter;
-        }
-        else if (id === "write-to-note") {
-            if (o.openAfter !== undefined)
-                ov["open-after"] = o.openAfter;
-        }
-        else if (id === "harvest-manuscript-lines") {
-            if (o.harvest !== undefined)
-                ov["enabled"] = o.harvest;
-        }
-        return Object.assign(Object.assign({}, step), { optionValues: ov });
-    });
-    return Object.assign(Object.assign({}, workflow), { steps });
-}
-/**
- * Deep-clone a workflow so a row can edit its steps' `optionValues` in the matrix
- * without mutating the user's saved workflow. Steps and their option maps are
- * copied; the (immutable) `description` is shared by reference.
- */
-function cloneWorkflow(workflow) {
-    return Object.assign(Object.assign({}, workflow), { steps: workflow.steps.map((step) => (Object.assign(Object.assign({}, step), { optionValues: Object.assign({}, step.optionValues) }))) });
-}
-const IDLE_ROW = { status: "idle", activeStep: -1 };
-/**
- * Fold a `CompileStatus` from the runner into the next row state. The runner emits
- * a Step event at the START of each step (so `activeStep` is the running one), a
- * single Success at the end, and Error on a throw.
- */
-function statusToRowState(status, prev) {
-    var _a;
-    switch (status.kind) {
-        case "CompileStatusStep":
-            return {
-                status: "running",
-                activeStep: status.stepIndex,
-                totalSteps: status.totalSteps,
-            };
-        case "CompileStatusSuccess":
-            return {
-                status: "done",
-                activeStep: (_a = prev.totalSteps) !== null && _a !== void 0 ? _a : prev.activeStep + 1,
-                totalSteps: prev.totalSteps,
-            };
-        case "CompileStatusError":
-            return Object.assign(Object.assign({}, prev), { status: "error", error: status.error });
-    }
-}
-/**
- * A short 2-letter chip for a draft, matching the schematic's MS / SI / RL. Known
- * academic drafts get a mnemonic; anything else falls back to word initials.
- */
-function draftAbbrev(name) {
-    const n = (name || "").toLowerCase();
-    if (n.includes("supplement"))
-        return "SI";
-    if (n.includes("response"))
-        return "RL";
-    if (n.includes("cover"))
-        return "CL";
-    if (n.includes("manuscript") || n.includes("main"))
-        return "MS";
-    const initials = (name || "")
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase();
-    return initials || "··";
-}
-/** How far along a row is, 0..1, for the progress-line fill. */
-function rowProgress(state, totalSteps) {
-    if (totalSteps <= 0)
-        return 0;
-    if (state.status === "done")
-        return 1;
-    if (state.status === "idle" || state.activeStep < 0)
-        return 0;
-    // active step is in-flight → fill up to (but not including) it, plus a nudge.
-    return Math.min(1, (state.activeStep + 0.5) / totalSteps);
-}
-
-/* src/view/compile/compile-matrix/CompileMatrix.svelte generated by Svelte v3.49.0 */
-
-function add_css$f(target) {
-	append_styles(target, "svelte-1d84fds", ".matrix.svelte-1d84fds.svelte-1d84fds{display:flex;flex-direction:column;gap:var(--size-4-2)}.matrix-header.svelte-1d84fds.svelte-1d84fds{display:flex;align-items:center;flex-wrap:wrap;gap:var(--size-4-3);padding-bottom:var(--size-4-2);border-bottom:1px solid var(--background-modifier-border)}.matrix-heading.svelte-1d84fds.svelte-1d84fds{display:flex;align-items:baseline;gap:var(--size-4-2);margin-right:auto}.matrix-title.svelte-1d84fds.svelte-1d84fds{font-weight:700;font-size:var(--font-ui-large, 1.1em);color:var(--text-normal)}.matrix-count.svelte-1d84fds.svelte-1d84fds{font-size:var(--font-ui-smaller);color:var(--text-faint)}.matrix-batch.svelte-1d84fds.svelte-1d84fds{display:flex;gap:var(--size-2-2);flex-wrap:wrap}.batch-toggle.svelte-1d84fds.svelte-1d84fds{display:inline-flex;align-items:center;gap:var(--size-2-1);font-size:var(--font-ui-smaller);color:var(--text-muted);padding:2px var(--size-2-3);border:1px solid var(--background-modifier-border);border-radius:var(--radius-l);cursor:pointer;user-select:none;transition:color 0.15s, border-color 0.15s, background-color 0.15s}.batch-toggle.on.svelte-1d84fds.svelte-1d84fds{color:var(--text-accent);border-color:var(--interactive-accent);background:color-mix(in srgb, var(--interactive-accent) 12%, transparent)}.batch-toggle.svelte-1d84fds input.svelte-1d84fds{margin:0}.matrix-run.svelte-1d84fds.svelte-1d84fds{font-weight:700;color:var(--text-on-accent);background:var(--interactive-accent);border:none;border-radius:var(--radius-s);padding:var(--size-2-2) var(--size-4-4);cursor:pointer;transition:background-color 0.15s, transform 0.1s}.matrix-run.svelte-1d84fds.svelte-1d84fds:hover:not(:disabled){background:var(--interactive-accent-hover)}.matrix-run.svelte-1d84fds.svelte-1d84fds:active:not(:disabled){transform:translateY(1px)}.matrix-run.svelte-1d84fds.svelte-1d84fds:disabled{background:var(--background-modifier-border);color:var(--text-faint);cursor:default}.matrix-hint.svelte-1d84fds.svelte-1d84fds{font-size:var(--font-smallest);color:var(--text-faint);margin-top:calc(-1 * var(--size-2-1))}.matrix ul{list-style:none;margin:0;padding:0}.matrix-row.svelte-1d84fds.svelte-1d84fds{display:flex;align-items:center;gap:var(--size-4-2);padding:var(--size-4-2) var(--size-4-1);border-radius:var(--radius-m, 8px);background:var(--background-secondary-alt);border:1px solid transparent;margin-bottom:var(--size-2-3);animation:svelte-1d84fds-matrix-in 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both;transition:border-color 0.2s, box-shadow 0.2s}.matrix-row.status-running.svelte-1d84fds.svelte-1d84fds{border-color:color-mix(in srgb, var(--interactive-accent) 55%, transparent);box-shadow:0 0 0 1px\n      color-mix(in srgb, var(--interactive-accent) 25%, transparent)}.matrix-row.status-done.svelte-1d84fds.svelte-1d84fds{border-color:color-mix(in srgb, var(--interactive-success) 45%, transparent)}.matrix-row.status-error.svelte-1d84fds.svelte-1d84fds{border-color:color-mix(in srgb, var(--text-error) 55%, transparent)}.matrix-row.not-runnable.svelte-1d84fds.svelte-1d84fds{opacity:0.55}.matrix-drag.svelte-1d84fds.svelte-1d84fds{cursor:grab;color:var(--text-faint);letter-spacing:-3px;padding:0 var(--size-2-1);line-height:1;user-select:none}.matrix-drag.svelte-1d84fds.svelte-1d84fds:hover{color:var(--text-muted)}.matrix-draft.svelte-1d84fds.svelte-1d84fds{display:flex;flex-direction:column;gap:var(--size-2-1);width:200px;min-width:200px}.matrix-draft-head.svelte-1d84fds.svelte-1d84fds{display:flex;align-items:center;gap:var(--size-2-3)}.matrix-workflow.svelte-1d84fds.svelte-1d84fds{max-width:100%;font-size:var(--font-smallest);color:var(--text-muted);background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:var(--radius-s);padding:1px var(--size-2-2);cursor:pointer}.matrix-workflow.svelte-1d84fds.svelte-1d84fds:disabled{cursor:default;opacity:0.7}.matrix-abbrev.svelte-1d84fds.svelte-1d84fds{display:inline-flex;align-items:center;justify-content:center;min-width:2.1em;height:1.7em;padding:0 var(--size-2-2);font-size:var(--font-smallest);font-weight:700;letter-spacing:0.04em;color:var(--text-on-accent);background:color-mix(\n      in srgb,\n      var(--text-accent) 55%,\n      var(--background-modifier-border) 45%\n    );border-radius:var(--radius-s)}.matrix-name.svelte-1d84fds.svelte-1d84fds{color:var(--text-normal);font-size:var(--font-ui-smaller);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.matrix-progress.svelte-1d84fds.svelte-1d84fds{flex:1;min-width:160px;display:flex;flex-direction:column;gap:2px}.matrix-runway.svelte-1d84fds.svelte-1d84fds{position:relative;min-width:160px;height:28px;display:flex;align-items:center;padding:0 var(--size-4-2)}.runway-track.svelte-1d84fds.svelte-1d84fds{position:absolute;left:var(--size-4-2);right:var(--size-4-2);top:50%;height:2px;transform:translateY(-50%);background:var(--background-modifier-border);border-radius:2px}.runway-fill.svelte-1d84fds.svelte-1d84fds{position:absolute;left:var(--size-4-2);right:var(--size-4-2);top:50%;height:3px;transform-origin:left center;transform:translateY(-50%) scaleX(0);background:var(--interactive-accent);border-radius:2px;transition:transform 0.4s cubic-bezier(0.3, 0.7, 0.3, 1)}.runway-nodes.svelte-1d84fds.svelte-1d84fds{position:relative;z-index:1;flex:1;display:flex;justify-content:space-between;align-items:center}.node.svelte-1d84fds.svelte-1d84fds{width:20px;height:20px;padding:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;background:var(--background-primary);border:2px solid var(--background-modifier-border);color:var(--text-faint);cursor:pointer;transition:background-color 0.2s, border-color 0.2s, transform 0.2s,\n      box-shadow 0.2s, color 0.2s}.node.svelte-1d84fds.svelte-1d84fds:hover,.node.is-hovered.svelte-1d84fds.svelte-1d84fds{border-color:var(--text-accent);color:var(--text-accent);transform:scale(1.12)}.node.is-open.svelte-1d84fds.svelte-1d84fds{box-shadow:0 0 0 2px\n      color-mix(in srgb, var(--text-accent) 60%, transparent)}.node.svelte-1d84fds.svelte-1d84fds:focus-visible{outline:none;box-shadow:0 0 0 2px var(--text-accent)}.node.is-done.svelte-1d84fds.svelte-1d84fds{background:var(--interactive-accent);border-color:var(--interactive-accent);color:var(--text-on-accent);animation:svelte-1d84fds-node-pop 0.25s ease}.node.is-active.svelte-1d84fds.svelte-1d84fds{border-color:var(--text-accent);background:var(--background-primary);animation:svelte-1d84fds-node-pulse 1.4s ease-in-out infinite}.node.is-error.svelte-1d84fds.svelte-1d84fds{background:var(--text-error);border-color:var(--text-error);color:var(--text-on-accent)}.node-num.svelte-1d84fds.svelte-1d84fds{font-size:10px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}.node-glyph.svelte-1d84fds.svelte-1d84fds{font-size:11px;line-height:1;color:var(--text-on-accent);font-weight:800}.node-spinner.svelte-1d84fds.svelte-1d84fds{width:14px;height:14px;border-radius:50%;border:2px solid transparent;border-top-color:var(--text-accent);border-right-color:var(--text-accent);animation:svelte-1d84fds-matrix-spin 0.7s linear infinite}.runway-caption.svelte-1d84fds.svelte-1d84fds{display:flex;align-items:baseline;gap:var(--size-2-2);min-height:1.1em;padding:0 var(--size-4-2);font-size:var(--font-smallest);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.caption-counter.svelte-1d84fds.svelte-1d84fds{flex:none;font-variant-numeric:tabular-nums;font-weight:700;color:var(--text-accent)}.caption-name.svelte-1d84fds.svelte-1d84fds{color:var(--text-muted);overflow:hidden;text-overflow:ellipsis}.caption-error.svelte-1d84fds.svelte-1d84fds{color:var(--text-error)}.caption-hint.svelte-1d84fds.svelte-1d84fds{color:var(--text-faint);font-style:italic}.matrix-skip.svelte-1d84fds.svelte-1d84fds{font-size:var(--font-ui-smaller);color:var(--text-faint);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.matrix-status.svelte-1d84fds.svelte-1d84fds{width:24px;min-width:24px;text-align:center;font-weight:800}.status-done.svelte-1d84fds.svelte-1d84fds{color:var(--interactive-success)}.status-error.svelte-1d84fds.svelte-1d84fds{color:var(--text-error)}.status-skip.svelte-1d84fds.svelte-1d84fds{color:var(--text-faint)}.status-spinner.svelte-1d84fds.svelte-1d84fds{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--background-modifier-border);border-top-color:var(--text-accent);animation:svelte-1d84fds-matrix-spin 0.7s linear infinite}.step-editor.svelte-1d84fds.svelte-1d84fds{margin:calc(-1 * var(--size-2-2)) 0 var(--size-2-3) 0;padding:var(--size-4-2) var(--size-4-3);background:var(--background-primary);border:1px solid var(--background-modifier-border);border-top:2px solid var(--interactive-accent);border-radius:0 0 var(--radius-m, 8px) var(--radius-m, 8px);animation:svelte-1d84fds-step-editor-in 0.2s ease both}.step-editor-head.svelte-1d84fds.svelte-1d84fds{display:flex;align-items:center;gap:var(--size-2-3)}.step-editor-head.svelte-1d84fds h4.svelte-1d84fds{margin:0;font-size:var(--font-ui-small);color:var(--text-normal);display:flex;align-items:center;gap:var(--size-2-2)}.step-editor-ord.svelte-1d84fds.svelte-1d84fds{display:inline-flex;align-items:center;justify-content:center;min-width:1.5em;height:1.5em;font-size:var(--font-smallest);font-weight:700;color:var(--text-on-accent);background:var(--interactive-accent);border-radius:50%}.step-editor-kind.svelte-1d84fds.svelte-1d84fds{font-size:var(--font-smallest);color:var(--text-muted);padding:1px var(--size-2-2);border:1px solid var(--background-modifier-border);border-radius:var(--radius-s)}.step-editor-close.svelte-1d84fds.svelte-1d84fds{margin-left:auto;background:transparent;border:none;color:var(--text-faint);cursor:pointer;padding:2px var(--size-2-2);border-radius:var(--radius-s);font-weight:700}.step-editor-close.svelte-1d84fds.svelte-1d84fds:hover{color:var(--text-normal);background:var(--background-modifier-hover)}.step-editor-desc.svelte-1d84fds.svelte-1d84fds{margin:var(--size-2-2) 0 var(--size-2-3) 0;font-size:var(--font-ui-smaller);color:var(--text-muted)}.step-editor-option.svelte-1d84fds.svelte-1d84fds{margin-bottom:var(--size-4-2)}.step-editor-option.svelte-1d84fds>label.svelte-1d84fds{display:block;font-size:var(--font-ui-smaller);font-weight:600;color:var(--text-normal);margin-bottom:2px}.step-editor-option.svelte-1d84fds input[type=\"text\"].svelte-1d84fds,.step-editor-option.svelte-1d84fds textarea.svelte-1d84fds,.step-editor-option.svelte-1d84fds select.svelte-1d84fds{width:100%;box-sizing:border-box}.step-editor-option.svelte-1d84fds textarea.svelte-1d84fds{min-height:4.5em;resize:vertical;font-family:var(--font-monospace);font-size:var(--font-ui-smaller)}.step-editor-checkbox.svelte-1d84fds.svelte-1d84fds{display:flex;align-items:center;gap:var(--size-2-2)}.step-editor-checkbox.svelte-1d84fds label.svelte-1d84fds{font-size:var(--font-ui-smaller);color:var(--text-normal)}.step-editor-option-desc.svelte-1d84fds.svelte-1d84fds{margin:2px 0 0 0;font-size:var(--font-smallest);color:var(--text-faint)}.step-editor-noopts.svelte-1d84fds.svelte-1d84fds{margin:0;font-size:var(--font-ui-smaller);color:var(--text-faint);font-style:italic}@keyframes svelte-1d84fds-step-editor-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}.caption-error-btn.svelte-1d84fds.svelte-1d84fds{background:transparent;border:none;padding:0;cursor:pointer;text-align:left;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.caption-error-btn.svelte-1d84fds:hover .caption-error.svelte-1d84fds{text-decoration:underline}.error-panel.svelte-1d84fds.svelte-1d84fds{margin:calc(-1 * var(--size-2-2)) 0 var(--size-2-3) 0;padding:var(--size-4-2) var(--size-4-3);background:var(--background-primary);border:1px solid var(--background-modifier-border);border-top:2px solid var(--text-error);border-radius:0 0 var(--radius-m, 8px) var(--radius-m, 8px)}.error-panel-head.svelte-1d84fds.svelte-1d84fds{display:flex;align-items:center;justify-content:space-between;gap:var(--size-2-3);margin-bottom:var(--size-2-2);font-size:var(--font-ui-smaller);font-weight:600;color:var(--text-error)}.error-copy.svelte-1d84fds.svelte-1d84fds{flex:none;font-size:var(--font-smallest);color:var(--text-muted);background:var(--background-secondary);border:1px solid var(--background-modifier-border);border-radius:var(--radius-s);padding:2px var(--size-2-3);cursor:pointer}.error-copy.svelte-1d84fds.svelte-1d84fds:hover{color:var(--text-normal);border-color:var(--text-accent)}.error-panel-body.svelte-1d84fds.svelte-1d84fds{margin:0;max-height:40vh;overflow:auto;white-space:pre-wrap;word-break:break-word;font-family:var(--font-monospace);font-size:var(--font-smallest);color:var(--text-muted);user-select:text}@keyframes svelte-1d84fds-matrix-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes svelte-1d84fds-matrix-spin{to{transform:rotate(360deg)}}@keyframes svelte-1d84fds-node-pop{0%{transform:scale(0.6)}60%{transform:scale(1.25)}100%{transform:scale(1)}}@keyframes svelte-1d84fds-node-pulse{0%,100%{box-shadow:0 0 0 0\n        color-mix(in srgb, var(--text-accent) 45%, transparent)}50%{box-shadow:0 0 0 5px transparent}}@media(prefers-reduced-motion: reduce){.matrix-row.svelte-1d84fds.svelte-1d84fds,.node.is-done.svelte-1d84fds.svelte-1d84fds,.step-editor.svelte-1d84fds.svelte-1d84fds{animation:none}.node.svelte-1d84fds.svelte-1d84fds:hover{transform:none}.node.is-active.svelte-1d84fds.svelte-1d84fds{animation:none;border-color:var(--text-accent)}.node-spinner.svelte-1d84fds.svelte-1d84fds,.status-spinner.svelte-1d84fds.svelte-1d84fds{animation:none;border-top-color:var(--text-accent);border-right-color:var(--text-accent)}.runway-fill.svelte-1d84fds.svelte-1d84fds{transition:none}}");
-}
-
-function get_each_context$6(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[42] = list[i];
-	return child_ctx;
-}
-
-function get_each_context_1$2(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[45] = list[i];
-	return child_ctx;
-}
-
-function get_if_ctx$1(ctx) {
-	const child_ctx = ctx.slice();
-	const constants_0 = /*item*/ child_ctx[40].workflow.steps[/*item*/ child_ctx[40].openStep];
-	child_ctx[41] = constants_0;
-	return child_ctx;
-}
-
-function get_each_context_2(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[48] = list[i];
-	child_ctx[50] = i;
-	return child_ctx;
-}
-
-function get_each_context_3(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[51] = list[i];
-	return child_ctx;
-}
-
-// (200:10) {#each allWorkflowNames as name}
-function create_each_block_3(ctx) {
-	let option;
-	let t_1_value = /*name*/ ctx[51] + "";
-	let t_1;
-	let option_value_value;
-
-	return {
-		c() {
-			option = element("option");
-			t_1 = text(t_1_value);
-			option.__value = option_value_value = /*name*/ ctx[51];
-			option.value = option.__value;
-		},
-		m(target, anchor) {
-			insert(target, option, anchor);
-			append(option, t_1);
-		},
-		p: noop,
-		d(detaching) {
-			if (detaching) detach(option);
-		}
-	};
-}
-
-// (242:10) {:else}
-function create_else_block_4(ctx) {
-	let div;
-	let t0_value = /*$t*/ ctx[9]("matrix.skipped") + "";
-	let t0;
-	let t1;
-	let t2_value = /*item*/ ctx[40].skipReason + "";
-	let t2;
-	let div_title_value;
-
-	return {
-		c() {
-			div = element("div");
-			t0 = text(t0_value);
-			t1 = text(" — ");
-			t2 = text(t2_value);
-			attr(div, "class", "matrix-skip svelte-1d84fds");
-			attr(div, "title", div_title_value = /*item*/ ctx[40].skipReason);
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t0);
-			append(div, t1);
-			append(div, t2);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 512 && t0_value !== (t0_value = /*$t*/ ctx[9]("matrix.skipped") + "")) set_data(t0, t0_value);
-			if (dirty[1] & /*item*/ 512 && t2_value !== (t2_value = /*item*/ ctx[40].skipReason + "")) set_data(t2, t2_value);
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && div_title_value !== (div_title_value = /*item*/ ctx[40].skipReason)) {
-				attr(div, "title", div_title_value);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (208:10) {#if item.runnable}
-function create_if_block_15$1(ctx) {
-	let div0;
-	let t0;
-	let div1;
-	let t1;
-	let div2;
-	let each_value_2 = /*item*/ ctx[40].steps;
-	let each_blocks = [];
-
-	for (let i = 0; i < each_value_2.length; i += 1) {
-		each_blocks[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
-	}
-
-	return {
-		c() {
-			div0 = element("div");
-			t0 = space();
-			div1 = element("div");
-			t1 = space();
-			div2 = element("div");
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			attr(div0, "class", "runway-track svelte-1d84fds");
-			attr(div1, "class", "runway-fill svelte-1d84fds");
-			set_style(div1, "transform", "scaleX(" + rowProgress(/*item*/ ctx[40].state, /*item*/ ctx[40].steps.length) + ")");
-			attr(div2, "class", "runway-nodes svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, div0, anchor);
-			insert(target, t0, anchor);
-			insert(target, div1, anchor);
-			insert(target, t1, anchor);
-			insert(target, div2, anchor);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(div2, null);
-			}
-		},
-		p(ctx, dirty) {
-			if (dirty[1] & /*item*/ 512) {
-				set_style(div1, "transform", "scaleX(" + rowProgress(/*item*/ ctx[40].state, /*item*/ ctx[40].steps.length) + ")");
-			}
-
-			if (dirty[0] & /*hovered, toggleStep, hoverStep, clearHover*/ 155712 | dirty[1] & /*item*/ 512) {
-				each_value_2 = /*item*/ ctx[40].steps;
-				let i;
-
-				for (i = 0; i < each_value_2.length; i += 1) {
-					const child_ctx = get_each_context_2(ctx, each_value_2, i);
-
-					if (each_blocks[i]) {
-						each_blocks[i].p(child_ctx, dirty);
-					} else {
-						each_blocks[i] = create_each_block_2(child_ctx);
-						each_blocks[i].c();
-						each_blocks[i].m(div2, null);
-					}
-				}
-
-				for (; i < each_blocks.length; i += 1) {
-					each_blocks[i].d(1);
-				}
-
-				each_blocks.length = each_value_2.length;
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div0);
-			if (detaching) detach(t0);
-			if (detaching) detach(div1);
-			if (detaching) detach(t1);
-			if (detaching) detach(div2);
-			destroy_each(each_blocks, detaching);
-		}
-	};
-}
-
-// (236:18) {:else}
-function create_else_block_3$1(ctx) {
-	let span;
-	let t_1_value = /*i*/ ctx[50] + 1 + "";
-	let t_1;
-
-	return {
-		c() {
-			span = element("span");
-			t_1 = text(t_1_value);
-			attr(span, "class", "node-num svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-			append(span, t_1);
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (234:68) 
-function create_if_block_18$1(ctx) {
-	let span;
-
-	return {
-		c() {
-			span = element("span");
-			span.textContent = "✕";
-			attr(span, "class", "node-glyph svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (232:67) 
-function create_if_block_17$1(ctx) {
-	let span;
-
-	return {
-		c() {
-			span = element("span");
-			span.textContent = "✓";
-			attr(span, "class", "node-glyph svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (230:18) {#if nodeClass(item.state, i) === "is-active"}
-function create_if_block_16$1(ctx) {
-	let span;
-
-	return {
-		c() {
-			span = element("span");
-			attr(span, "class", "node-spinner svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (215:14) {#each item.steps as s, i}
-function create_each_block_2(ctx) {
-	let button;
-	let show_if;
-	let show_if_1;
-	let show_if_2;
-	let t_1;
-	let button_class_value;
-	let button_title_value;
-	let button_aria_label_value;
-	let button_aria_expanded_value;
-	let mounted;
-	let dispose;
-
-	function select_block_type_1(ctx, dirty) {
-		if (dirty[1] & /*item*/ 512) show_if = null;
-		if (dirty[1] & /*item*/ 512) show_if_1 = null;
-		if (dirty[1] & /*item*/ 512) show_if_2 = null;
-		if (show_if == null) show_if = !!(nodeClass(/*item*/ ctx[40].state, /*i*/ ctx[50]) === "is-active");
-		if (show_if) return create_if_block_16$1;
-		if (show_if_1 == null) show_if_1 = !!(nodeClass(/*item*/ ctx[40].state, /*i*/ ctx[50]) === "is-done");
-		if (show_if_1) return create_if_block_17$1;
-		if (show_if_2 == null) show_if_2 = !!(nodeClass(/*item*/ ctx[40].state, /*i*/ ctx[50]) === "is-error");
-		if (show_if_2) return create_if_block_18$1;
-		return create_else_block_3$1;
-	}
-
-	let current_block_type = select_block_type_1(ctx, [-1, -1]);
-	let if_block = current_block_type(ctx);
-
-	function click_handler() {
-		return /*click_handler*/ ctx[25](/*item*/ ctx[40], /*i*/ ctx[50]);
-	}
-
-	function mouseenter_handler() {
-		return /*mouseenter_handler*/ ctx[26](/*item*/ ctx[40], /*i*/ ctx[50]);
-	}
-
-	function focus_handler() {
-		return /*focus_handler*/ ctx[27](/*item*/ ctx[40], /*i*/ ctx[50]);
-	}
-
-	return {
-		c() {
-			button = element("button");
-			if_block.c();
-			t_1 = space();
-			attr(button, "type", "button");
-			attr(button, "class", button_class_value = "node " + nodeClass(/*item*/ ctx[40].state, /*i*/ ctx[50]) + " svelte-1d84fds");
-			attr(button, "title", button_title_value = "" + (/*i*/ ctx[50] + 1 + ". " + /*s*/ ctx[48].name));
-			attr(button, "aria-label", button_aria_label_value = "Step " + (/*i*/ ctx[50] + 1) + ": " + /*s*/ ctx[48].name);
-			attr(button, "aria-expanded", button_aria_expanded_value = /*item*/ ctx[40].openStep === /*i*/ ctx[50]);
-			toggle_class(button, "is-open", /*item*/ ctx[40].openStep === /*i*/ ctx[50]);
-			toggle_class(button, "is-hovered", /*hovered*/ ctx[6].id === /*item*/ ctx[40].id && /*hovered*/ ctx[6].i === /*i*/ ctx[50]);
-		},
-		m(target, anchor) {
-			insert(target, button, anchor);
-			if_block.m(button, null);
-			append(button, t_1);
-
-			if (!mounted) {
-				dispose = [
-					listen(button, "click", click_handler),
-					listen(button, "mouseenter", mouseenter_handler),
-					listen(button, "mouseleave", /*clearHover*/ ctx[14]),
-					listen(button, "focus", focus_handler),
-					listen(button, "blur", /*clearHover*/ ctx[14])
-				];
-
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-
-			if (current_block_type !== (current_block_type = select_block_type_1(ctx, dirty))) {
-				if_block.d(1);
-				if_block = current_block_type(ctx);
-
-				if (if_block) {
-					if_block.c();
-					if_block.m(button, t_1);
-				}
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && button_class_value !== (button_class_value = "node " + nodeClass(/*item*/ ctx[40].state, /*i*/ ctx[50]) + " svelte-1d84fds")) {
-				attr(button, "class", button_class_value);
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && button_title_value !== (button_title_value = "" + (/*i*/ ctx[50] + 1 + ". " + /*s*/ ctx[48].name))) {
-				attr(button, "title", button_title_value);
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && button_aria_label_value !== (button_aria_label_value = "Step " + (/*i*/ ctx[50] + 1) + ": " + /*s*/ ctx[48].name)) {
-				attr(button, "aria-label", button_aria_label_value);
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && button_aria_expanded_value !== (button_aria_expanded_value = /*item*/ ctx[40].openStep === /*i*/ ctx[50])) {
-				attr(button, "aria-expanded", button_aria_expanded_value);
-			}
-
-			if (dirty[1] & /*item, item*/ 512) {
-				toggle_class(button, "is-open", /*item*/ ctx[40].openStep === /*i*/ ctx[50]);
-			}
-
-			if (dirty[0] & /*hovered*/ 64 | dirty[1] & /*item, item*/ 512) {
-				toggle_class(button, "is-hovered", /*hovered*/ ctx[6].id === /*item*/ ctx[40].id && /*hovered*/ ctx[6].i === /*i*/ ctx[50]);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(button);
-			if_block.d();
-			mounted = false;
-			run_all(dispose);
-		}
-	};
-}
-
-// (248:8) {#if item.runnable}
-function create_if_block_10$1(ctx) {
-	let div;
-
-	function select_block_type_2(ctx, dirty) {
-		if (/*hovered*/ ctx[6].id === /*item*/ ctx[40].id && /*item*/ ctx[40].steps[/*hovered*/ ctx[6].i]) return create_if_block_11$1;
-		if (/*item*/ ctx[40].state.status === "running" && /*item*/ ctx[40].steps[/*item*/ ctx[40].state.activeStep]) return create_if_block_12$1;
-		if (/*item*/ ctx[40].state.status === "done") return create_if_block_13$1;
-		if (/*item*/ ctx[40].state.status === "error") return create_if_block_14$1;
-		return create_else_block_2$1;
-	}
-
-	let current_block_type = select_block_type_2(ctx);
-	let if_block = current_block_type(ctx);
-
-	return {
-		c() {
-			div = element("div");
-			if_block.c();
-			attr(div, "class", "runway-caption svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			if_block.m(div, null);
-		},
-		p(ctx, dirty) {
-			if (current_block_type === (current_block_type = select_block_type_2(ctx)) && if_block) {
-				if_block.p(ctx, dirty);
-			} else {
-				if_block.d(1);
-				if_block = current_block_type(ctx);
-
-				if (if_block) {
-					if_block.c();
-					if_block.m(div, null);
-				}
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-			if_block.d();
-		}
-	};
-}
-
-// (276:12) {:else}
-function create_else_block_2$1(ctx) {
-	let span;
-	let t_1_value = /*$t*/ ctx[9]("matrix.clickStepHint") + "";
-	let t_1;
-
-	return {
-		c() {
-			span = element("span");
-			t_1 = text(t_1_value);
-			attr(span, "class", "caption-hint svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-			append(span, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 512 && t_1_value !== (t_1_value = /*$t*/ ctx[9]("matrix.clickStepHint") + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (264:52) 
-function create_if_block_14$1(ctx) {
-	let button;
-	let span;
-	let t0_value = (/*item*/ ctx[40].steps[/*item*/ ctx[40].state.activeStep]?.name ?? "") + "";
-	let t0;
-	let t1;
-	let t2_value = /*$t*/ ctx[9]("matrix.viewError") + "";
-	let t2;
-	let button_title_value;
-	let mounted;
-	let dispose;
-
-	function click_handler_1() {
-		return /*click_handler_1*/ ctx[28](/*item*/ ctx[40]);
-	}
-
-	return {
-		c() {
-			button = element("button");
-			span = element("span");
-			t0 = text(t0_value);
-			t1 = text(" — ");
-			t2 = text(t2_value);
-			attr(span, "class", "caption-name caption-error svelte-1d84fds");
-			attr(button, "class", "caption-error-btn svelte-1d84fds");
-			attr(button, "title", button_title_value = /*$t*/ ctx[9]("matrix.viewError"));
-		},
-		m(target, anchor) {
-			insert(target, button, anchor);
-			append(button, span);
-			append(span, t0);
-			append(span, t1);
-			append(span, t2);
-
-			if (!mounted) {
-				dispose = listen(button, "click", click_handler_1);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty[1] & /*item*/ 512 && t0_value !== (t0_value = (/*item*/ ctx[40].steps[/*item*/ ctx[40].state.activeStep]?.name ?? "") + "")) set_data(t0, t0_value);
-			if (dirty[0] & /*$t*/ 512 && t2_value !== (t2_value = /*$t*/ ctx[9]("matrix.viewError") + "")) set_data(t2, t2_value);
-
-			if (dirty[0] & /*$t*/ 512 && button_title_value !== (button_title_value = /*$t*/ ctx[9]("matrix.viewError"))) {
-				attr(button, "title", button_title_value);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(button);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (262:51) 
-function create_if_block_13$1(ctx) {
-	let span;
-	let t_1_value = /*$t*/ ctx[9]("matrix.finished") + "";
-	let t_1;
-
-	return {
-		c() {
-			span = element("span");
-			t_1 = text(t_1_value);
-			attr(span, "class", "caption-name svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-			append(span, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 512 && t_1_value !== (t_1_value = /*$t*/ ctx[9]("matrix.finished") + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (257:91) 
-function create_if_block_12$1(ctx) {
-	let span0;
-	let t0_value = /*item*/ ctx[40].state.activeStep + 1 + "";
-	let t0;
-	let t1;
-	let t2_value = /*item*/ ctx[40].steps.length + "";
-	let t2;
-	let t3;
-	let span1;
-	let t4_value = /*item*/ ctx[40].steps[/*item*/ ctx[40].state.activeStep].name + "";
-	let t4;
-
-	return {
-		c() {
-			span0 = element("span");
-			t0 = text(t0_value);
-			t1 = text("/");
-			t2 = text(t2_value);
-			t3 = space();
-			span1 = element("span");
-			t4 = text(t4_value);
-			attr(span0, "class", "caption-counter svelte-1d84fds");
-			attr(span1, "class", "caption-name svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span0, anchor);
-			append(span0, t0);
-			append(span0, t1);
-			append(span0, t2);
-			insert(target, t3, anchor);
-			insert(target, span1, anchor);
-			append(span1, t4);
-		},
-		p(ctx, dirty) {
-			if (dirty[1] & /*item*/ 512 && t0_value !== (t0_value = /*item*/ ctx[40].state.activeStep + 1 + "")) set_data(t0, t0_value);
-			if (dirty[1] & /*item*/ 512 && t2_value !== (t2_value = /*item*/ ctx[40].steps.length + "")) set_data(t2, t2_value);
-			if (dirty[1] & /*item*/ 512 && t4_value !== (t4_value = /*item*/ ctx[40].steps[/*item*/ ctx[40].state.activeStep].name + "")) set_data(t4, t4_value);
-		},
-		d(detaching) {
-			if (detaching) detach(span0);
-			if (detaching) detach(t3);
-			if (detaching) detach(span1);
-		}
-	};
-}
-
-// (252:12) {#if hovered.id === item.id && item.steps[hovered.i]}
-function create_if_block_11$1(ctx) {
-	let span0;
-	let t0_value = /*hovered*/ ctx[6].i + 1 + "";
-	let t0;
-	let t1;
-	let t2_value = /*item*/ ctx[40].steps.length + "";
-	let t2;
-	let t3;
-	let span1;
-	let t4_value = /*item*/ ctx[40].steps[/*hovered*/ ctx[6].i].name + "";
-	let t4;
-
-	return {
-		c() {
-			span0 = element("span");
-			t0 = text(t0_value);
-			t1 = text("/");
-			t2 = text(t2_value);
-			t3 = space();
-			span1 = element("span");
-			t4 = text(t4_value);
-			attr(span0, "class", "caption-counter svelte-1d84fds");
-			attr(span1, "class", "caption-name svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span0, anchor);
-			append(span0, t0);
-			append(span0, t1);
-			append(span0, t2);
-			insert(target, t3, anchor);
-			insert(target, span1, anchor);
-			append(span1, t4);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*hovered*/ 64 && t0_value !== (t0_value = /*hovered*/ ctx[6].i + 1 + "")) set_data(t0, t0_value);
-			if (dirty[1] & /*item*/ 512 && t2_value !== (t2_value = /*item*/ ctx[40].steps.length + "")) set_data(t2, t2_value);
-			if (dirty[0] & /*hovered*/ 64 | dirty[1] & /*item*/ 512 && t4_value !== (t4_value = /*item*/ ctx[40].steps[/*hovered*/ ctx[6].i].name + "")) set_data(t4, t4_value);
-		},
-		d(detaching) {
-			if (detaching) detach(span0);
-			if (detaching) detach(t3);
-			if (detaching) detach(span1);
-		}
-	};
-}
-
-// (290:50) 
-function create_if_block_9$2(ctx) {
-	let span;
-
-	return {
-		c() {
-			span = element("span");
-			span.textContent = "–";
-			attr(span, "class", "status-skip svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-		},
-		p: noop,
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (288:48) 
-function create_if_block_8$2(ctx) {
-	let span;
-	let t_1;
-	let span_title_value;
-
-	return {
-		c() {
-			span = element("span");
-			t_1 = text("✕");
-			attr(span, "class", "status-error svelte-1d84fds");
-			attr(span, "title", span_title_value = /*item*/ ctx[40].state.error);
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-			append(span, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && span_title_value !== (span_title_value = /*item*/ ctx[40].state.error)) {
-				attr(span, "title", span_title_value);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (286:47) 
-function create_if_block_7$3(ctx) {
-	let span;
-
-	return {
-		c() {
-			span = element("span");
-			span.textContent = "✓";
-			attr(span, "class", "status-done svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-		},
-		p: noop,
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (284:8) {#if item.state.status === "running"}
-function create_if_block_6$3(ctx) {
-	let span;
-
-	return {
-		c() {
-			span = element("span");
-			attr(span, "class", "status-spinner svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-		},
-		p: noop,
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (296:4) {#if item.state.status === "error" && openError === item.id}
-function create_if_block_5$4(ctx) {
-	let div1;
-	let div0;
-	let span;
-	let t0_value = /*item*/ ctx[40].title + "";
-	let t0;
-	let t1;
-	let t2_value = /*$t*/ ctx[9]("matrix.errorTitle") + "";
-	let t2;
-	let t3;
-	let button;
-	let t4_value = /*$t*/ ctx[9]("matrix.copyError") + "";
-	let t4;
-	let t5;
-	let pre;
-	let t6_value = /*item*/ ctx[40].state.error + "";
-	let t6;
-	let mounted;
-	let dispose;
-
-	function click_handler_2() {
-		return /*click_handler_2*/ ctx[29](/*item*/ ctx[40]);
-	}
-
-	return {
-		c() {
-			div1 = element("div");
-			div0 = element("div");
-			span = element("span");
-			t0 = text(t0_value);
-			t1 = text(" — ");
-			t2 = text(t2_value);
-			t3 = space();
-			button = element("button");
-			t4 = text(t4_value);
-			t5 = space();
-			pre = element("pre");
-			t6 = text(t6_value);
-			attr(button, "class", "error-copy svelte-1d84fds");
-			attr(div0, "class", "error-panel-head svelte-1d84fds");
-			attr(pre, "class", "error-panel-body svelte-1d84fds");
-			attr(div1, "class", "error-panel svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, div1, anchor);
-			append(div1, div0);
-			append(div0, span);
-			append(span, t0);
-			append(span, t1);
-			append(span, t2);
-			append(div0, t3);
-			append(div0, button);
-			append(button, t4);
-			append(div1, t5);
-			append(div1, pre);
-			append(pre, t6);
-
-			if (!mounted) {
-				dispose = listen(button, "click", click_handler_2);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty[1] & /*item*/ 512 && t0_value !== (t0_value = /*item*/ ctx[40].title + "")) set_data(t0, t0_value);
-			if (dirty[0] & /*$t*/ 512 && t2_value !== (t2_value = /*$t*/ ctx[9]("matrix.errorTitle") + "")) set_data(t2, t2_value);
-			if (dirty[0] & /*$t*/ 512 && t4_value !== (t4_value = /*$t*/ ctx[9]("matrix.copyError") + "")) set_data(t4, t4_value);
-			if (dirty[1] & /*item*/ 512 && t6_value !== (t6_value = /*item*/ ctx[40].state.error + "")) set_data(t6, t6_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div1);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (308:4) {#if item.runnable && item.openStep >= 0 && item.workflow.steps[item.openStep]}
-function create_if_block$d(ctx) {
-	let div1;
-	let div0;
-	let h4;
-	let span0;
-	let t0_value = /*item*/ ctx[40].openStep + 1 + "";
-	let t0;
-	let t1;
-	let t2_value = /*step*/ ctx[41].description.name + "";
-	let t2;
-	let t3;
-	let span1;
-	let t4_value = /*item*/ ctx[40].steps[/*item*/ ctx[40].openStep]?.kind + "";
-	let t4;
-	let span1_title_value;
-	let t5;
-	let button;
-	let t7;
-	let p;
-	let t8_value = /*step*/ ctx[41].description.description + "";
-	let t8;
-	let t9;
-	let mounted;
-	let dispose;
-
-	function click_handler_3() {
-		return /*click_handler_3*/ ctx[30](/*item*/ ctx[40]);
-	}
-
-	function select_block_type_4(ctx, dirty) {
-		if (/*step*/ ctx[41].description.options.length > 0) return create_if_block_1$a;
-		return create_else_block_1$2;
-	}
-
-	let current_block_type = select_block_type_4(ctx);
-	let if_block = current_block_type(ctx);
-
-	return {
-		c() {
-			div1 = element("div");
-			div0 = element("div");
-			h4 = element("h4");
-			span0 = element("span");
-			t0 = text(t0_value);
-			t1 = space();
-			t2 = text(t2_value);
-			t3 = space();
-			span1 = element("span");
-			t4 = text(t4_value);
-			t5 = space();
-			button = element("button");
-			button.textContent = "✕";
-			t7 = space();
-			p = element("p");
-			t8 = text(t8_value);
-			t9 = space();
-			if_block.c();
-			attr(span0, "class", "step-editor-ord svelte-1d84fds");
-			attr(h4, "class", "svelte-1d84fds");
-			attr(span1, "class", "step-editor-kind svelte-1d84fds");
-			attr(span1, "title", span1_title_value = explainStepKind(/*item*/ ctx[40].steps[/*item*/ ctx[40].openStep]?.kindRaw));
-			attr(button, "class", "step-editor-close svelte-1d84fds");
-			attr(button, "title", "Close");
-			attr(div0, "class", "step-editor-head svelte-1d84fds");
-			attr(p, "class", "step-editor-desc svelte-1d84fds");
-			attr(div1, "class", "step-editor svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, div1, anchor);
-			append(div1, div0);
-			append(div0, h4);
-			append(h4, span0);
-			append(span0, t0);
-			append(h4, t1);
-			append(h4, t2);
-			append(div0, t3);
-			append(div0, span1);
-			append(span1, t4);
-			append(div0, t5);
-			append(div0, button);
-			append(div1, t7);
-			append(div1, p);
-			append(p, t8);
-			append(div1, t9);
-			if_block.m(div1, null);
-
-			if (!mounted) {
-				dispose = listen(button, "click", click_handler_3);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty[1] & /*item*/ 512 && t0_value !== (t0_value = /*item*/ ctx[40].openStep + 1 + "")) set_data(t0, t0_value);
-			if (dirty[1] & /*item*/ 512 && t2_value !== (t2_value = /*step*/ ctx[41].description.name + "")) set_data(t2, t2_value);
-			if (dirty[1] & /*item*/ 512 && t4_value !== (t4_value = /*item*/ ctx[40].steps[/*item*/ ctx[40].openStep]?.kind + "")) set_data(t4, t4_value);
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && span1_title_value !== (span1_title_value = explainStepKind(/*item*/ ctx[40].steps[/*item*/ ctx[40].openStep]?.kindRaw))) {
-				attr(span1, "title", span1_title_value);
-			}
-
-			if (dirty[1] & /*item*/ 512 && t8_value !== (t8_value = /*step*/ ctx[41].description.description + "")) set_data(t8, t8_value);
-
-			if (current_block_type === (current_block_type = select_block_type_4(ctx)) && if_block) {
-				if_block.p(ctx, dirty);
-			} else {
-				if_block.d(1);
-				if_block = current_block_type(ctx);
-
-				if (if_block) {
-					if_block.c();
-					if_block.m(div1, null);
-				}
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div1);
-			if_block.d();
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (378:8) {:else}
-function create_else_block_1$2(ctx) {
-	let p;
-	let t_1_value = /*$t*/ ctx[9]("matrix.noOptions") + "";
-	let t_1;
-
-	return {
-		c() {
-			p = element("p");
-			t_1 = text(t_1_value);
-			attr(p, "class", "step-editor-noopts svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, p, anchor);
-			append(p, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 512 && t_1_value !== (t_1_value = /*$t*/ ctx[9]("matrix.noOptions") + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(p);
-		}
-	};
-}
-
-// (322:8) {#if step.description.options.length > 0}
-function create_if_block_1$a(ctx) {
-	let div;
-	let each_value = /*step*/ ctx[41].description.options;
-	let each_blocks = [];
-
-	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$6(get_each_context$6(ctx, each_value, i));
-	}
-
-	return {
-		c() {
-			div = element("div");
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			attr(div, "class", "step-editor-options");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(div, null);
-			}
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*running, setOption, $pandocTemplates*/ 263169 | dirty[1] & /*item*/ 512) {
-				each_value = /*step*/ ctx[41].description.options;
-				let i;
-
-				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$6(ctx, each_value, i);
-
-					if (each_blocks[i]) {
-						each_blocks[i].p(child_ctx, dirty);
-					} else {
-						each_blocks[i] = create_each_block$6(child_ctx);
-						each_blocks[i].c();
-						each_blocks[i].m(div, null);
-					}
-				}
-
-				for (; i < each_blocks.length; i += 1) {
-					each_blocks[i].d(1);
-				}
-
-				each_blocks.length = each_value.length;
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-			destroy_each(each_blocks, detaching);
-		}
-	};
-}
-
-// (361:16) {:else}
-function create_else_block$6(ctx) {
-	let div;
-	let input;
-	let input_id_value;
-	let input_checked_value;
-	let t0;
-	let label;
-	let t1_value = /*option*/ ctx[42].name + "";
-	let t1;
-	let label_for_value;
-	let mounted;
-	let dispose;
-
-	function change_handler_2(...args) {
-		return /*change_handler_2*/ ctx[34](/*item*/ ctx[40], /*option*/ ctx[42], ...args);
-	}
-
-	return {
-		c() {
-			div = element("div");
-			input = element("input");
-			t0 = space();
-			label = element("label");
-			t1 = text(t1_value);
-			attr(input, "id", input_id_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id);
-			attr(input, "type", "checkbox");
-			input.disabled = /*running*/ ctx[0];
-			input.checked = input_checked_value = !!/*step*/ ctx[41].optionValues[/*option*/ ctx[42].id];
-			attr(label, "for", label_for_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id);
-			attr(label, "class", "svelte-1d84fds");
-			attr(div, "class", "step-editor-checkbox svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, input);
-			append(div, t0);
-			append(div, label);
-			append(label, t1);
-
-			if (!mounted) {
-				dispose = listen(input, "change", change_handler_2);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && input_id_value !== (input_id_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id)) {
-				attr(input, "id", input_id_value);
-			}
-
-			if (dirty[0] & /*running*/ 1) {
-				input.disabled = /*running*/ ctx[0];
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && input_checked_value !== (input_checked_value = !!/*step*/ ctx[41].optionValues[/*option*/ ctx[42].id])) {
-				input.checked = input_checked_value;
-			}
-
-			if (dirty[1] & /*item*/ 512 && t1_value !== (t1_value = /*option*/ ctx[42].name + "")) set_data(t1, t1_value);
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && label_for_value !== (label_for_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id)) {
-				attr(label, "for", label_for_value);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (347:73) 
-function create_if_block_4$4(ctx) {
-	let label;
-	let t0_value = /*option*/ ctx[42].name + "";
-	let t0;
-	let label_for_value;
-	let t1;
-	let select;
-	let option;
-	let t2_value = (/*option*/ ctx[42].emptyLabel ?? "(default)") + "";
-	let t2;
-	let select_id_value;
-	let select_value_value;
-	let mounted;
-	let dispose;
-
-	let each_value_1 = /*option*/ ctx[42].dynamicChoices === "pandoc-templates"
-	? /*$pandocTemplates*/ ctx[10]
-	: /*option*/ ctx[42].choices ?? [];
-
-	let each_blocks = [];
-
-	for (let i = 0; i < each_value_1.length; i += 1) {
-		each_blocks[i] = create_each_block_1$2(get_each_context_1$2(ctx, each_value_1, i));
-	}
-
-	function change_handler_1(...args) {
-		return /*change_handler_1*/ ctx[33](/*item*/ ctx[40], /*option*/ ctx[42], ...args);
-	}
-
-	return {
-		c() {
-			label = element("label");
-			t0 = text(t0_value);
-			t1 = space();
-			select = element("select");
-			option = element("option");
-			t2 = text(t2_value);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			attr(label, "for", label_for_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id);
-			attr(label, "class", "svelte-1d84fds");
-			option.__value = "";
-			option.value = option.__value;
-			attr(select, "id", select_id_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id);
-			select.disabled = /*running*/ ctx[0];
-			attr(select, "class", "svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, label, anchor);
-			append(label, t0);
-			insert(target, t1, anchor);
-			insert(target, select, anchor);
-			append(select, option);
-			append(option, t2);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(select, null);
-			}
-
-			select_option(select, /*step*/ ctx[41].optionValues[/*option*/ ctx[42].id] ?? "");
-
-			if (!mounted) {
-				dispose = listen(select, "change", change_handler_1);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty[1] & /*item*/ 512 && t0_value !== (t0_value = /*option*/ ctx[42].name + "")) set_data(t0, t0_value);
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && label_for_value !== (label_for_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id)) {
-				attr(label, "for", label_for_value);
-			}
-
-			if (dirty[1] & /*item*/ 512 && t2_value !== (t2_value = (/*option*/ ctx[42].emptyLabel ?? "(default)") + "")) set_data(t2, t2_value);
-
-			if (dirty[0] & /*$pandocTemplates*/ 1024 | dirty[1] & /*item*/ 512) {
-				each_value_1 = /*option*/ ctx[42].dynamicChoices === "pandoc-templates"
-				? /*$pandocTemplates*/ ctx[10]
-				: /*option*/ ctx[42].choices ?? [];
-
-				let i;
-
-				for (i = 0; i < each_value_1.length; i += 1) {
-					const child_ctx = get_each_context_1$2(ctx, each_value_1, i);
-
-					if (each_blocks[i]) {
-						each_blocks[i].p(child_ctx, dirty);
-					} else {
-						each_blocks[i] = create_each_block_1$2(child_ctx);
-						each_blocks[i].c();
-						each_blocks[i].m(select, null);
-					}
-				}
-
-				for (; i < each_blocks.length; i += 1) {
-					each_blocks[i].d(1);
-				}
-
-				each_blocks.length = each_value_1.length;
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && select_id_value !== (select_id_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id)) {
-				attr(select, "id", select_id_value);
-			}
-
-			if (dirty[0] & /*running*/ 1) {
-				select.disabled = /*running*/ ctx[0];
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && select_value_value !== (select_value_value = /*step*/ ctx[41].optionValues[/*option*/ ctx[42].id] ?? "")) {
-				select_option(select, /*step*/ ctx[41].optionValues[/*option*/ ctx[42].id] ?? "");
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(label);
-			if (detaching) detach(t1);
-			if (detaching) detach(select);
-			destroy_each(each_blocks, detaching);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (337:78) 
-function create_if_block_3$4(ctx) {
-	let label;
-	let t0_value = /*option*/ ctx[42].name + "";
-	let t0;
-	let label_for_value;
-	let t1;
-	let textarea;
-	let textarea_id_value;
-	let textarea_value_value;
-	let mounted;
-	let dispose;
-
-	function input_handler_1(...args) {
-		return /*input_handler_1*/ ctx[32](/*item*/ ctx[40], /*option*/ ctx[42], ...args);
-	}
-
-	return {
-		c() {
-			label = element("label");
-			t0 = text(t0_value);
-			t1 = space();
-			textarea = element("textarea");
-			attr(label, "for", label_for_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id);
-			attr(label, "class", "svelte-1d84fds");
-			attr(textarea, "id", textarea_id_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id);
-			textarea.disabled = /*running*/ ctx[0];
-			attr(textarea, "placeholder", "key: value");
-			textarea.value = textarea_value_value = /*step*/ ctx[41].optionValues[/*option*/ ctx[42].id] ?? "";
-			attr(textarea, "class", "svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, label, anchor);
-			append(label, t0);
-			insert(target, t1, anchor);
-			insert(target, textarea, anchor);
-
-			if (!mounted) {
-				dispose = listen(textarea, "input", input_handler_1);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty[1] & /*item*/ 512 && t0_value !== (t0_value = /*option*/ ctx[42].name + "")) set_data(t0, t0_value);
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && label_for_value !== (label_for_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id)) {
-				attr(label, "for", label_for_value);
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && textarea_id_value !== (textarea_id_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id)) {
-				attr(textarea, "id", textarea_id_value);
-			}
-
-			if (dirty[0] & /*running*/ 1) {
-				textarea.disabled = /*running*/ ctx[0];
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && textarea_value_value !== (textarea_value_value = /*step*/ ctx[41].optionValues[/*option*/ ctx[42].id] ?? "")) {
-				textarea.value = textarea_value_value;
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(label);
-			if (detaching) detach(t1);
-			if (detaching) detach(textarea);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (326:16) {#if option.type === CompileStepOptionType.Text}
-function create_if_block_2$8(ctx) {
-	let label;
-	let t0_value = /*option*/ ctx[42].name + "";
-	let t0;
-	let label_for_value;
-	let t1;
-	let input;
-	let input_id_value;
-	let input_placeholder_value;
-	let input_value_value;
-	let mounted;
-	let dispose;
-
-	function input_handler(...args) {
-		return /*input_handler*/ ctx[31](/*item*/ ctx[40], /*option*/ ctx[42], ...args);
-	}
-
-	return {
-		c() {
-			label = element("label");
-			t0 = text(t0_value);
-			t1 = space();
-			input = element("input");
-			attr(label, "for", label_for_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id);
-			attr(label, "class", "svelte-1d84fds");
-			attr(input, "id", input_id_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id);
-			attr(input, "type", "text");
-			input.disabled = /*running*/ ctx[0];
-			attr(input, "placeholder", input_placeholder_value = String(/*option*/ ctx[42].default ?? "").replace(/\n/g, "\\n"));
-			input.value = input_value_value = /*step*/ ctx[41].optionValues[/*option*/ ctx[42].id] ?? "";
-			attr(input, "class", "svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, label, anchor);
-			append(label, t0);
-			insert(target, t1, anchor);
-			insert(target, input, anchor);
-
-			if (!mounted) {
-				dispose = listen(input, "input", input_handler);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty[1] & /*item*/ 512 && t0_value !== (t0_value = /*option*/ ctx[42].name + "")) set_data(t0, t0_value);
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && label_for_value !== (label_for_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id)) {
-				attr(label, "for", label_for_value);
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && input_id_value !== (input_id_value = /*step*/ ctx[41].id + "-" + /*option*/ ctx[42].id)) {
-				attr(input, "id", input_id_value);
-			}
-
-			if (dirty[0] & /*running*/ 1) {
-				input.disabled = /*running*/ ctx[0];
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && input_placeholder_value !== (input_placeholder_value = String(/*option*/ ctx[42].default ?? "").replace(/\n/g, "\\n"))) {
-				attr(input, "placeholder", input_placeholder_value);
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && input_value_value !== (input_value_value = /*step*/ ctx[41].optionValues[/*option*/ ctx[42].id] ?? "") && input.value !== input_value_value) {
-				input.value = input_value_value;
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(label);
-			if (detaching) detach(t1);
-			if (detaching) detach(input);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (357:20) {#each option.dynamicChoices === "pandoc-templates" ? $pandocTemplates : option.choices ?? [] as choice}
-function create_each_block_1$2(ctx) {
-	let option;
-	let t_1_value = /*choice*/ ctx[45] + "";
-	let t_1;
-	let option_value_value;
-
-	return {
-		c() {
-			option = element("option");
-			t_1 = text(t_1_value);
-			option.__value = option_value_value = /*choice*/ ctx[45];
-			option.value = option.__value;
-		},
-		m(target, anchor) {
-			insert(target, option, anchor);
-			append(option, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$pandocTemplates*/ 1024 | dirty[1] & /*item*/ 512 && t_1_value !== (t_1_value = /*choice*/ ctx[45] + "")) set_data(t_1, t_1_value);
-
-			if (dirty[0] & /*$pandocTemplates, allWorkflowNames*/ 33792 | dirty[1] & /*item*/ 512 && option_value_value !== (option_value_value = /*choice*/ ctx[45])) {
-				option.__value = option_value_value;
-				option.value = option.__value;
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(option);
-		}
-	};
-}
-
-// (324:12) {#each step.description.options as option}
-function create_each_block$6(ctx) {
-	let div;
-	let t0;
-	let p;
-	let t1_value = /*option*/ ctx[42].description + "";
-	let t1;
-	let t2;
-
-	function select_block_type_5(ctx, dirty) {
-		if (/*option*/ ctx[42].type === CompileStepOptionType.Text) return create_if_block_2$8;
-		if (/*option*/ ctx[42].type === CompileStepOptionType.MultilineText) return create_if_block_3$4;
-		if (/*option*/ ctx[42].type === CompileStepOptionType.Dropdown) return create_if_block_4$4;
-		return create_else_block$6;
-	}
-
-	let current_block_type = select_block_type_5(ctx);
-	let if_block = current_block_type(ctx);
-
-	return {
-		c() {
-			div = element("div");
-			if_block.c();
-			t0 = space();
-			p = element("p");
-			t1 = text(t1_value);
-			t2 = space();
-			attr(p, "class", "step-editor-option-desc svelte-1d84fds");
-			attr(div, "class", "step-editor-option svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			if_block.m(div, null);
-			append(div, t0);
-			append(div, p);
-			append(p, t1);
-			append(div, t2);
-		},
-		p(ctx, dirty) {
-			if (current_block_type === (current_block_type = select_block_type_5(ctx)) && if_block) {
-				if_block.p(ctx, dirty);
-			} else {
-				if_block.d(1);
-				if_block = current_block_type(ctx);
-
-				if (if_block) {
-					if_block.c();
-					if_block.m(div, t0);
-				}
-			}
-
-			if (dirty[1] & /*item*/ 512 && t1_value !== (t1_value = /*option*/ ctx[42].description + "")) set_data(t1, t1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-			if_block.d();
-		}
-	};
-}
-
-// (180:2) <SortableList items={rows} {sortableOptions} on:orderChanged={onReorder} let:item>
-function create_default_slot$2(ctx) {
-	let div6;
-	let div0;
-	let t0;
-	let div0_title_value;
-	let t1;
-	let div2;
-	let div1;
-	let span0;
-	let t2_value = /*item*/ ctx[40].abbrev + "";
-	let t2;
-	let t3;
-	let span1;
-	let t4_value = /*item*/ ctx[40].title + "";
-	let t4;
-	let span1_title_value;
-	let t5;
-	let select;
-	let select_value_value;
-	let select_title_value;
-	let t6;
-	let div4;
-	let div3;
-	let t7;
-	let t8;
-	let div5;
-	let div5_aria_label_value;
-	let div6_class_value;
-	let t9;
-	let t10;
-	let if_block4_anchor;
-	let mounted;
-	let dispose;
-	let each_value_3 = /*allWorkflowNames*/ ctx[15];
-	let each_blocks = [];
-
-	for (let i = 0; i < each_value_3.length; i += 1) {
-		each_blocks[i] = create_each_block_3(get_each_context_3(ctx, each_value_3, i));
-	}
-
-	function change_handler(...args) {
-		return /*change_handler*/ ctx[24](/*item*/ ctx[40], ...args);
-	}
-
-	function select_block_type(ctx, dirty) {
-		if (/*item*/ ctx[40].runnable) return create_if_block_15$1;
-		return create_else_block_4;
-	}
-
-	let current_block_type = select_block_type(ctx);
-	let if_block0 = current_block_type(ctx);
-	let if_block1 = /*item*/ ctx[40].runnable && create_if_block_10$1(ctx);
-
-	function select_block_type_3(ctx, dirty) {
-		if (/*item*/ ctx[40].state.status === "running") return create_if_block_6$3;
-		if (/*item*/ ctx[40].state.status === "done") return create_if_block_7$3;
-		if (/*item*/ ctx[40].state.status === "error") return create_if_block_8$2;
-		if (/*item*/ ctx[40].state.status === "skipped") return create_if_block_9$2;
-	}
-
-	let current_block_type_1 = select_block_type_3(ctx);
-	let if_block2 = current_block_type_1 && current_block_type_1(ctx);
-	let if_block3 = /*item*/ ctx[40].state.status === "error" && /*openError*/ ctx[5] === /*item*/ ctx[40].id && create_if_block_5$4(ctx);
-	let if_block4 = /*item*/ ctx[40].runnable && /*item*/ ctx[40].openStep >= 0 && /*item*/ ctx[40].workflow.steps[/*item*/ ctx[40].openStep] && create_if_block$d(get_if_ctx$1(ctx));
-
-	return {
-		c() {
-			div6 = element("div");
-			div0 = element("div");
-			t0 = text("⋮⋮");
-			t1 = space();
-			div2 = element("div");
-			div1 = element("div");
-			span0 = element("span");
-			t2 = text(t2_value);
-			t3 = space();
-			span1 = element("span");
-			t4 = text(t4_value);
-			t5 = space();
-			select = element("select");
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			t6 = space();
-			div4 = element("div");
-			div3 = element("div");
-			if_block0.c();
-			t7 = space();
-			if (if_block1) if_block1.c();
-			t8 = space();
-			div5 = element("div");
-			if (if_block2) if_block2.c();
-			t9 = space();
-			if (if_block3) if_block3.c();
-			t10 = space();
-			if (if_block4) if_block4.c();
-			if_block4_anchor = empty();
-			attr(div0, "class", "matrix-drag svelte-1d84fds");
-			attr(div0, "title", div0_title_value = /*$t*/ ctx[9]("matrix.reorderHint"));
-			attr(div0, "aria-label", "Reorder");
-			attr(span0, "class", "matrix-abbrev svelte-1d84fds");
-			attr(span1, "class", "matrix-name svelte-1d84fds");
-			attr(span1, "title", span1_title_value = /*item*/ ctx[40].title);
-			attr(div1, "class", "matrix-draft-head svelte-1d84fds");
-			attr(select, "class", "matrix-workflow svelte-1d84fds");
-			select.disabled = /*running*/ ctx[0];
-			attr(select, "title", select_title_value = /*$t*/ ctx[9]("matrix.workflow"));
-			attr(div2, "class", "matrix-draft svelte-1d84fds");
-			attr(div3, "class", "matrix-runway svelte-1d84fds");
-			attr(div4, "class", "matrix-progress svelte-1d84fds");
-			attr(div5, "class", "matrix-status svelte-1d84fds");
-			attr(div5, "aria-label", div5_aria_label_value = /*item*/ ctx[40].state.status);
-			attr(div6, "class", div6_class_value = "matrix-row status-" + /*item*/ ctx[40].state.status + " svelte-1d84fds");
-			set_style(div6, "animation-delay", /*rows*/ ctx[1].indexOf(/*item*/ ctx[40]) * 45 + "ms");
-			toggle_class(div6, "not-runnable", !/*item*/ ctx[40].runnable);
-		},
-		m(target, anchor) {
-			insert(target, div6, anchor);
-			append(div6, div0);
-			append(div0, t0);
-			append(div6, t1);
-			append(div6, div2);
-			append(div2, div1);
-			append(div1, span0);
-			append(span0, t2);
-			append(div1, t3);
-			append(div1, span1);
-			append(span1, t4);
-			append(div2, t5);
-			append(div2, select);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(select, null);
-			}
-
-			select_option(select, /*item*/ ctx[40].workflowName);
-			append(div6, t6);
-			append(div6, div4);
-			append(div4, div3);
-			if_block0.m(div3, null);
-			append(div4, t7);
-			if (if_block1) if_block1.m(div4, null);
-			append(div6, t8);
-			append(div6, div5);
-			if (if_block2) if_block2.m(div5, null);
-			insert(target, t9, anchor);
-			if (if_block3) if_block3.m(target, anchor);
-			insert(target, t10, anchor);
-			if (if_block4) if_block4.m(target, anchor);
-			insert(target, if_block4_anchor, anchor);
-
-			if (!mounted) {
-				dispose = listen(select, "change", change_handler);
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-
-			if (dirty[0] & /*$t*/ 512 && div0_title_value !== (div0_title_value = /*$t*/ ctx[9]("matrix.reorderHint"))) {
-				attr(div0, "title", div0_title_value);
-			}
-
-			if (dirty[1] & /*item*/ 512 && t2_value !== (t2_value = /*item*/ ctx[40].abbrev + "")) set_data(t2, t2_value);
-			if (dirty[1] & /*item*/ 512 && t4_value !== (t4_value = /*item*/ ctx[40].title + "")) set_data(t4, t4_value);
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && span1_title_value !== (span1_title_value = /*item*/ ctx[40].title)) {
-				attr(span1, "title", span1_title_value);
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768) {
-				each_value_3 = /*allWorkflowNames*/ ctx[15];
-				let i;
-
-				for (i = 0; i < each_value_3.length; i += 1) {
-					const child_ctx = get_each_context_3(ctx, each_value_3, i);
-
-					if (each_blocks[i]) {
-						each_blocks[i].p(child_ctx, dirty);
-					} else {
-						each_blocks[i] = create_each_block_3(child_ctx);
-						each_blocks[i].c();
-						each_blocks[i].m(select, null);
-					}
-				}
-
-				for (; i < each_blocks.length; i += 1) {
-					each_blocks[i].d(1);
-				}
-
-				each_blocks.length = each_value_3.length;
-			}
-
-			if (dirty[0] & /*running*/ 1) {
-				select.disabled = /*running*/ ctx[0];
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && select_value_value !== (select_value_value = /*item*/ ctx[40].workflowName)) {
-				select_option(select, /*item*/ ctx[40].workflowName);
-			}
-
-			if (dirty[0] & /*$t*/ 512 && select_title_value !== (select_title_value = /*$t*/ ctx[9]("matrix.workflow"))) {
-				attr(select, "title", select_title_value);
-			}
-
-			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block0) {
-				if_block0.p(ctx, dirty);
-			} else {
-				if_block0.d(1);
-				if_block0 = current_block_type(ctx);
-
-				if (if_block0) {
-					if_block0.c();
-					if_block0.m(div3, null);
-				}
-			}
-
-			if (/*item*/ ctx[40].runnable) {
-				if (if_block1) {
-					if_block1.p(ctx, dirty);
-				} else {
-					if_block1 = create_if_block_10$1(ctx);
-					if_block1.c();
-					if_block1.m(div4, null);
-				}
-			} else if (if_block1) {
-				if_block1.d(1);
-				if_block1 = null;
-			}
-
-			if (current_block_type_1 === (current_block_type_1 = select_block_type_3(ctx)) && if_block2) {
-				if_block2.p(ctx, dirty);
-			} else {
-				if (if_block2) if_block2.d(1);
-				if_block2 = current_block_type_1 && current_block_type_1(ctx);
-
-				if (if_block2) {
-					if_block2.c();
-					if_block2.m(div5, null);
-				}
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && div5_aria_label_value !== (div5_aria_label_value = /*item*/ ctx[40].state.status)) {
-				attr(div5, "aria-label", div5_aria_label_value);
-			}
-
-			if (dirty[0] & /*allWorkflowNames*/ 32768 | dirty[1] & /*item*/ 512 && div6_class_value !== (div6_class_value = "matrix-row status-" + /*item*/ ctx[40].state.status + " svelte-1d84fds")) {
-				attr(div6, "class", div6_class_value);
-			}
-
-			if (dirty[0] & /*rows*/ 2 | dirty[1] & /*item*/ 512) {
-				set_style(div6, "animation-delay", /*rows*/ ctx[1].indexOf(/*item*/ ctx[40]) * 45 + "ms");
-			}
-
-			if (dirty[1] & /*item, item*/ 512) {
-				toggle_class(div6, "not-runnable", !/*item*/ ctx[40].runnable);
-			}
-
-			if (/*item*/ ctx[40].state.status === "error" && /*openError*/ ctx[5] === /*item*/ ctx[40].id) {
-				if (if_block3) {
-					if_block3.p(ctx, dirty);
-				} else {
-					if_block3 = create_if_block_5$4(ctx);
-					if_block3.c();
-					if_block3.m(t10.parentNode, t10);
-				}
-			} else if (if_block3) {
-				if_block3.d(1);
-				if_block3 = null;
-			}
-
-			if (/*item*/ ctx[40].runnable && /*item*/ ctx[40].openStep >= 0 && /*item*/ ctx[40].workflow.steps[/*item*/ ctx[40].openStep]) {
-				if (if_block4) {
-					if_block4.p(get_if_ctx$1(ctx), dirty);
-				} else {
-					if_block4 = create_if_block$d(get_if_ctx$1(ctx));
-					if_block4.c();
-					if_block4.m(if_block4_anchor.parentNode, if_block4_anchor);
-				}
-			} else if (if_block4) {
-				if_block4.d(1);
-				if_block4 = null;
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div6);
-			destroy_each(each_blocks, detaching);
-			if_block0.d();
-			if (if_block1) if_block1.d();
-
-			if (if_block2) {
-				if_block2.d();
-			}
-
-			if (detaching) detach(t9);
-			if (if_block3) if_block3.d(detaching);
-			if (detaching) detach(t10);
-			if (if_block4) if_block4.d(detaching);
-			if (detaching) detach(if_block4_anchor);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-function create_fragment$f(ctx) {
-	let div4;
-	let div2;
-	let div0;
-	let span0;
-	let t0_value = /*$t*/ ctx[9]("matrix.title") + "";
-	let t0;
-	let t1;
-	let span1;
-	let t2_value = /*rows*/ ctx[1].length + "";
-	let t2;
-	let t3;
-	let t4_value = /*$t*/ ctx[9]("matrix.drafts") + "";
-	let t4;
-	let t5;
-	let div1;
-	let label0;
-	let input0;
-	let t6;
-	let t7_value = /*$t*/ ctx[9]("matrix.dryRun") + "";
-	let t7;
-	let t8;
-	let label1;
-	let input1;
-	let t9;
-	let t10_value = /*$t*/ ctx[9]("matrix.openPdf") + "";
-	let t10;
-	let t11;
-	let label2;
-	let input2;
-	let t12;
-	let t13_value = /*$t*/ ctx[9]("matrix.harvest") + "";
-	let t13;
-	let t14;
-	let button;
-
-	let t15_value = (/*running*/ ctx[0]
-	? /*$t*/ ctx[9]("matrix.running")
-	: /*$t*/ ctx[9]("matrix.run")) + "";
-
-	let t15;
-	let button_disabled_value;
-	let t16;
-	let div3;
-	let t17_value = /*$t*/ ctx[9]("matrix.reorderHint") + "";
-	let t17;
-	let t18;
-	let sortablelist;
-	let current;
-	let mounted;
-	let dispose;
-
-	sortablelist = new SortableList({
-			props: {
-				items: /*rows*/ ctx[1],
-				sortableOptions: /*sortableOptions*/ ctx[7],
-				$$slots: {
-					default: [
-						create_default_slot$2,
-						({ item }) => ({ 40: item }),
-						({ item }) => [0, item ? 512 : 0]
-					]
-				},
-				$$scope: { ctx }
-			}
-		});
-
-	sortablelist.$on("orderChanged", /*onReorder*/ ctx[19]);
-
-	return {
-		c() {
-			div4 = element("div");
-			div2 = element("div");
-			div0 = element("div");
-			span0 = element("span");
-			t0 = text(t0_value);
-			t1 = space();
-			span1 = element("span");
-			t2 = text(t2_value);
-			t3 = space();
-			t4 = text(t4_value);
-			t5 = space();
-			div1 = element("div");
-			label0 = element("label");
-			input0 = element("input");
-			t6 = space();
-			t7 = text(t7_value);
-			t8 = space();
-			label1 = element("label");
-			input1 = element("input");
-			t9 = space();
-			t10 = text(t10_value);
-			t11 = space();
-			label2 = element("label");
-			input2 = element("input");
-			t12 = space();
-			t13 = text(t13_value);
-			t14 = space();
-			button = element("button");
-			t15 = text(t15_value);
-			t16 = space();
-			div3 = element("div");
-			t17 = text(t17_value);
-			t18 = space();
-			create_component(sortablelist.$$.fragment);
-			attr(span0, "class", "matrix-title svelte-1d84fds");
-			attr(span1, "class", "matrix-count svelte-1d84fds");
-			attr(div0, "class", "matrix-heading svelte-1d84fds");
-			attr(input0, "type", "checkbox");
-			input0.disabled = /*running*/ ctx[0];
-			attr(input0, "class", "svelte-1d84fds");
-			attr(label0, "class", "batch-toggle svelte-1d84fds");
-			toggle_class(label0, "on", /*dryRun*/ ctx[2]);
-			attr(input1, "type", "checkbox");
-			input1.disabled = /*running*/ ctx[0];
-			attr(input1, "class", "svelte-1d84fds");
-			attr(label1, "class", "batch-toggle svelte-1d84fds");
-			toggle_class(label1, "on", /*openAfter*/ ctx[3]);
-			attr(input2, "type", "checkbox");
-			input2.disabled = /*running*/ ctx[0];
-			attr(input2, "class", "svelte-1d84fds");
-			attr(label2, "class", "batch-toggle svelte-1d84fds");
-			toggle_class(label2, "on", /*harvest*/ ctx[4]);
-			attr(div1, "class", "matrix-batch svelte-1d84fds");
-			attr(button, "class", "matrix-run svelte-1d84fds");
-			button.disabled = button_disabled_value = /*running*/ ctx[0] || !/*anyRunnable*/ ctx[8];
-			attr(div2, "class", "matrix-header svelte-1d84fds");
-			attr(div3, "class", "matrix-hint svelte-1d84fds");
-			attr(div4, "class", "matrix svelte-1d84fds");
-		},
-		m(target, anchor) {
-			insert(target, div4, anchor);
-			append(div4, div2);
-			append(div2, div0);
-			append(div0, span0);
-			append(span0, t0);
-			append(div0, t1);
-			append(div0, span1);
-			append(span1, t2);
-			append(span1, t3);
-			append(span1, t4);
-			append(div2, t5);
-			append(div2, div1);
-			append(div1, label0);
-			append(label0, input0);
-			input0.checked = /*dryRun*/ ctx[2];
-			append(label0, t6);
-			append(label0, t7);
-			append(div1, t8);
-			append(div1, label1);
-			append(label1, input1);
-			input1.checked = /*openAfter*/ ctx[3];
-			append(label1, t9);
-			append(label1, t10);
-			append(div1, t11);
-			append(div1, label2);
-			append(label2, input2);
-			input2.checked = /*harvest*/ ctx[4];
-			append(label2, t12);
-			append(label2, t13);
-			append(div2, t14);
-			append(div2, button);
-			append(button, t15);
-			append(div4, t16);
-			append(div4, div3);
-			append(div3, t17);
-			append(div4, t18);
-			mount_component(sortablelist, div4, null);
-			current = true;
-
-			if (!mounted) {
-				dispose = [
-					listen(input0, "change", /*input0_change_handler*/ ctx[21]),
-					listen(input1, "change", /*input1_change_handler*/ ctx[22]),
-					listen(input2, "change", /*input2_change_handler*/ ctx[23]),
-					listen(button, "click", /*run*/ ctx[20])
-				];
-
-				mounted = true;
-			}
-		},
-		p(ctx, dirty) {
-			if ((!current || dirty[0] & /*$t*/ 512) && t0_value !== (t0_value = /*$t*/ ctx[9]("matrix.title") + "")) set_data(t0, t0_value);
-			if ((!current || dirty[0] & /*rows*/ 2) && t2_value !== (t2_value = /*rows*/ ctx[1].length + "")) set_data(t2, t2_value);
-			if ((!current || dirty[0] & /*$t*/ 512) && t4_value !== (t4_value = /*$t*/ ctx[9]("matrix.drafts") + "")) set_data(t4, t4_value);
-
-			if (!current || dirty[0] & /*running*/ 1) {
-				input0.disabled = /*running*/ ctx[0];
-			}
-
-			if (dirty[0] & /*dryRun*/ 4) {
-				input0.checked = /*dryRun*/ ctx[2];
-			}
-
-			if ((!current || dirty[0] & /*$t*/ 512) && t7_value !== (t7_value = /*$t*/ ctx[9]("matrix.dryRun") + "")) set_data(t7, t7_value);
-
-			if (dirty[0] & /*dryRun*/ 4) {
-				toggle_class(label0, "on", /*dryRun*/ ctx[2]);
-			}
-
-			if (!current || dirty[0] & /*running*/ 1) {
-				input1.disabled = /*running*/ ctx[0];
-			}
-
-			if (dirty[0] & /*openAfter*/ 8) {
-				input1.checked = /*openAfter*/ ctx[3];
-			}
-
-			if ((!current || dirty[0] & /*$t*/ 512) && t10_value !== (t10_value = /*$t*/ ctx[9]("matrix.openPdf") + "")) set_data(t10, t10_value);
-
-			if (dirty[0] & /*openAfter*/ 8) {
-				toggle_class(label1, "on", /*openAfter*/ ctx[3]);
-			}
-
-			if (!current || dirty[0] & /*running*/ 1) {
-				input2.disabled = /*running*/ ctx[0];
-			}
-
-			if (dirty[0] & /*harvest*/ 16) {
-				input2.checked = /*harvest*/ ctx[4];
-			}
-
-			if ((!current || dirty[0] & /*$t*/ 512) && t13_value !== (t13_value = /*$t*/ ctx[9]("matrix.harvest") + "")) set_data(t13, t13_value);
-
-			if (dirty[0] & /*harvest*/ 16) {
-				toggle_class(label2, "on", /*harvest*/ ctx[4]);
-			}
-
-			if ((!current || dirty[0] & /*running, $t*/ 513) && t15_value !== (t15_value = (/*running*/ ctx[0]
-			? /*$t*/ ctx[9]("matrix.running")
-			: /*$t*/ ctx[9]("matrix.run")) + "")) set_data(t15, t15_value);
-
-			if (!current || dirty[0] & /*running, anyRunnable*/ 257 && button_disabled_value !== (button_disabled_value = /*running*/ ctx[0] || !/*anyRunnable*/ ctx[8])) {
-				button.disabled = button_disabled_value;
-			}
-
-			if ((!current || dirty[0] & /*$t*/ 512) && t17_value !== (t17_value = /*$t*/ ctx[9]("matrix.reorderHint") + "")) set_data(t17, t17_value);
-			const sortablelist_changes = {};
-			if (dirty[0] & /*rows*/ 2) sortablelist_changes.items = /*rows*/ ctx[1];
-			if (dirty[0] & /*sortableOptions*/ 128) sortablelist_changes.sortableOptions = /*sortableOptions*/ ctx[7];
-
-			if (dirty[0] & /*running, $pandocTemplates, $t, openError, rows, hovered*/ 1635 | dirty[1] & /*$$scope, item*/ 8389120) {
-				sortablelist_changes.$$scope = { dirty, ctx };
-			}
-
-			sortablelist.$set(sortablelist_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(sortablelist.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(sortablelist.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			if (detaching) detach(div4);
-			destroy_component(sortablelist);
-			mounted = false;
-			run_all(dispose);
-		}
-	};
-}
-
-function nodeClass(state, i) {
-	if (state.status === "error") {
-		if (i === state.activeStep) return "is-error";
-		if (i < state.activeStep) return "is-done";
-		return "is-pending";
-	}
-
-	if (state.status === "done") return "is-done";
-
-	if (state.status === "running") {
-		if (i < state.activeStep) return "is-done";
-		if (i === state.activeStep) return "is-active";
-	}
-
-	return "is-pending";
-}
-
-function instance$f($$self, $$props, $$invalidate) {
-	let anyRunnable;
-	let sortableOptions;
-	let $t;
-	let $pandocTemplates;
-	component_subscribe($$self, t, $$value => $$invalidate(9, $t = $$value));
-	component_subscribe($$self, pandocTemplates, $$value => $$invalidate(10, $pandocTemplates = $$value));
-	const app = useApp();
-	getContext("close");
-
-	// Batch toggles (per-run; sensible batch defaults).
-	let dryRun = false;
-
-	let openAfter = false;
-	let harvest = true;
-	let running = false;
-
-	// Which failed row's full-error panel is expanded.
-	let openError = null;
-
-	const toggleError = row => $$invalidate(5, openError = openError === row.id ? null : row.id);
-
-	function copyError(text) {
-		return __awaiter(this, void 0, void 0, function* () {
-			yield navigator.clipboard.writeText(text !== null && text !== void 0 ? text : "");
-			new obsidian.Notice(translate("matrix.errorCopied"));
-		});
-	}
-
-	// Which step node the pointer/focus is on, so the fixed caption can preview it.
-	let hovered = { id: null, i: -1 };
-
-	const hoverStep = (row, i) => $$invalidate(6, hovered = { id: row.id, i });
-	const clearHover = () => $$invalidate(6, hovered = { id: null, i: -1 });
-	const wfsSnapshot = get_store_value(workflows);
-	const allWorkflowNames = Object.keys(wfsSnapshot).sort();
-
-	// Resolve a (cloned, editable) workflow into the row fields the board renders:
-	// node list + validity. Steps mirror `wf.steps`, so option edits keep them in sync.
-	function resolveRow(draft, wf) {
-		if (!wf) {
-			return {
-				steps: [],
-				runnable: false,
-				skipReason: "no workflow assigned"
-			};
-		}
-
-		const [valid, kinds] = calculateWorkflow(wf, draft.format === "scenes");
-
-		if (valid.error !== WorkflowError.Valid) {
-			return {
-				steps: [],
-				runnable: false,
-				skipReason: valid.error
-			};
-		}
-
-		const steps = wf.steps.map((s, i) => ({
-			name: s.description.name,
-			kind: formatStepKind(kinds[i]),
-			kindRaw: kinds[i]
-		}));
-
-		return { steps, runnable: true, skipReason: "" };
-	}
-
-	// Snapshot the project's drafts, resolving each to its default workflow. Each row
-	// owns an editable clone of its workflow so per-step option edits and the workflow
-	// picker stay local to this run and never touch the user's saved workflows.
-	function buildRows() {
-		var _a;
-
-		const projectDrafts = (_a = get_store_value(selectedProject)) !== null && _a !== void 0
-		? _a
-		: [];
-
-		const cur = get_store_value(currentWorkflow);
-
-		return projectDrafts.map(draft => {
-			var _a, _b, _c;
-
-			const defaultName = (_c = (_b = (_a = draft.workflow && wfsSnapshot[draft.workflow]
-			? draft.workflow
-			: null) !== null && _a !== void 0
-			? _a
-			: cur === null || cur === void 0 ? void 0 : cur.name) !== null && _b !== void 0
-			? _b
-			: allWorkflowNames[0]) !== null && _c !== void 0
-			? _c
-			: null;
-
-			const source = defaultName ? wfsSnapshot[defaultName] : cur;
-			const workflow = source ? cloneWorkflow(source) : null;
-
-			return Object.assign(
-				Object.assign(
-					{
-						id: draft.vaultPath,
-						draft,
-						title: draftTitle(draft),
-						abbrev: draftAbbrev(draft.draftTitle || draft.title),
-						workflowName: defaultName,
-						workflow,
-						openStep: -1
-					},
-					resolveRow(draft, workflow)
-				),
-				{ state: Object.assign({}, IDLE_ROW) }
-			);
-		});
-	}
-
-	let rows = buildRows();
-
-	function selectWorkflow(row, name) {
-		if (running) return;
-		row.workflowName = name;
-
-		row.workflow = wfsSnapshot[name]
-		? cloneWorkflow(wfsSnapshot[name])
-		: null;
-
-		row.openStep = -1;
-		row.state = Object.assign({}, IDLE_ROW);
-		Object.assign(row, resolveRow(row.draft, row.workflow));
-		$$invalidate(1, rows);
-	}
-
-	function toggleStep(row, i) {
-		row.openStep = row.openStep === i ? -1 : i;
-		$$invalidate(1, rows);
-	}
-
-	// Slot `let:item` vars can't be `bind:`-ed in Svelte 3, so option inputs are
-	// controlled: write straight into the row's cloned workflow and re-render.
-	function setOption(row, stepIndex, optionId, value) {
-		row.workflow.steps[stepIndex].optionValues[optionId] = value;
-		$$invalidate(1, rows);
-	}
-
-	function onReorder(e) {
-		$$invalidate(1, rows = e.detail);
-	}
-
-	function run() {
-		var _a;
-
-		return __awaiter(this, void 0, void 0, function* () {
-			if (running || !anyRunnable) return;
-			$$invalidate(0, running = true);
-			const projectRoot = projectRootPath(rows.map(r => r.draft));
-
-			for (let i = 0; i < rows.length; i++) {
-				const row = rows[i];
-
-				if (!row.runnable) {
-					row.state = {
-						status: "skipped",
-						activeStep: -1,
-						error: row.skipReason
-					};
-
-					$$invalidate(1, rows);
-					continue;
-				}
-
-				// Batch toggles win over per-step edits for their specific options; every
-				// other manual edit on the row's cloned workflow is preserved.
-				const wf = applyBatchOverrides(row.workflow, { dryRun, openAfter, harvest });
-
-				const [,kinds] = calculateWorkflow(wf, row.draft.format === "scenes");
-
-				try {
-					yield compile(
-						app,
-						row.draft,
-						wf,
-						kinds,
-						status => {
-							row.state = statusToRowState(status, row.state);
-							$$invalidate(1, rows);
-						},
-						{
-							suppressOpenAfter: !openAfter,
-							projectRoot
-						}
-					);
-				} catch(e) {
-					row.state = Object.assign(Object.assign({}, row.state), {
-						status: "error",
-						error: String((_a = e === null || e === void 0 ? void 0 : e.message) !== null && _a !== void 0
-						? _a
-						: e)
-					});
-
-					$$invalidate(1, rows);
-				}
-			}
-
-			$$invalidate(0, running = false);
-			const ok = rows.filter(r => r.state.status === "done").length;
-			new obsidian.Notice(`Compiled ${ok} draft${ok === 1 ? "" : "s"}.`);
-		});
-	}
-
-	function input0_change_handler() {
-		dryRun = this.checked;
-		$$invalidate(2, dryRun);
-	}
-
-	function input1_change_handler() {
-		openAfter = this.checked;
-		$$invalidate(3, openAfter);
-	}
-
-	function input2_change_handler() {
-		harvest = this.checked;
-		$$invalidate(4, harvest);
-	}
-
-	const change_handler = (item, e) => selectWorkflow(item, e.currentTarget.value);
-	const click_handler = (item, i) => toggleStep(item, i);
-	const mouseenter_handler = (item, i) => hoverStep(item, i);
-	const focus_handler = (item, i) => hoverStep(item, i);
-	const click_handler_1 = item => toggleError(item);
-	const click_handler_2 = item => copyError(item.state.error);
-	const click_handler_3 = item => toggleStep(item, item.openStep);
-	const input_handler = (item, option, e) => setOption(item, item.openStep, option.id, e.currentTarget.value);
-	const input_handler_1 = (item, option, e) => setOption(item, item.openStep, option.id, e.currentTarget.value);
-	const change_handler_1 = (item, option, e) => setOption(item, item.openStep, option.id, e.currentTarget.value);
-	const change_handler_2 = (item, option, e) => setOption(item, item.openStep, option.id, e.currentTarget.checked);
-
-	$$self.$$.update = () => {
-		if ($$self.$$.dirty[0] & /*rows*/ 2) {
-			$$invalidate(8, anyRunnable = rows.some(r => r.runnable));
-		}
-
-		if ($$self.$$.dirty[0] & /*running*/ 1) {
-			$$invalidate(7, sortableOptions = {
-				handle: ".matrix-drag",
-				animation: 150,
-				disabled: running
-			});
-		}
-	};
-
-	return [
-		running,
-		rows,
-		dryRun,
-		openAfter,
-		harvest,
-		openError,
-		hovered,
-		sortableOptions,
-		anyRunnable,
-		$t,
-		$pandocTemplates,
-		toggleError,
-		copyError,
-		hoverStep,
-		clearHover,
-		allWorkflowNames,
-		selectWorkflow,
-		toggleStep,
-		setOption,
-		onReorder,
-		run,
-		input0_change_handler,
-		input1_change_handler,
-		input2_change_handler,
-		change_handler,
-		click_handler,
-		mouseenter_handler,
-		focus_handler,
-		click_handler_1,
-		click_handler_2,
-		click_handler_3,
-		input_handler,
-		input_handler_1,
-		change_handler_1,
-		change_handler_2
-	];
-}
-
-class CompileMatrix extends SvelteComponent {
-	constructor(options) {
-		super();
-		init(this, options, instance$f, create_fragment$f, safe_not_equal, {}, add_css$f, [-1, -1]);
-	}
-}
-
-/**
- * Opens the Compile Matrix: a board of the project's drafts that shows each one's
- * live compile progress, reorders the compile order by drag, batch-overrides a few
- * options for the run, and runs them sequentially on demand.
- */
-class CompileMatrixModal extends obsidian.Modal {
-    constructor(app) {
-        super(app);
-        this.view = null;
-    }
-    onOpen() {
-        // Wider than the default modal so the step runways have room.
-        this.modalEl.style.width = "min(760px, 92vw)";
-        const entrypoint = this.contentEl.createDiv("longform-compile-matrix-root");
-        const context = appContext(this);
-        context.set("close", () => this.close());
-        this.view = new CompileMatrix({ target: entrypoint, context });
-    }
-    onClose() {
-        var _a;
-        (_a = this.view) === null || _a === void 0 ? void 0 : _a.$destroy();
-        this.view = null;
-        this.contentEl.empty();
-    }
 }
 
 var ListCache$2 = _ListCache;
@@ -31975,11 +27631,11 @@ var _initCloneArray = initCloneArray$1;
 var root = _root;
 
 /** Built-in value references. */
-var Uint8Array$2 = root.Uint8Array;
+var Uint8Array$1 = root.Uint8Array;
 
-var _Uint8Array = Uint8Array$2;
+var _Uint8Array = Uint8Array$1;
 
-var Uint8Array$1 = _Uint8Array;
+var Uint8Array = _Uint8Array;
 
 /**
  * Creates a clone of `arrayBuffer`.
@@ -31990,7 +27646,7 @@ var Uint8Array$1 = _Uint8Array;
  */
 function cloneArrayBuffer$3(arrayBuffer) {
   var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
-  new Uint8Array$1(result).set(new Uint8Array$1(arrayBuffer));
+  new Uint8Array(result).set(new Uint8Array(arrayBuffer));
   return result;
 }
 
@@ -32690,11 +28346,11 @@ var omit_1 = omit;
 
 /* src/view/components/AutoTextArea.svelte generated by Svelte v3.49.0 */
 
-function add_css$e(target) {
+function add_css$d(target) {
 	append_styles(target, "svelte-1wdi5lq", ".container.svelte-1wdi5lq{position:relative}pre.svelte-1wdi5lq,textarea.svelte-1wdi5lq{font-family:inherit;padding:var(--size-4-2);box-sizing:border-box;border:none;line-height:1.2;overflow:hidden}textarea.svelte-1wdi5lq{position:absolute;width:100%;height:100%;top:0;resize:none}");
 }
 
-function create_fragment$e(ctx) {
+function create_fragment$d(ctx) {
 	let div;
 	let pre;
 	let t0_value = /*value*/ ctx[0] + "\n" + "";
@@ -32768,7 +28424,7 @@ function create_fragment$e(ctx) {
 	};
 }
 
-function instance$e($$self, $$props, $$invalidate) {
+function instance$d($$self, $$props, $$invalidate) {
 	let minHeight;
 	let maxHeight;
 	let { value = "" } = $$props;
@@ -32805,70 +28461,24 @@ function instance$e($$self, $$props, $$invalidate) {
 class AutoTextArea extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$e, create_fragment$e, safe_not_equal, { value: 0, minRows: 4, maxRows: 5 }, add_css$e);
+		init(this, options, instance$d, create_fragment$d, safe_not_equal, { value: 0, minRows: 4, maxRows: 5 }, add_css$d);
 	}
-}
-
-/**
- * A simple modal for surfacing a (potentially long) error message with a
- * "Copy" button, so users can grab the full log instead of squinting at a
- * truncated inline line or digging through the developer console.
- */
-class LongformErrorModal extends obsidian.Modal {
-    constructor(app, title, message) {
-        super(app);
-        this.titleText = title;
-        this.message = message;
-    }
-    onOpen() {
-        const { contentEl, titleEl } = this;
-        titleEl.setText(this.titleText);
-        contentEl.empty();
-        const pre = contentEl.createEl("pre", { cls: "longform-error-modal-log" });
-        pre.setText(this.message);
-        const buttons = contentEl.createDiv({
-            cls: "longform-error-modal-buttons",
-        });
-        const copyButton = buttons.createEl("button", {
-            text: "Copy error",
-            cls: "mod-cta",
-        });
-        copyButton.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield navigator.clipboard.writeText(this.message);
-                copyButton.setText("Copied!");
-                window.setTimeout(() => copyButton.setText("Copy error"), 1500);
-            }
-            catch (e) {
-                new obsidian.Notice("Could not copy to clipboard.");
-            }
-        }));
-        const closeButton = buttons.createEl("button", { text: "Close" });
-        closeButton.addEventListener("click", () => this.close());
-    }
-    onClose() {
-        this.contentEl.empty();
-    }
-}
-/** Convenience helper: construct and open a {@link LongformErrorModal}. */
-function showErrorModal(app, title, message) {
-    new LongformErrorModal(app, title, message).open();
 }
 
 /* src/view/compile/CompileView.svelte generated by Svelte v3.49.0 */
 
-function add_css$d(target) {
-	append_styles(target, "svelte-1br8pmp", ".longform-workflow-picker-container.svelte-1br8pmp.svelte-1br8pmp{padding:var(--size-4-2);background:var(--background-primary);display:flex;flex-direction:column}#longform-workflows.svelte-1br8pmp.svelte-1br8pmp{color:var(--color-accent-2)}.longform-workflow-picker.svelte-1br8pmp.svelte-1br8pmp{display:flex;flex-direction:row;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:var(--size-4-2)}.longform-workflow-picker.svelte-1br8pmp .longform-hint.svelte-1br8pmp{font-size:1em}select.svelte-1br8pmp.svelte-1br8pmp{background-color:transparent;border:none;padding:var(--size-4-1) 0;margin:0;font-family:inherit;font-size:inherit;cursor:inherit;line-height:inherit;outline:none;box-shadow:none}.select.svelte-1br8pmp.svelte-1br8pmp{cursor:pointer}.select.svelte-1br8pmp>select.svelte-1br8pmp{color:var(--text-accent)}.select.svelte-1br8pmp>select.svelte-1br8pmp:hover{text-decoration:underline;color:var(--text-accent-hover)}.longform-compile-container.svelte-1br8pmp .longform-sortable-step-list{list-style-type:none;padding:0;margin:0}.options-button.svelte-1br8pmp.svelte-1br8pmp{background-color:var(--background-secondary-alt);color:var(--text-accent)}.options-button.svelte-1br8pmp.svelte-1br8pmp:hover{background-color:var(--background-primary);color:var(--text-accent-hover)}.add-step-container.svelte-1br8pmp.svelte-1br8pmp{display:flex;flex-direction:row;align-items:center;justify-content:center}.add-step-container.svelte-1br8pmp button.svelte-1br8pmp{font-weight:bold;color:var(--text-accent)}.add-step-container.svelte-1br8pmp button.svelte-1br8pmp:hover{text-decoration:underline;color:var(--text-accent-hover)}.longform-compile-instructions.svelte-1br8pmp.svelte-1br8pmp{font-size:var(--font-smallest);padding:var(--size-4-4) var(--size-4-4) var(--size-4-1) var(--size-4-8);color:var(--text-muted)}.longform-compile-instructions.svelte-1br8pmp li.svelte-1br8pmp{margin-bottom:var(--size-4-1)\n    }.longform-compile-instructions.svelte-1br8pmp strong.svelte-1br8pmp{color:var(--color-accent-2)}.compile-button.svelte-1br8pmp.svelte-1br8pmp{font-weight:bold;background-color:var(--interactive-accent);color:var(--text-on-accent)}.compile-button.svelte-1br8pmp.svelte-1br8pmp:hover{background-color:var(--interactive-accent-hover);color:var(--text-on-accent)}.compile-button.svelte-1br8pmp.svelte-1br8pmp:disabled{background-color:var(--text-muted);color:var(--text-faint)}.longform-compile-run-container.svelte-1br8pmp.svelte-1br8pmp{display:flex;flex-direction:row;align-items:center;justify-content:space-between;margin-top:var(--size-4-8)}.longform-compile-buttons.svelte-1br8pmp.svelte-1br8pmp{display:flex;flex-direction:row;align-items:center;gap:var(--size-4-2)}.longform-compile-run-container.svelte-1br8pmp .compile-status.svelte-1br8pmp{color:var(--text-muted)}.compile-status-error{color:var(--text-error) !important}.compile-status-success{color:var(--interactive-success) !important}.step-ghost{background-color:var(--interactive-accent-hover);color:var(--text-on-accent)}");
+function add_css$c(target) {
+	append_styles(target, "svelte-1hf1yah", ".longform-workflow-picker-container.svelte-1hf1yah.svelte-1hf1yah{padding:var(--size-4-2);background:var(--background-primary);display:flex;flex-direction:column}#longform-workflows.svelte-1hf1yah.svelte-1hf1yah{color:var(--color-accent-2)}.longform-workflow-picker.svelte-1hf1yah.svelte-1hf1yah{display:flex;flex-direction:row;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:var(--size-4-2)}.longform-workflow-picker.svelte-1hf1yah .longform-hint.svelte-1hf1yah{font-size:1em}select.svelte-1hf1yah.svelte-1hf1yah{background-color:transparent;border:none;padding:var(--size-4-1) 0;margin:0;font-family:inherit;font-size:inherit;cursor:inherit;line-height:inherit;outline:none;box-shadow:none}.select.svelte-1hf1yah.svelte-1hf1yah{cursor:pointer}.select.svelte-1hf1yah>select.svelte-1hf1yah{color:var(--text-accent)}.select.svelte-1hf1yah>select.svelte-1hf1yah:hover{text-decoration:underline;color:var(--text-accent-hover)}.longform-compile-container.svelte-1hf1yah .longform-sortable-step-list{list-style-type:none;padding:0;margin:0}.options-button.svelte-1hf1yah.svelte-1hf1yah{background-color:var(--background-secondary-alt);color:var(--text-accent)}.options-button.svelte-1hf1yah.svelte-1hf1yah:hover{background-color:var(--background-primary);color:var(--text-accent-hover)}.add-step-container.svelte-1hf1yah.svelte-1hf1yah{display:flex;flex-direction:row;align-items:center;justify-content:center}.add-step-container.svelte-1hf1yah button.svelte-1hf1yah{font-weight:bold;color:var(--text-accent)}.add-step-container.svelte-1hf1yah button.svelte-1hf1yah:hover{text-decoration:underline;color:var(--text-accent-hover)}.longform-compile-instructions.svelte-1hf1yah.svelte-1hf1yah{font-size:var(--font-smallest);padding:var(--size-4-4) var(--size-4-4) var(--size-4-1) var(--size-4-8);color:var(--text-muted)}.longform-compile-instructions.svelte-1hf1yah li.svelte-1hf1yah{margin-bottom:var(--size-4-1)\n    }.longform-compile-instructions.svelte-1hf1yah strong.svelte-1hf1yah{color:var(--color-accent-2)}.compile-button.svelte-1hf1yah.svelte-1hf1yah{font-weight:bold;background-color:var(--interactive-accent);color:var(--text-on-accent)}.compile-button.svelte-1hf1yah.svelte-1hf1yah:hover{background-color:var(--interactive-accent-hover);color:var(--text-on-accent)}.compile-button.svelte-1hf1yah.svelte-1hf1yah:disabled{background-color:var(--text-muted);color:var(--text-faint)}.longform-compile-run-container.svelte-1hf1yah.svelte-1hf1yah{display:flex;flex-direction:row;align-items:center;justify-content:space-between;margin-top:var(--size-4-8)}.longform-compile-run-container.svelte-1hf1yah .compile-status.svelte-1hf1yah{color:var(--text-muted)}.compile-status-error{color:var(--text-error) !important}.compile-status-success{color:var(--interactive-success) !important}.step-ghost{background-color:var(--interactive-accent-hover);color:var(--text-on-accent)}");
 }
 
-function get_each_context$5(ctx, list, i) {
+function get_each_context$4(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[48] = list[i];
+	child_ctx[44] = list[i];
 	return child_ctx;
 }
 
-// (191:0) {#if $selectedDraft}
-function create_if_block$c(ctx) {
+// (177:0) {#if $selectedDraft}
+function create_if_block$b(ctx) {
 	let div3;
 	let div1;
 	let div0;
@@ -32881,15 +28491,15 @@ function create_if_block$c(ctx) {
 	let current;
 
 	function select_block_type(ctx, dirty) {
-		if (/*workflowInputState*/ ctx[6] !== "hidden") return create_if_block_6$2;
-		return create_else_block$5;
+		if (/*workflowInputState*/ ctx[6] !== "hidden") return create_if_block_5$2;
+		return create_else_block$4;
 	}
 
 	let current_block_type = select_block_type(ctx);
 	let if_block0 = current_block_type(ctx);
-	let if_block1 = /*$workflows*/ ctx[4][/*currentWorkflowName*/ ctx[1]] && create_if_block_5$3(ctx);
-	let if_block2 = /*$workflows*/ ctx[4][/*currentWorkflowName*/ ctx[1]] && create_if_block_3$3(ctx);
-	let if_block3 = /*$currentWorkflow*/ ctx[2] && /*$currentWorkflow*/ ctx[2].steps.length > 0 && create_if_block_1$9(ctx);
+	let if_block1 = /*$workflows*/ ctx[4][/*currentWorkflowName*/ ctx[1]] && create_if_block_4$2(ctx);
+	let if_block2 = /*$workflows*/ ctx[4][/*currentWorkflowName*/ ctx[1]] && create_if_block_2$6(ctx);
+	let if_block3 = /*$currentWorkflow*/ ctx[2] && /*$currentWorkflow*/ ctx[2].steps.length > 0 && create_if_block_1$8(ctx);
 
 	return {
 		c() {
@@ -32904,20 +28514,20 @@ function create_if_block$c(ctx) {
 			t2 = space();
 			ul = element("ul");
 
-			ul.innerHTML = `<li class="svelte-1br8pmp">Compile workflows run their steps in order.</li> 
-      <li class="svelte-1br8pmp"><strong class="svelte-1br8pmp">Scene</strong> workflows run once per scene.</li> 
-      <li class="svelte-1br8pmp"><strong class="svelte-1br8pmp">Join</strong> workflows run once and combine the rest of your scene steps into a single manuscript.</li> 
-      <li class="svelte-1br8pmp"><strong class="svelte-1br8pmp">Manuscript</strong> steps run once on the joined manuscript.</li> 
-      <li class="svelte-1br8pmp">Drag to rearrange. <a href="https://github.com/kevboh/longform/blob/main/docs/COMPILE.md">Documentation here.</a></li>`;
+			ul.innerHTML = `<li class="svelte-1hf1yah">Compile workflows run their steps in order.</li> 
+      <li class="svelte-1hf1yah"><strong class="svelte-1hf1yah">Scene</strong> workflows run once per scene.</li> 
+      <li class="svelte-1hf1yah"><strong class="svelte-1hf1yah">Join</strong> workflows run once and combine the rest of your scene steps into a single manuscript.</li> 
+      <li class="svelte-1hf1yah"><strong class="svelte-1hf1yah">Manuscript</strong> steps run once on the joined manuscript.</li> 
+      <li class="svelte-1hf1yah">Drag to rearrange. <a href="https://github.com/kevboh/longform/blob/main/docs/COMPILE.md">Documentation here.</a></li>`;
 
 			t16 = space();
 			div2 = element("div");
 			if (if_block3) if_block3.c();
-			attr(div0, "class", "longform-workflow-picker svelte-1br8pmp");
-			attr(div1, "class", "longform-workflow-picker-container svelte-1br8pmp");
-			attr(ul, "class", "longform-compile-instructions svelte-1br8pmp");
-			attr(div2, "class", "longform-compile-run-container svelte-1br8pmp");
-			attr(div3, "class", "longform-compile-container svelte-1br8pmp");
+			attr(div0, "class", "longform-workflow-picker svelte-1hf1yah");
+			attr(div1, "class", "longform-workflow-picker-container svelte-1hf1yah");
+			attr(ul, "class", "longform-compile-instructions svelte-1hf1yah");
+			attr(div2, "class", "longform-compile-run-container svelte-1hf1yah");
+			attr(div3, "class", "longform-compile-container svelte-1hf1yah");
 		},
 		m(target, anchor) {
 			insert(target, div3, anchor);
@@ -32956,7 +28566,7 @@ function create_if_block$c(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_5$3(ctx);
+					if_block1 = create_if_block_4$2(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(div1, null);
@@ -32979,7 +28589,7 @@ function create_if_block$c(ctx) {
 						transition_in(if_block2, 1);
 					}
 				} else {
-					if_block2 = create_if_block_3$3(ctx);
+					if_block2 = create_if_block_2$6(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
 					if_block2.m(div3, t2);
@@ -32998,7 +28608,7 @@ function create_if_block$c(ctx) {
 				if (if_block3) {
 					if_block3.p(ctx, dirty);
 				} else {
-					if_block3 = create_if_block_1$9(ctx);
+					if_block3 = create_if_block_1$8(ctx);
 					if_block3.c();
 					if_block3.m(div2, null);
 				}
@@ -33028,15 +28638,15 @@ function create_if_block$c(ctx) {
 	};
 }
 
-// (214:8) {:else}
-function create_else_block$5(ctx) {
+// (200:8) {:else}
+function create_else_block$4(ctx) {
 	let t0;
 	let button;
 	let mounted;
 	let dispose;
 
 	function select_block_type_1(ctx, dirty) {
-		if (/*allWorkflowNames*/ ctx[0].length == 0) return create_if_block_7$2;
+		if (/*allWorkflowNames*/ ctx[0].length == 0) return create_if_block_6$1;
 		return create_else_block_1$1;
 	}
 
@@ -33049,17 +28659,17 @@ function create_else_block$5(ctx) {
 			t0 = space();
 			button = element("button");
 			button.textContent = "▼";
-			attr(button, "class", "options-button svelte-1br8pmp");
+			attr(button, "class", "options-button svelte-1hf1yah");
 			attr(button, "title", "Workflow Actions");
 		},
 		m(target, anchor) {
 			if_block.m(target, anchor);
 			insert(target, t0, anchor);
 			insert(target, button, anchor);
-			/*button_binding*/ ctx[31](button);
+			/*button_binding*/ ctx[29](button);
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler*/ ctx[32]);
+				dispose = listen(button, "click", /*click_handler*/ ctx[30]);
 				mounted = true;
 			}
 		},
@@ -33080,15 +28690,15 @@ function create_else_block$5(ctx) {
 			if_block.d(detaching);
 			if (detaching) detach(t0);
 			if (detaching) detach(button);
-			/*button_binding*/ ctx[31](null);
+			/*button_binding*/ ctx[29](null);
 			mounted = false;
 			dispose();
 		}
 	};
 }
 
-// (195:8) {#if workflowInputState !== "hidden"}
-function create_if_block_6$2(ctx) {
+// (181:8) {#if workflowInputState !== "hidden"}
+function create_if_block_5$2(ctx) {
 	let input;
 	let input_placeholder_value;
 	let mounted;
@@ -33106,12 +28716,12 @@ function create_if_block_6$2(ctx) {
 		m(target, anchor) {
 			insert(target, input, anchor);
 			set_input_value(input, /*workflowInputValue*/ ctx[7]);
-			/*input_binding*/ ctx[29](input);
+			/*input_binding*/ ctx[27](input);
 
 			if (!mounted) {
 				dispose = [
-					listen(input, "input", /*input_input_handler*/ ctx[28]),
-					listen(input, "keydown", /*keydown_handler*/ ctx[30]),
+					listen(input, "input", /*input_input_handler*/ ctx[26]),
+					listen(input, "keydown", /*keydown_handler*/ ctx[28]),
 					action_destroyer(focusOnInit.call(null, input))
 				];
 
@@ -33131,14 +28741,14 @@ function create_if_block_6$2(ctx) {
 		},
 		d(detaching) {
 			if (detaching) detach(input);
-			/*input_binding*/ ctx[29](null);
+			/*input_binding*/ ctx[27](null);
 			mounted = false;
 			run_all(dispose);
 		}
 	};
 }
 
-// (217:10) {:else}
+// (203:10) {:else}
 function create_else_block_1$1(ctx) {
 	let div;
 	let select;
@@ -33149,7 +28759,7 @@ function create_else_block_1$1(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$5(get_each_context$5(ctx, each_value, i));
+		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
 	}
 
 	return {
@@ -33162,8 +28772,8 @@ function create_else_block_1$1(ctx) {
 			}
 
 			attr(select, "id", "longform-workflows");
-			attr(select, "class", "svelte-1br8pmp");
-			attr(div, "class", "select svelte-1br8pmp");
+			attr(select, "class", "svelte-1hf1yah");
+			attr(div, "class", "select svelte-1hf1yah");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -33176,7 +28786,7 @@ function create_else_block_1$1(ctx) {
 			select_option(select, /*$selectedDraft*/ ctx[3].workflow);
 
 			if (!mounted) {
-				dispose = listen(select, "change", /*selectedWorkflow*/ ctx[14]);
+				dispose = listen(select, "change", /*selectedWorkflow*/ ctx[13]);
 				mounted = true;
 			}
 		},
@@ -33186,12 +28796,12 @@ function create_else_block_1$1(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$5(ctx, each_value, i);
+					const child_ctx = get_each_context$4(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$5(child_ctx);
+						each_blocks[i] = create_each_block$4(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(select, null);
 					}
@@ -33217,15 +28827,15 @@ function create_else_block_1$1(ctx) {
 	};
 }
 
-// (215:10) {#if allWorkflowNames.length == 0}
-function create_if_block_7$2(ctx) {
+// (201:10) {#if allWorkflowNames.length == 0}
+function create_if_block_6$1(ctx) {
 	let span;
 
 	return {
 		c() {
 			span = element("span");
 			span.textContent = "Create a new workflow to begin →";
-			attr(span, "class", "longform-hint svelte-1br8pmp");
+			attr(span, "class", "longform-hint svelte-1hf1yah");
 		},
 		m(target, anchor) {
 			insert(target, span, anchor);
@@ -33237,10 +28847,10 @@ function create_if_block_7$2(ctx) {
 	};
 }
 
-// (224:16) {#each allWorkflowNames as workflowOption}
-function create_each_block$5(ctx) {
+// (210:16) {#each allWorkflowNames as workflowOption}
+function create_each_block$4(ctx) {
 	let option;
-	let t_value = /*workflowOption*/ ctx[48] + "";
+	let t_value = /*workflowOption*/ ctx[44] + "";
 	let t;
 	let option_value_value;
 
@@ -33248,7 +28858,7 @@ function create_each_block$5(ctx) {
 		c() {
 			option = element("option");
 			t = text(t_value);
-			option.__value = option_value_value = /*workflowOption*/ ctx[48];
+			option.__value = option_value_value = /*workflowOption*/ ctx[44];
 			option.value = option.__value;
 		},
 		m(target, anchor) {
@@ -33256,9 +28866,9 @@ function create_each_block$5(ctx) {
 			append(option, t);
 		},
 		p(ctx, dirty) {
-			if (dirty[0] & /*allWorkflowNames*/ 1 && t_value !== (t_value = /*workflowOption*/ ctx[48] + "")) set_data(t, t_value);
+			if (dirty[0] & /*allWorkflowNames*/ 1 && t_value !== (t_value = /*workflowOption*/ ctx[44] + "")) set_data(t, t_value);
 
-			if (dirty[0] & /*allWorkflowNames*/ 1 && option_value_value !== (option_value_value = /*workflowOption*/ ctx[48])) {
+			if (dirty[0] & /*allWorkflowNames*/ 1 && option_value_value !== (option_value_value = /*workflowOption*/ ctx[44])) {
 				option.__value = option_value_value;
 				option.value = option.__value;
 			}
@@ -33269,14 +28879,14 @@ function create_each_block$5(ctx) {
 	};
 }
 
-// (246:6) {#if $workflows[currentWorkflowName]}
-function create_if_block_5$3(ctx) {
+// (232:6) {#if $workflows[currentWorkflowName]}
+function create_if_block_4$2(ctx) {
 	let autotextarea;
 	let updating_value;
 	let current;
 
 	function autotextarea_value_binding(value) {
-		/*autotextarea_value_binding*/ ctx[33](value);
+		/*autotextarea_value_binding*/ ctx[31](value);
 	}
 
 	let autotextarea_props = {
@@ -33326,8 +28936,8 @@ function create_if_block_5$3(ctx) {
 	};
 }
 
-// (255:4) {#if $workflows[currentWorkflowName]}
-function create_if_block_3$3(ctx) {
+// (241:4) {#if $workflows[currentWorkflowName]}
+function create_if_block_2$6(ctx) {
 	let sortablelist;
 	let updating_items;
 	let t;
@@ -33336,17 +28946,17 @@ function create_if_block_3$3(ctx) {
 	let current;
 
 	function sortablelist_items_binding(value) {
-		/*sortablelist_items_binding*/ ctx[35](value);
+		/*sortablelist_items_binding*/ ctx[33](value);
 	}
 
 	let sortablelist_props = {
-		sortableOptions: /*sortableOptions*/ ctx[21],
+		sortableOptions: /*sortableOptions*/ ctx[20],
 		class: "longform-sortable-step-list",
 		$$slots: {
 			default: [
 				create_default_slot$1,
-				({ item }) => ({ 47: item }),
-				({ item }) => [0, item ? 65536 : 0]
+				({ item }) => ({ 43: item }),
+				({ item }) => [0, item ? 4096 : 0]
 			]
 		},
 		$$scope: { ctx }
@@ -33358,8 +28968,8 @@ function create_if_block_3$3(ctx) {
 
 	sortablelist = new SortableList({ props: sortablelist_props });
 	binding_callbacks.push(() => bind(sortablelist, 'items', sortablelist_items_binding));
-	sortablelist.$on("orderChanged", /*itemOrderChanged*/ ctx[22]);
-	let if_block = show_if && create_if_block_4$3(ctx);
+	sortablelist.$on("orderChanged", /*itemOrderChanged*/ ctx[21]);
+	let if_block = show_if && create_if_block_3$2(ctx);
 
 	return {
 		c() {
@@ -33367,7 +28977,7 @@ function create_if_block_3$3(ctx) {
 			t = space();
 			div = element("div");
 			if (if_block) if_block.c();
-			attr(div, "class", "add-step-container svelte-1br8pmp");
+			attr(div, "class", "add-step-container svelte-1hf1yah");
 		},
 		m(target, anchor) {
 			mount_component(sortablelist, target, anchor);
@@ -33379,7 +28989,7 @@ function create_if_block_3$3(ctx) {
 		p(ctx, dirty) {
 			const sortablelist_changes = {};
 
-			if (dirty[0] & /*$workflows, currentWorkflowName, $currentWorkflow*/ 22 | dirty[1] & /*$$scope, item*/ 1114112) {
+			if (dirty[0] & /*$workflows, currentWorkflowName, $currentWorkflow*/ 22 | dirty[1] & /*$$scope, item*/ 69632) {
 				sortablelist_changes.$$scope = { dirty, ctx };
 			}
 
@@ -33396,7 +29006,7 @@ function create_if_block_3$3(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block_4$3(ctx);
+					if_block = create_if_block_3$2(ctx);
 					if_block.c();
 					if_block.m(div, null);
 				}
@@ -33423,21 +29033,21 @@ function create_if_block_3$3(ctx) {
 	};
 }
 
-// (256:6) <SortableList         bind:items         let:item         {sortableOptions}         on:orderChanged={itemOrderChanged}         class="longform-sortable-step-list"       >
+// (242:6) <SortableList         bind:items         let:item         {sortableOptions}         on:orderChanged={itemOrderChanged}         class="longform-sortable-step-list"       >
 function create_default_slot$1(ctx) {
 	let compilestepview;
 	let current;
 
 	function removeStep_handler() {
-		return /*removeStep_handler*/ ctx[34](/*item*/ ctx[47]);
+		return /*removeStep_handler*/ ctx[32](/*item*/ ctx[43]);
 	}
 
 	compilestepview = new CompileStepView({
 			props: {
-				ordinal: /*item*/ ctx[47].index + 1,
-				step: /*$workflows*/ ctx[4][/*currentWorkflowName*/ ctx[1]].steps[/*item*/ ctx[47].index],
-				calculatedKind: /*kindAtIndex*/ ctx[19](/*item*/ ctx[47].index),
-				error: /*errorAtIndex*/ ctx[20](/*item*/ ctx[47].index)
+				ordinal: /*item*/ ctx[43].index + 1,
+				step: /*$workflows*/ ctx[4][/*currentWorkflowName*/ ctx[1]].steps[/*item*/ ctx[43].index],
+				calculatedKind: /*kindAtIndex*/ ctx[18](/*item*/ ctx[43].index),
+				error: /*errorAtIndex*/ ctx[19](/*item*/ ctx[43].index)
 			}
 		});
 
@@ -33454,10 +29064,10 @@ function create_default_slot$1(ctx) {
 		p(new_ctx, dirty) {
 			ctx = new_ctx;
 			const compilestepview_changes = {};
-			if (dirty[1] & /*item*/ 65536) compilestepview_changes.ordinal = /*item*/ ctx[47].index + 1;
-			if (dirty[0] & /*$workflows, currentWorkflowName*/ 18 | dirty[1] & /*item*/ 65536) compilestepview_changes.step = /*$workflows*/ ctx[4][/*currentWorkflowName*/ ctx[1]].steps[/*item*/ ctx[47].index];
-			if (dirty[1] & /*item*/ 65536) compilestepview_changes.calculatedKind = /*kindAtIndex*/ ctx[19](/*item*/ ctx[47].index);
-			if (dirty[1] & /*item*/ 65536) compilestepview_changes.error = /*errorAtIndex*/ ctx[20](/*item*/ ctx[47].index);
+			if (dirty[1] & /*item*/ 4096) compilestepview_changes.ordinal = /*item*/ ctx[43].index + 1;
+			if (dirty[0] & /*$workflows, currentWorkflowName*/ 18 | dirty[1] & /*item*/ 4096) compilestepview_changes.step = /*$workflows*/ ctx[4][/*currentWorkflowName*/ ctx[1]].steps[/*item*/ ctx[43].index];
+			if (dirty[1] & /*item*/ 4096) compilestepview_changes.calculatedKind = /*kindAtIndex*/ ctx[18](/*item*/ ctx[43].index);
+			if (dirty[1] & /*item*/ 4096) compilestepview_changes.error = /*errorAtIndex*/ ctx[19](/*item*/ ctx[43].index);
 			compilestepview.$set(compilestepview_changes);
 		},
 		i(local) {
@@ -33475,8 +29085,8 @@ function create_default_slot$1(ctx) {
 	};
 }
 
-// (280:8) {#if Object.keys($workflows).length > 0}
-function create_if_block_4$3(ctx) {
+// (266:8) {#if Object.keys($workflows).length > 0}
+function create_if_block_3$2(ctx) {
 	let button;
 	let mounted;
 	let dispose;
@@ -33485,13 +29095,13 @@ function create_if_block_4$3(ctx) {
 		c() {
 			button = element("button");
 			button.textContent = "+ Add Step";
-			attr(button, "class", "svelte-1br8pmp");
+			attr(button, "class", "svelte-1hf1yah");
 		},
 		m(target, anchor) {
 			insert(target, button, anchor);
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*addStep*/ ctx[18]);
+				dispose = listen(button, "click", /*addStep*/ ctx[17]);
 				mounted = true;
 			}
 		},
@@ -33504,60 +29114,50 @@ function create_if_block_4$3(ctx) {
 	};
 }
 
-// (306:6) {#if $currentWorkflow && $currentWorkflow.steps.length > 0}
-function create_if_block_1$9(ctx) {
-	let div;
+// (292:6) {#if $currentWorkflow && $currentWorkflow.steps.length > 0}
+function create_if_block_1$8(ctx) {
 	let button;
 	let t0;
 	let button_disabled_value;
 	let button_aria_label_value;
 	let t1;
-	let t2;
 	let span;
 
-	let t3_value = (/*validation*/ ctx[11].error === WorkflowError.Valid
+	let t2_value = (/*validation*/ ctx[11].error === WorkflowError.Valid
 	? /*defaultCompileStatus*/ ctx[10]
 	: /*validation*/ ctx[11].error) + "";
 
-	let t3;
+	let t2;
 	let mounted;
 	let dispose;
-	let if_block = /*$selectedProjectHasMultipleDrafts*/ ctx[13] && create_if_block_2$7(ctx);
 
 	return {
 		c() {
-			div = element("div");
 			button = element("button");
 			t0 = text("Compile");
 			t1 = space();
-			if (if_block) if_block.c();
-			t2 = space();
 			span = element("span");
-			t3 = text(t3_value);
-			attr(button, "class", "compile-button svelte-1br8pmp");
-			button.disabled = button_disabled_value = /*validation*/ ctx[11].error !== WorkflowError.Valid || isCompiling;
+			t2 = text(t2_value);
+			attr(button, "class", "compile-button svelte-1hf1yah");
+			button.disabled = button_disabled_value = /*validation*/ ctx[11].error !== WorkflowError.Valid;
 			attr(button, "aria-label", button_aria_label_value = /*validation*/ ctx[11].error);
-			attr(div, "class", "longform-compile-buttons svelte-1br8pmp");
-			attr(span, "class", "compile-status svelte-1br8pmp");
+			attr(span, "class", "compile-status svelte-1hf1yah");
 		},
 		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, button);
+			insert(target, button, anchor);
 			append(button, t0);
-			append(div, t1);
-			if (if_block) if_block.m(div, null);
-			insert(target, t2, anchor);
+			insert(target, t1, anchor);
 			insert(target, span, anchor);
-			append(span, t3);
-			/*span_binding*/ ctx[36](span);
+			append(span, t2);
+			/*span_binding*/ ctx[34](span);
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*doCompile*/ ctx[23]);
+				dispose = listen(button, "click", /*doCompile*/ ctx[22]);
 				mounted = true;
 			}
 		},
 		p(ctx, dirty) {
-			if (dirty[0] & /*validation*/ 2048 && button_disabled_value !== (button_disabled_value = /*validation*/ ctx[11].error !== WorkflowError.Valid || isCompiling)) {
+			if (dirty[0] & /*validation*/ 2048 && button_disabled_value !== (button_disabled_value = /*validation*/ ctx[11].error !== WorkflowError.Valid)) {
 				button.disabled = button_disabled_value;
 			}
 
@@ -33565,72 +29165,25 @@ function create_if_block_1$9(ctx) {
 				attr(button, "aria-label", button_aria_label_value);
 			}
 
-			if (/*$selectedProjectHasMultipleDrafts*/ ctx[13]) {
-				if (if_block) {
-					if_block.p(ctx, dirty);
-				} else {
-					if_block = create_if_block_2$7(ctx);
-					if_block.c();
-					if_block.m(div, null);
-				}
-			} else if (if_block) {
-				if_block.d(1);
-				if_block = null;
-			}
-
-			if (dirty[0] & /*validation, defaultCompileStatus*/ 3072 && t3_value !== (t3_value = (/*validation*/ ctx[11].error === WorkflowError.Valid
+			if (dirty[0] & /*validation, defaultCompileStatus*/ 3072 && t2_value !== (t2_value = (/*validation*/ ctx[11].error === WorkflowError.Valid
 			? /*defaultCompileStatus*/ ctx[10]
-			: /*validation*/ ctx[11].error) + "")) set_data(t3, t3_value);
+			: /*validation*/ ctx[11].error) + "")) set_data(t2, t2_value);
 		},
-		d(detaching) {
-			if (detaching) detach(div);
-			if (if_block) if_block.d();
-			if (detaching) detach(t2);
-			if (detaching) detach(span);
-			/*span_binding*/ ctx[36](null);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (314:10) {#if $selectedProjectHasMultipleDrafts}
-function create_if_block_2$7(ctx) {
-	let button;
-	let t;
-	let mounted;
-	let dispose;
-
-	return {
-		c() {
-			button = element("button");
-			t = text("Compile All Drafts…");
-			attr(button, "class", "compile-button svelte-1br8pmp");
-			button.disabled = isCompiling;
-			attr(button, "title", "Open the compile matrix: reorder drafts, batch-configure, and run each with live progress.");
-		},
-		m(target, anchor) {
-			insert(target, button, anchor);
-			append(button, t);
-
-			if (!mounted) {
-				dispose = listen(button, "click", /*openCompileMatrix*/ ctx[24]);
-				mounted = true;
-			}
-		},
-		p: noop,
 		d(detaching) {
 			if (detaching) detach(button);
+			if (detaching) detach(t1);
+			if (detaching) detach(span);
+			/*span_binding*/ ctx[34](null);
 			mounted = false;
 			dispose();
 		}
 	};
 }
 
-function create_fragment$d(ctx) {
+function create_fragment$c(ctx) {
 	let if_block_anchor;
 	let current;
-	let if_block = /*$selectedDraft*/ ctx[3] && create_if_block$c(ctx);
+	let if_block = /*$selectedDraft*/ ctx[3] && create_if_block$b(ctx);
 
 	return {
 		c() {
@@ -33651,7 +29204,7 @@ function create_fragment$d(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$c(ctx);
+					if_block = create_if_block$b(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -33682,27 +29235,20 @@ function create_fragment$d(ctx) {
 	};
 }
 
-let isCompiling = false;
-
 function focusOnInit(el) {
 	el.focus();
 }
 
-function instance$d($$self, $$props, $$invalidate) {
+function instance$c($$self, $$props, $$invalidate) {
 	let $currentWorkflow;
 	let $selectedDraft;
-	let $selectedProject;
 	let $workflows;
 	let $drafts;
-	let $selectedProjectHasMultipleDrafts;
 	component_subscribe($$self, currentWorkflow, $$value => $$invalidate(2, $currentWorkflow = $$value));
 	component_subscribe($$self, selectedDraft, $$value => $$invalidate(3, $selectedDraft = $$value));
-	component_subscribe($$self, selectedProject, $$value => $$invalidate(39, $selectedProject = $$value));
 	component_subscribe($$self, workflows, $$value => $$invalidate(4, $workflows = $$value));
-	component_subscribe($$self, drafts, $$value => $$invalidate(27, $drafts = $$value));
-	component_subscribe($$self, selectedProjectHasMultipleDrafts, $$value => $$invalidate(13, $selectedProjectHasMultipleDrafts = $$value));
+	component_subscribe($$self, drafts, $$value => $$invalidate(25, $drafts = $$value));
 	var _a;
-	const app = useApp();
 	let workflowContextButton;
 	let workflowInputState = "hidden";
 	let workflowInputValue = "";
@@ -33732,7 +29278,7 @@ function instance$d($$self, $$props, $$invalidate) {
 			$$invalidate(6, workflowInputState = "rename");
 		} else if (type == "delete") {
 			showConfirmModal(`Delete ${currentWorkflowName}?`, "Really delete this workflow? This can’t be undone.", "Delete", () => {
-				$$invalidate(26, isDeletingWorkflow = true);
+				$$invalidate(24, isDeletingWorkflow = true);
 				const toDelete = currentWorkflowName;
 				const remaining = allWorkflowNames.filter(n => n != toDelete);
 
@@ -33743,7 +29289,7 @@ function instance$d($$self, $$props, $$invalidate) {
 				}
 
 				set_store_value(workflows, $workflows = delete $workflows[toDelete] && $workflows, $workflows);
-				$$invalidate(26, isDeletingWorkflow = false);
+				$$invalidate(24, isDeletingWorkflow = false);
 			});
 		}
 	}
@@ -33823,10 +29369,9 @@ function instance$d($$self, $$props, $$invalidate) {
 
 	function onCompileStatusChange(status) {
 		if (status.kind == "CompileStatusError") {
-			$$invalidate(9, compileStatus.innerText = "Compile failed.", compileStatus);
+			$$invalidate(9, compileStatus.innerText = `${status.error}. See dev console for more details.`, compileStatus);
 			compileStatus.classList.add("compile-status-error");
 			restoreDefaultStatusAfter(10000);
-			showErrorModal(app, "Compile failed", status.error);
 		} else if (status.kind == "CompileStatusStep") {
 			$$invalidate(9, compileStatus.innerText = `Step ${status.stepIndex + 1}/${status.totalSteps} (${formatStepKind(status.stepKind)})`, compileStatus);
 		} else if (status.kind == "CompileStatusSuccess") {
@@ -33853,17 +29398,7 @@ function instance$d($$self, $$props, $$invalidate) {
 	const compile = getContext("compile");
 
 	function doCompile() {
-		const projectRoot = projectRootPath($selectedProject !== null && $selectedProject !== void 0
-		? $selectedProject
-		: [$selectedDraft]);
-
-		compile($selectedDraft, $currentWorkflow, calculatedKinds, onCompileStatusChange, { projectRoot });
-	}
-
-	// "Compile All Drafts" opens the Compile Matrix board (reorder, batch config,
-	// then run) rather than compiling immediately.
-	function openCompileMatrix() {
-		new CompileMatrixModal(app).open();
+		compile($selectedDraft, $currentWorkflow, calculatedKinds, onCompileStatusChange);
 	}
 
 	function input_input_handler() {
@@ -33929,14 +29464,14 @@ function instance$d($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty[0] & /*$workflows, _a*/ 33554448) {
+		if ($$self.$$.dirty[0] & /*$workflows, _a*/ 8388624) {
 			// WORKFLOW MANAGEMENT
-			$$invalidate(0, allWorkflowNames = $$invalidate(25, _a = Object.keys($workflows).sort()) !== null && _a !== void 0
+			$$invalidate(0, allWorkflowNames = $$invalidate(23, _a = Object.keys($workflows).sort()) !== null && _a !== void 0
 			? _a
 			: []);
 		}
 
-		if ($$self.$$.dirty[0] & /*$selectedDraft, isDeletingWorkflow, currentWorkflowName, allWorkflowNames, $drafts*/ 201326603) {
+		if ($$self.$$.dirty[0] & /*$selectedDraft, isDeletingWorkflow, currentWorkflowName, allWorkflowNames, $drafts*/ 50331659) {
 			{
 				if ($selectedDraft) {
 					$$invalidate(1, currentWorkflowName = $selectedDraft.workflow);
@@ -33951,7 +29486,7 @@ function instance$d($$self, $$props, $$invalidate) {
 			}
 		}
 
-		if ($$self.$$.dirty[0] & /*$selectedDraft, $drafts*/ 134217736) {
+		if ($$self.$$.dirty[0] & /*$selectedDraft, $drafts*/ 33554440) {
 			{
 				currentDraftIndex = $selectedDraft && $drafts.findIndex(d => d.vaultPath === $selectedDraft.vaultPath);
 			}
@@ -33996,7 +29531,6 @@ function instance$d($$self, $$props, $$invalidate) {
 		defaultCompileStatus,
 		validation,
 		items,
-		$selectedProjectHasMultipleDrafts,
 		selectedWorkflow,
 		showCompileActionsMenu,
 		workflowAction,
@@ -34007,7 +29541,6 @@ function instance$d($$self, $$props, $$invalidate) {
 		sortableOptions,
 		itemOrderChanged,
 		doCompile,
-		openCompileMatrix,
 		_a,
 		isDeletingWorkflow,
 		$drafts,
@@ -34026,7 +29559,7 @@ function instance$d($$self, $$props, $$invalidate) {
 class CompileView extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$d, create_fragment$d, safe_not_equal, {}, add_css$d, [-1, -1]);
+		init(this, options, instance$c, create_fragment$c, safe_not_equal, {}, add_css$c, [-1, -1]);
 	}
 }
 
@@ -34086,12 +29619,12 @@ const goalProgress = derived([selectedDraft, sessions, pluginSettings, activeFil
 
 /* src/view/explorer/NewSceneField.svelte generated by Svelte v3.49.0 */
 
-function add_css$c(target) {
+function add_css$b(target) {
 	append_styles(target, "svelte-e1ncqi", ".new-scene-container.svelte-e1ncqi{margin:0;padding:var(--size-4-2) 0}#new-scene.svelte-e1ncqi{width:100%;background:var(--background-modifier-form-field);border:var(--input-border-width) solid var(--background-modifier-border);border-radius:var(--input-radius);font-size:var(--font-ui-small);padding:var(--size-4-1) var(--size-4-2)}#new-scene.invalid.svelte-e1ncqi{color:var(--text-error)}");
 }
 
 // (50:2) {#if error}
-function create_if_block$b(ctx) {
+function create_if_block$a(ctx) {
 	let p;
 	let t;
 
@@ -34113,13 +29646,13 @@ function create_if_block$b(ctx) {
 	};
 }
 
-function create_fragment$c(ctx) {
+function create_fragment$b(ctx) {
 	let div;
 	let input;
 	let t;
 	let mounted;
 	let dispose;
-	let if_block = /*error*/ ctx[2] && create_if_block$b(ctx);
+	let if_block = /*error*/ ctx[2] && create_if_block$a(ctx);
 
 	return {
 		c() {
@@ -34164,7 +29697,7 @@ function create_fragment$c(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$b(ctx);
+					if_block = create_if_block$a(ctx);
 					if_block.c();
 					if_block.m(div, null);
 				}
@@ -34185,7 +29718,7 @@ function create_fragment$c(ctx) {
 	};
 }
 
-function instance$c($$self, $$props, $$invalidate) {
+function instance$b($$self, $$props, $$invalidate) {
 	let $selectedDraft;
 	component_subscribe($$self, selectedDraft, $$value => $$invalidate(7, $selectedDraft = $$value));
 	let newSceneName = "";
@@ -34256,30 +29789,30 @@ function instance$c($$self, $$props, $$invalidate) {
 class NewSceneField extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$c, create_fragment$c, safe_not_equal, {}, add_css$c);
+		init(this, options, instance$b, create_fragment$b, safe_not_equal, {}, add_css$b);
 	}
 }
 
 /* src/view/explorer/ProjectPicker.svelte generated by Svelte v3.49.0 */
 
-function add_css$b(target) {
+function add_css$a(target) {
 	append_styles(target, "svelte-1hf8c86", "#project-picker-container.svelte-1hf8c86.svelte-1hf8c86{margin-bottom:var(--size-4-2)}select.svelte-1hf8c86.svelte-1hf8c86{background-color:transparent;border:var(--input-border-width) solid var(--background-modifier-border);border-radius:var(--input-radius);padding:var(--size-4-2) var(--size-4-3);width:100%;height:100%;font-family:inherit;font-size:var(--font-ui-large);cursor:inherit;line-height:inherit;outline:none;box-shadow:none}.select.svelte-1hf8c86>select.svelte-1hf8c86:hover{color:var(--text-normal);background-color:var(--background-modifier-hover);box-shadow:0 0 0 2px var(--background-modifier-border-focus);border-color:var(--background-modifier-border-focus);transition:box-shadow 0.15s ease-in-out,\n      border 0.15s ease-in-out}.current-draft-path.svelte-1hf8c86.svelte-1hf8c86{color:var(--text-faint);font-size:var(--font-smallest);padding:0 0 var(--size-4-1) var(--size-4-3)}.current-draft-path.svelte-1hf8c86.svelte-1hf8c86:hover{color:var(--text-accent);cursor:pointer}#select-drafts.svelte-1hf8c86.svelte-1hf8c86{margin-top:var(--size-4-1)}");
 }
 
-function get_each_context$4(ctx, list, i) {
+function get_each_context$3(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[12] = list[i];
 	return child_ctx;
 }
 
-function get_each_context_1$1(ctx, list, i) {
+function get_each_context_1(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[15] = list[i];
 	return child_ctx;
 }
 
 // (80:2) {:else}
-function create_else_block$4(ctx) {
+function create_else_block$3(ctx) {
 	let p;
 
 	return {
@@ -34301,7 +29834,7 @@ function create_else_block$4(ctx) {
 }
 
 // (49:2) {#if projectOptions.length > 0}
-function create_if_block$a(ctx) {
+function create_if_block$9(ctx) {
 	let div1;
 	let div0;
 	let select;
@@ -34315,11 +29848,11 @@ function create_if_block$a(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value_1.length; i += 1) {
-		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
+		each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
 	}
 
-	let if_block0 = /*$selectedProjectHasMultipleDrafts*/ ctx[4] && create_if_block_2$6(ctx);
-	let if_block1 = /*$selectedDraft*/ ctx[2] && create_if_block_1$8(ctx);
+	let if_block0 = /*$selectedProjectHasMultipleDrafts*/ ctx[4] && create_if_block_2$5(ctx);
+	let if_block1 = /*$selectedDraft*/ ctx[2] && create_if_block_1$7(ctx);
 
 	return {
 		c() {
@@ -34372,12 +29905,12 @@ function create_if_block$a(ctx) {
 				let i;
 
 				for (i = 0; i < each_value_1.length; i += 1) {
-					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
+					const child_ctx = get_each_context_1(ctx, each_value_1, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block_1$1(child_ctx);
+						each_blocks[i] = create_each_block_1(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(select, null);
 					}
@@ -34402,7 +29935,7 @@ function create_if_block$a(ctx) {
 				if (if_block0) {
 					if_block0.p(ctx, dirty);
 				} else {
-					if_block0 = create_if_block_2$6(ctx);
+					if_block0 = create_if_block_2$5(ctx);
 					if_block0.c();
 					if_block0.m(div1, null);
 				}
@@ -34415,7 +29948,7 @@ function create_if_block$a(ctx) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 				} else {
-					if_block1 = create_if_block_1$8(ctx);
+					if_block1 = create_if_block_1$7(ctx);
 					if_block1.c();
 					if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
 				}
@@ -34438,7 +29971,7 @@ function create_if_block$a(ctx) {
 }
 
 // (58:10) {#each projectOptions as projectOption}
-function create_each_block_1$1(ctx) {
+function create_each_block_1(ctx) {
 	let option;
 	let t_value = /*projectOption*/ ctx[15] + "";
 	let t;
@@ -34471,7 +30004,7 @@ function create_each_block_1$1(ctx) {
 }
 
 // (65:6) {#if $selectedProjectHasMultipleDrafts}
-function create_if_block_2$6(ctx) {
+function create_if_block_2$5(ctx) {
 	let div;
 	let select;
 	let mounted;
@@ -34480,7 +30013,7 @@ function create_if_block_2$6(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
 	}
 
 	return {
@@ -34519,12 +30052,12 @@ function create_if_block_2$6(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$4(ctx, each_value, i);
+					const child_ctx = get_each_context$3(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$4(child_ctx);
+						each_blocks[i] = create_each_block$3(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(select, null);
 					}
@@ -34551,7 +30084,7 @@ function create_if_block_2$6(ctx) {
 }
 
 // (68:12) {#each draftOptions as draftOption}
-function create_each_block$4(ctx) {
+function create_each_block$3(ctx) {
 	let option;
 	let t_value = /*draftOption*/ ctx[12].title + "";
 	let t;
@@ -34583,7 +30116,7 @@ function create_each_block$4(ctx) {
 }
 
 // (75:4) {#if $selectedDraft}
-function create_if_block_1$8(ctx) {
+function create_if_block_1$7(ctx) {
 	let div;
 	let t_value = /*$selectedDraft*/ ctx[2].vaultPath + "";
 	let t;
@@ -34616,12 +30149,12 @@ function create_if_block_1$8(ctx) {
 	};
 }
 
-function create_fragment$b(ctx) {
+function create_fragment$a(ctx) {
 	let div;
 
 	function select_block_type(ctx, dirty) {
-		if (/*projectOptions*/ ctx[0].length > 0) return create_if_block$a;
-		return create_else_block$4;
+		if (/*projectOptions*/ ctx[0].length > 0) return create_if_block$9;
+		return create_else_block$3;
 	}
 
 	let current_block_type = select_block_type(ctx);
@@ -34660,7 +30193,7 @@ function create_fragment$b(ctx) {
 	};
 }
 
-function instance$b($$self, $$props, $$invalidate) {
+function instance$a($$self, $$props, $$invalidate) {
 	let $selectedDraft;
 	let $selectedDraftVaultPath;
 	let $projects;
@@ -34751,17 +30284,17 @@ function instance$b($$self, $$props, $$invalidate) {
 class ProjectPicker extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$b, create_fragment$b, safe_not_equal, {}, add_css$b);
+		init(this, options, instance$a, create_fragment$a, safe_not_equal, {}, add_css$a);
 	}
 }
 
 /* src/view/components/Disclosure.svelte generated by Svelte v3.49.0 */
 
-function add_css$a(target) {
+function add_css$9(target) {
 	append_styles(target, "svelte-ff880f", ".right-triangle.svelte-ff880f.svelte-ff880f{transition:transform 0.3s;display:flex;align-items:center;justify-content:center;width:var(--size-4-3);color:var(--icon-color);margin-left:calc(var(--size-4-1) * -1);margin-top:calc(var(--size-4-1) * -.25)}.collapsed.svelte-ff880f .right-triangle.svelte-ff880f{transform:rotate(-90deg)}");
 }
 
-function create_fragment$a(ctx) {
+function create_fragment$9(ctx) {
 	let span;
 	let svg;
 	let path;
@@ -34817,7 +30350,7 @@ function create_fragment$a(ctx) {
 	};
 }
 
-function instance$a($$self, $$props, $$invalidate) {
+function instance$9($$self, $$props, $$invalidate) {
 	let { collapsed = false } = $$props;
 	let { class: className = "" } = $$props;
 
@@ -34836,7 +30369,7 @@ function instance$a($$self, $$props, $$invalidate) {
 class Disclosure extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$a, create_fragment$a, safe_not_equal, { collapsed: 0, class: 1 }, add_css$a);
+		init(this, options, instance$9, create_fragment$9, safe_not_equal, { collapsed: 0, class: 1 }, add_css$9);
 	}
 }
 
@@ -34922,18 +30455,18 @@ const ignoreAll = () => {
 
 /* src/view/explorer/SceneList.svelte generated by Svelte v3.49.0 */
 
-function add_css$9(target) {
+function add_css$8(target) {
 	append_styles(target, "svelte-u6nqd", ".group{margin-left:var(--size-4-2)}#scene-list.svelte-u6nqd.svelte-u6nqd{margin:var(--size-4-1) 0}#scene-list.svelte-u6nqd .sortable-scene-list{list-style-type:none;padding:0;margin:0}.scene-container.svelte-u6nqd.svelte-u6nqd{display:flex;flex-direction:row;align-items:center;border:var(--border-width) solid transparent;border-radius:var(--radius-s);cursor:pointer;color:var(--nav-item-color);font-size:var(--nav-item-size);font-weight:var(--nav-item-weight);line-height:var(--line-height-tight);padding:var(--size-4-1) var(--size-4-2);white-space:normal}.scene-container.collapsible.svelte-u6nqd.svelte-u6nqd{display:flex;flex-direction:row;align-items:center;border:var(--border-width) solid transparent;border-radius:var(--radius-s);cursor:pointer;color:var(--nav-item-color);font-size:var(--nav-item-size);font-weight:var(--nav-item-weight);line-height:var(--line-height-tight);padding:var(--size-4-1) var(--size-4-2);white-space:normal}.scene-container.hidden.svelte-u6nqd.svelte-u6nqd{display:none}.scene-container.svelte-u6nqd .svelte-u6nqd:nth-child(2){margin-left:var(--size-4-2)}.selected.svelte-u6nqd.svelte-u6nqd,.svelte-u6nqd:not(.dragging) .scene-container.svelte-u6nqd:hover{background-color:var(--background-secondary-alt);color:var(--text-normal)}.scene-container.svelte-u6nqd.svelte-u6nqd:active{background-color:inherit;color:var(--text-muted)}.longform-scene-number.svelte-u6nqd.svelte-u6nqd{color:var(--text-muted);margin-right:var(--size-4-1);font-weight:bold}.longform-scene-number.svelte-u6nqd.svelte-u6nqd::after{content:\".\"}#longform-unknown-files-wizard.svelte-u6nqd.svelte-u6nqd{border-top:var(--border-width) solid var(--text-muted);padding:var(--size-4-2) 0}.longform-unknown-inner.svelte-u6nqd.svelte-u6nqd{border-left:var(--size-2-1) solid var(--text-accent);padding:0 0 0 var(--size-4-1)}.longform-unknown-explanation.svelte-u6nqd.svelte-u6nqd{color:var(--text-muted);font-size:1em}#longform-unknown-files-wizard.svelte-u6nqd ul.svelte-u6nqd{list-style-type:none;padding:0 0 0 var(--size-4-2)}.longform-unknown-file.svelte-u6nqd.svelte-u6nqd{display:flex;flex-direction:row;justify-content:space-between}.longform-unknown-add.svelte-u6nqd.svelte-u6nqd{color:var(--text-accent);font-weight:bold}.longform-unknown-ignore.svelte-u6nqd.svelte-u6nqd{color:var(--text-muted);font-weight:bold}.scene-drag-ghost{background-color:var(--interactive-accent-hover);color:var(--text-on-accent);margin-left:var(--ghost-indent)}");
 }
 
-function get_each_context$3(ctx, list, i) {
+function get_each_context$2(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[45] = list[i];
 	return child_ctx;
 }
 
 // (342:8) {#if item.collapsible}
-function create_if_block_2$5(ctx) {
+function create_if_block_2$4(ctx) {
 	let disclosure;
 	let current;
 
@@ -34979,7 +30512,7 @@ function create_if_block_2$5(ctx) {
 }
 
 // (357:10) {#if $pluginSettings.numberScenes}
-function create_if_block_1$7(ctx) {
+function create_if_block_1$6(ctx) {
 	let span;
 	let t_value = /*numberLabel*/ ctx[20](/*item*/ ctx[48]) + "";
 	let t;
@@ -35030,8 +30563,8 @@ function create_default_slot(ctx) {
 	let current;
 	let mounted;
 	let dispose;
-	let if_block0 = /*item*/ ctx[48].collapsible && create_if_block_2$5(ctx);
-	let if_block1 = /*$pluginSettings*/ ctx[7].numberScenes && create_if_block_1$7(ctx);
+	let if_block0 = /*item*/ ctx[48].collapsible && create_if_block_2$4(ctx);
+	let if_block1 = /*$pluginSettings*/ ctx[7].numberScenes && create_if_block_1$6(ctx);
 
 	function click_handler_1(...args) {
 		return /*click_handler_1*/ ctx[24](/*item*/ ctx[48], ...args);
@@ -35127,7 +30660,7 @@ function create_default_slot(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$5(ctx);
+					if_block0 = create_if_block_2$4(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(div2, t0);
@@ -35146,7 +30679,7 @@ function create_default_slot(ctx) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 				} else {
-					if_block1 = create_if_block_1$7(ctx);
+					if_block1 = create_if_block_1$6(ctx);
 					if_block1.c();
 					if_block1.m(div1, t1);
 				}
@@ -35241,7 +30774,7 @@ function create_default_slot(ctx) {
 }
 
 // (384:2) {#if $selectedDraft && $selectedDraft.format === "scenes" && $selectedDraft.unknownFiles.length > 0}
-function create_if_block$9(ctx) {
+function create_if_block$8(ctx) {
 	let div2;
 	let div1;
 	let p;
@@ -35269,7 +30802,7 @@ function create_if_block$9(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
+		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
 	}
 
 	return {
@@ -35346,12 +30879,12 @@ function create_if_block$9(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$3(ctx, each_value, i);
+					const child_ctx = get_each_context$2(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$3(child_ctx);
+						each_blocks[i] = create_each_block$2(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(ul, null);
 					}
@@ -35374,7 +30907,7 @@ function create_if_block$9(ctx) {
 }
 
 // (403:10) {#each $selectedDraft.unknownFiles as fileName}
-function create_each_block$3(ctx) {
+function create_each_block$2(ctx) {
 	let li;
 	let div1;
 	let span;
@@ -35448,7 +30981,7 @@ function create_each_block$3(ctx) {
 	};
 }
 
-function create_fragment$9(ctx) {
+function create_fragment$8(ctx) {
 	let div1;
 	let div0;
 	let sortablelist;
@@ -35482,7 +31015,7 @@ function create_fragment$9(ctx) {
 	binding_callbacks.push(() => bind(sortablelist, 'items', sortablelist_items_binding));
 	sortablelist.$on("orderChanged", /*itemOrderChanged*/ ctx[9]);
 	sortablelist.$on("indentChanged", /*itemIndentChanged*/ ctx[10]);
-	let if_block = /*$selectedDraft*/ ctx[1] && /*$selectedDraft*/ ctx[1].format === "scenes" && /*$selectedDraft*/ ctx[1].unknownFiles.length > 0 && create_if_block$9(ctx);
+	let if_block = /*$selectedDraft*/ ctx[1] && /*$selectedDraft*/ ctx[1].format === "scenes" && /*$selectedDraft*/ ctx[1].unknownFiles.length > 0 && create_if_block$8(ctx);
 
 	return {
 		c() {
@@ -35532,7 +31065,7 @@ function create_fragment$9(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$9(ctx);
+					if_block = create_if_block$8(ctx);
 					if_block.c();
 					if_block.m(div1, null);
 				}
@@ -35558,7 +31091,7 @@ function create_fragment$9(ctx) {
 	};
 }
 
-function instance$9($$self, $$props, $$invalidate) {
+function instance$8($$self, $$props, $$invalidate) {
 	let $drafts;
 	let $selectedDraft;
 	let $activeFile;
@@ -35993,18 +31526,18 @@ function instance$9($$self, $$props, $$invalidate) {
 class SceneList extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$9, create_fragment$9, safe_not_equal, {}, add_css$9, [-1, -1]);
+		init(this, options, instance$8, create_fragment$8, safe_not_equal, {}, add_css$8, [-1, -1]);
 	}
 }
 
 /* src/view/components/Icon.svelte generated by Svelte v3.49.0 */
 
-function add_css$8(target) {
+function add_css$7(target) {
 	append_styles(target, "svelte-eq2zbb", "span.svelte-eq2zbb{display:flex;align-items:center;justify-content:center}");
 }
 
 // (9:0) {#if iconName.length > 0}
-function create_if_block$8(ctx) {
+function create_if_block$7(ctx) {
 	let span;
 	let icon_action;
 	let mounted;
@@ -36034,9 +31567,9 @@ function create_if_block$8(ctx) {
 	};
 }
 
-function create_fragment$8(ctx) {
+function create_fragment$7(ctx) {
 	let if_block_anchor;
-	let if_block = /*iconName*/ ctx[0].length > 0 && create_if_block$8(ctx);
+	let if_block = /*iconName*/ ctx[0].length > 0 && create_if_block$7(ctx);
 
 	return {
 		c() {
@@ -36052,7 +31585,7 @@ function create_fragment$8(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$8(ctx);
+					if_block = create_if_block$7(ctx);
 					if_block.c();
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
 				}
@@ -36070,7 +31603,7 @@ function create_fragment$8(ctx) {
 	};
 }
 
-function instance$8($$self, $$props, $$invalidate) {
+function instance$7($$self, $$props, $$invalidate) {
 	let { iconName = "" } = $$props;
 
 	const icon = (node, icon) => {
@@ -36087,7 +31620,7 @@ function instance$8($$self, $$props, $$invalidate) {
 class Icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$8, create_fragment$8, safe_not_equal, { iconName: 0 }, add_css$8);
+		init(this, options, instance$7, create_fragment$7, safe_not_equal, { iconName: 0 }, add_css$7);
 	}
 }
 
@@ -36247,7 +31780,7 @@ function getBasePlacement(placement) {
   return placement.split('-')[0];
 }
 
-var max$1 = Math.max;
+var max = Math.max;
 var min = Math.min;
 var round = Math.round;
 
@@ -36427,8 +31960,8 @@ function getMainAxisFromPlacement(placement) {
   return ['top', 'bottom'].indexOf(placement) >= 0 ? 'x' : 'y';
 }
 
-function within(min$1, value, max) {
-  return max$1(min$1, min(value, max));
+function within(min$1, value, max$1) {
+  return max(min$1, min(value, max$1));
 }
 function withinMaxClamp(min, value, max) {
   var v = within(min, value, max);
@@ -36860,13 +32393,13 @@ function getDocumentRect(element) {
   var html = getDocumentElement(element);
   var winScroll = getWindowScroll(element);
   var body = (_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body;
-  var width = max$1(html.scrollWidth, html.clientWidth, body ? body.scrollWidth : 0, body ? body.clientWidth : 0);
-  var height = max$1(html.scrollHeight, html.clientHeight, body ? body.scrollHeight : 0, body ? body.clientHeight : 0);
+  var width = max(html.scrollWidth, html.clientWidth, body ? body.scrollWidth : 0, body ? body.clientWidth : 0);
+  var height = max(html.scrollHeight, html.clientHeight, body ? body.scrollHeight : 0, body ? body.clientHeight : 0);
   var x = -winScroll.scrollLeft + getWindowScrollBarX(element);
   var y = -winScroll.scrollTop;
 
   if (getComputedStyle(body || html).direction === 'rtl') {
-    x += max$1(html.clientWidth, body ? body.clientWidth : 0) - width;
+    x += max(html.clientWidth, body ? body.clientWidth : 0) - width;
   }
 
   return {
@@ -36975,10 +32508,10 @@ function getClippingRect(element, boundary, rootBoundary) {
   var firstClippingParent = clippingParents[0];
   var clippingRect = clippingParents.reduce(function (accRect, clippingParent) {
     var rect = getClientRectFromMixedType(element, clippingParent);
-    accRect.top = max$1(rect.top, accRect.top);
+    accRect.top = max(rect.top, accRect.top);
     accRect.right = min(rect.right, accRect.right);
     accRect.bottom = min(rect.bottom, accRect.bottom);
-    accRect.left = max$1(rect.left, accRect.left);
+    accRect.left = max(rect.left, accRect.left);
     return accRect;
   }, getClientRectFromMixedType(element, firstClippingParent));
   clippingRect.width = clippingRect.right - clippingRect.left;
@@ -37488,7 +33021,7 @@ function preventOverflow(_ref) {
     var len = mainAxis === 'y' ? 'height' : 'width';
     var offset = popperOffsets[mainAxis];
     var min$1 = offset + overflow[mainSide];
-    var max = offset - overflow[altSide];
+    var max$1 = offset - overflow[altSide];
     var additive = tether ? -popperRect[len] / 2 : 0;
     var minLen = variation === start ? referenceRect[len] : popperRect[len];
     var maxLen = variation === start ? -popperRect[len] : -referenceRect[len]; // We need to include the arrow in the calculation so the arrow doesn't go
@@ -37515,7 +33048,7 @@ function preventOverflow(_ref) {
     var offsetModifierValue = (_offsetModifierState$ = offsetModifierState == null ? void 0 : offsetModifierState[mainAxis]) != null ? _offsetModifierState$ : 0;
     var tetherMin = offset + minOffset - offsetModifierValue - clientOffset;
     var tetherMax = offset + maxOffset - offsetModifierValue;
-    var preventedOffset = within(tether ? min(min$1, tetherMin) : min$1, offset, tether ? max$1(max, tetherMax) : max);
+    var preventedOffset = within(tether ? min(min$1, tetherMin) : min$1, offset, tether ? max(max$1, tetherMax) : max$1);
     popperOffsets[mainAxis] = preventedOffset;
     data[mainAxis] = preventedOffset - offset;
   }
@@ -38260,24 +33793,24 @@ class FolderSuggest extends TextInputSuggest {
 
 /* src/view/explorer/DraftList.svelte generated by Svelte v3.49.0 */
 
-function add_css$7(target) {
+function add_css$6(target) {
 	append_styles(target, "svelte-1ytjg2y", "#draft-list.svelte-1ytjg2y.svelte-1ytjg2y{margin:var(--size-4-1) 0}#draft-list.svelte-1ytjg2y ol.svelte-1ytjg2y{list-style-type:none;padding:0;margin:0}.draft-container.svelte-1ytjg2y.svelte-1ytjg2y{display:flex;border:var(--border-width) solid transparent;border-radius:var(--radius-s);cursor:pointer;color:var(--text-muted);font-size:var(--font-small);line-height:var(--h3-line-height);white-space:nowrap;padding:var(--size-2-1) 0}.selected.svelte-1ytjg2y.svelte-1ytjg2y,.draft-container.svelte-1ytjg2y.svelte-1ytjg2y:hover{background-color:var(--background-secondary-alt);color:var(--text-normal)}.draft-container.svelte-1ytjg2y.svelte-1ytjg2y:active{background-color:inherit;color:var(--text-muted)}");
 }
 
-function get_each_context$2(ctx, list, i) {
+function get_each_context$1(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[11] = list[i];
 	return child_ctx;
 }
 
 // (52:2) {#if $selectedProject}
-function create_if_block$7(ctx) {
+function create_if_block$6(ctx) {
 	let ol;
 	let each_value = /*$selectedProject*/ ctx[1];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
 	}
 
 	return {
@@ -38303,12 +33836,12 @@ function create_if_block$7(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$2(ctx, each_value, i);
+					const child_ctx = get_each_context$1(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$2(child_ctx);
+						each_blocks[i] = create_each_block$1(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(ol, null);
 					}
@@ -38329,7 +33862,7 @@ function create_if_block$7(ctx) {
 }
 
 // (54:6) {#each $selectedProject as draft}
-function create_each_block$2(ctx) {
+function create_each_block$1(ctx) {
 	let li;
 	let div;
 	let t0_value = draftTitle(/*draft*/ ctx[11]) + "";
@@ -38408,9 +33941,9 @@ function create_each_block$2(ctx) {
 	};
 }
 
-function create_fragment$7(ctx) {
+function create_fragment$6(ctx) {
 	let div;
-	let if_block = /*$selectedProject*/ ctx[1] && create_if_block$7(ctx);
+	let if_block = /*$selectedProject*/ ctx[1] && create_if_block$6(ctx);
 
 	return {
 		c() {
@@ -38428,7 +33961,7 @@ function create_fragment$7(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$7(ctx);
+					if_block = create_if_block$6(ctx);
 					if_block.c();
 					if_block.m(div, null);
 				}
@@ -38446,7 +33979,7 @@ function create_fragment$7(ctx) {
 	};
 }
 
-function instance$7($$self, $$props, $$invalidate) {
+function instance$6($$self, $$props, $$invalidate) {
 	let $drafts;
 	let $selectedDraftVaultPath;
 	let $selectedProject;
@@ -38527,18 +34060,18 @@ function instance$7($$self, $$props, $$invalidate) {
 class DraftList extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$7, create_fragment$7, safe_not_equal, {}, add_css$7);
+		init(this, options, instance$6, create_fragment$6, safe_not_equal, {}, add_css$6);
 	}
 }
 
 /* src/view/explorer/ProjectDetails.svelte generated by Svelte v3.49.0 */
 
-function add_css$6(target) {
+function add_css$5(target) {
 	append_styles(target, "svelte-1ioudaq", ".longform-project-section.svelte-1ioudaq.svelte-1ioudaq{margin-top:var(--size-4-4);padding-bottom:var(--size-4-2);padding-left:var(--size-4-8)}.longform-project-section.svelte-1ioudaq+.longform-project-section.svelte-1ioudaq{border-top:var(--border-width) solid var(--background-modifier-border);padding-top:var(--size-4-4)}.longform-project-details-section-header.svelte-1ioudaq.svelte-1ioudaq{display:flex;flex-direction:row;justify-content:start;align-items:center;cursor:pointer;margin-left:calc(var(--size-4-6) * -1)}h4.svelte-1ioudaq.svelte-1ioudaq{font-size:var(--font-ui-medium);color:var(--text-normal);user-select:none;font-weight:inherit;margin:0 0 0 var(--size-4-4)}input.svelte-1ioudaq.svelte-1ioudaq{width:100%}label.svelte-1ioudaq.svelte-1ioudaq{display:block;font-size:var(--font-ui-smaller);color:var(--text-muted);margin-top:var(--size-4-4);line-height:var(--line-height-tight)}p.longform-project-warning.svelte-1ioudaq.svelte-1ioudaq{color:var(--text-faint);font-size:var(--font-smallest);margin:var(--size-2-1) 0 0 var(--size-2-1);line-height:normal}.word-counts.svelte-1ioudaq p.svelte-1ioudaq{margin:var(--size-4-2) 0;font-size:var(--font-smallest);color:var(--text-muted)}.word-counts.svelte-1ioudaq p strong.svelte-1ioudaq{color:var(--text-normal)}.progress.svelte-1ioudaq.svelte-1ioudaq{height:var(--size-4-6);width:100%;background-color:var(--background-secondary-alt);border-radius:var(--radius-s);position:relative;overflow:hidden;margin-top:var(--size-4-4)}.progress.svelte-1ioudaq.svelte-1ioudaq:before{content:attr(data-label);font-size:var(--font-smallest);color:var(--progress-text-color);font-weight:bold;position:absolute;text-align:center;top:0;left:0;right:0;display:flex;justify-content:center;align-items:center;align-self:center;height:100%}.progress.svelte-1ioudaq .value.svelte-1ioudaq{height:100%;background-color:var(--text-accent)}.drafts-title-container.svelte-1ioudaq.svelte-1ioudaq{display:flex;flex-direction:row;justify-content:space-between;align-items:center;margin-bottom:var(--size-4-2)}.drafts-title-container.svelte-1ioudaq h4.svelte-1ioudaq{margin-right:var(--size-4-2)}.drafts-title-container.svelte-1ioudaq button.svelte-1ioudaq{margin:0;padding:var(--size-4-2);color:var(--interactive-accent);background-color:inherit}.longform-manuscript-metadata-help.svelte-1ioudaq.svelte-1ioudaq{color:var(--text-muted);font-size:var(--font-ui-smaller);line-height:var(--line-height-tight);margin:var(--size-4-2) 0 var(--size-4-3) 0}.longform-manuscript-metadata-help.svelte-1ioudaq a.svelte-1ioudaq{color:var(--text-accent)}.longform-edit-metadata-button.svelte-1ioudaq.svelte-1ioudaq{width:100%}");
 }
 
 // (150:2) {#if $selectedDraft}
-function create_if_block_7$1(ctx) {
+function create_if_block_7(ctx) {
 	let div1;
 	let div0;
 	let disclosure;
@@ -38553,7 +34086,7 @@ function create_if_block_7$1(ctx) {
 			props: { collapsed: !/*showMetdata*/ ctx[1] }
 		});
 
-	let if_block = /*showMetdata*/ ctx[1] && create_if_block_8$1(ctx);
+	let if_block = /*showMetdata*/ ctx[1] && create_if_block_8(ctx);
 
 	return {
 		c() {
@@ -38593,7 +34126,7 @@ function create_if_block_7$1(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block_8$1(ctx);
+					if_block = create_if_block_8(ctx);
 					if_block.c();
 					if_block.m(div1, null);
 				}
@@ -38622,7 +34155,7 @@ function create_if_block_7$1(ctx) {
 }
 
 // (161:6) {#if showMetdata}
-function create_if_block_8$1(ctx) {
+function create_if_block_8(ctx) {
 	let div;
 	let label;
 	let t1;
@@ -38631,7 +34164,7 @@ function create_if_block_8$1(ctx) {
 	let t2;
 	let mounted;
 	let dispose;
-	let if_block = /*$selectedDraft*/ ctx[0].format === "scenes" && create_if_block_9$1(ctx);
+	let if_block = /*$selectedDraft*/ ctx[0].format === "scenes" && create_if_block_9(ctx);
 
 	return {
 		c() {
@@ -38671,7 +34204,7 @@ function create_if_block_8$1(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block_9$1(ctx);
+					if_block = create_if_block_9(ctx);
 					if_block.c();
 					if_block.m(div, null);
 				}
@@ -38690,7 +34223,7 @@ function create_if_block_8$1(ctx) {
 }
 
 // (170:10) {#if $selectedDraft.format === "scenes"}
-function create_if_block_9$1(ctx) {
+function create_if_block_9(ctx) {
 	let label0;
 	let t1;
 	let input0;
@@ -38793,7 +34326,7 @@ function create_if_block_9$1(ctx) {
 }
 
 // (204:2) {#if $selectedDraft}
-function create_if_block_5$2(ctx) {
+function create_if_block_5$1(ctx) {
 	let div1;
 	let div0;
 	let disclosure;
@@ -38810,7 +34343,7 @@ function create_if_block_5$2(ctx) {
 			}
 		});
 
-	let if_block = /*showManuscriptMetadata*/ ctx[12] && create_if_block_6$1(ctx);
+	let if_block = /*showManuscriptMetadata*/ ctx[12] && create_if_block_6(ctx);
 
 	return {
 		c() {
@@ -38850,7 +34383,7 @@ function create_if_block_5$2(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block_6$1(ctx);
+					if_block = create_if_block_6(ctx);
 					if_block.c();
 					if_block.m(div1, null);
 				}
@@ -38879,7 +34412,7 @@ function create_if_block_5$2(ctx) {
 }
 
 // (215:6) {#if showManuscriptMetadata}
-function create_if_block_6$1(ctx) {
+function create_if_block_6(ctx) {
 	let div;
 	let p;
 	let t7;
@@ -38925,7 +34458,7 @@ function create_if_block_6$1(ctx) {
 }
 
 // (253:4) {#if showWordCount}
-function create_if_block_1$6(ctx) {
+function create_if_block_1$5(ctx) {
 	let div;
 	let t0;
 	let t1;
@@ -38935,9 +34468,9 @@ function create_if_block_1$6(ctx) {
 	let t4;
 	let t5_value = pluralize(/*projectCount*/ ctx[6], "word") + "";
 	let t5;
-	let if_block0 = /*showProgress*/ ctx[9] && create_if_block_4$2(ctx);
-	let if_block1 = /*sceneCount*/ ctx[8] && create_if_block_3$2(ctx);
-	let if_block2 = /*draftCount*/ ctx[7] && create_if_block_2$4(ctx);
+	let if_block0 = /*showProgress*/ ctx[9] && create_if_block_4$1(ctx);
+	let if_block1 = /*sceneCount*/ ctx[8] && create_if_block_3$1(ctx);
+	let if_block2 = /*draftCount*/ ctx[7] && create_if_block_2$3(ctx);
 
 	return {
 		c() {
@@ -38975,7 +34508,7 @@ function create_if_block_1$6(ctx) {
 				if (if_block0) {
 					if_block0.p(ctx, dirty);
 				} else {
-					if_block0 = create_if_block_4$2(ctx);
+					if_block0 = create_if_block_4$1(ctx);
 					if_block0.c();
 					if_block0.m(div, t0);
 				}
@@ -38988,7 +34521,7 @@ function create_if_block_1$6(ctx) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 				} else {
-					if_block1 = create_if_block_3$2(ctx);
+					if_block1 = create_if_block_3$1(ctx);
 					if_block1.c();
 					if_block1.m(div, t1);
 				}
@@ -39001,7 +34534,7 @@ function create_if_block_1$6(ctx) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 				} else {
-					if_block2 = create_if_block_2$4(ctx);
+					if_block2 = create_if_block_2$3(ctx);
 					if_block2.c();
 					if_block2.m(div, t2);
 				}
@@ -39022,7 +34555,7 @@ function create_if_block_1$6(ctx) {
 }
 
 // (255:8) {#if showProgress}
-function create_if_block_4$2(ctx) {
+function create_if_block_4$1(ctx) {
 	let div1;
 	let div0;
 	let div0_style_value;
@@ -39061,7 +34594,7 @@ function create_if_block_4$2(ctx) {
 }
 
 // (264:8) {#if sceneCount}
-function create_if_block_3$2(ctx) {
+function create_if_block_3$1(ctx) {
 	let p;
 	let strong;
 	let t1;
@@ -39095,7 +34628,7 @@ function create_if_block_3$2(ctx) {
 }
 
 // (270:8) {#if draftCount}
-function create_if_block_2$4(ctx) {
+function create_if_block_2$3(ctx) {
 	let p;
 	let strong;
 	let t1;
@@ -39129,7 +34662,7 @@ function create_if_block_2$4(ctx) {
 }
 
 // (298:4) {#if showDrafts}
-function create_if_block$6(ctx) {
+function create_if_block$5(ctx) {
 	let draftlist;
 	let current;
 	draftlist = new DraftList({});
@@ -39157,7 +34690,7 @@ function create_if_block$6(ctx) {
 	};
 }
 
-function create_fragment$6(ctx) {
+function create_fragment$5(ctx) {
 	let div5;
 	let t0;
 	let t1;
@@ -39182,21 +34715,21 @@ function create_fragment$6(ctx) {
 	let current;
 	let mounted;
 	let dispose;
-	let if_block0 = /*$selectedDraft*/ ctx[0] && create_if_block_7$1(ctx);
-	let if_block1 = /*$selectedDraft*/ ctx[0] && create_if_block_5$2(ctx);
+	let if_block0 = /*$selectedDraft*/ ctx[0] && create_if_block_7(ctx);
+	let if_block1 = /*$selectedDraft*/ ctx[0] && create_if_block_5$1(ctx);
 
 	disclosure0 = new Disclosure({
 			props: { collapsed: !/*showWordCount*/ ctx[2] }
 		});
 
-	let if_block2 = /*showWordCount*/ ctx[2] && create_if_block_1$6(ctx);
+	let if_block2 = /*showWordCount*/ ctx[2] && create_if_block_1$5(ctx);
 
 	disclosure1 = new Disclosure({
 			props: { collapsed: !/*showDrafts*/ ctx[3] }
 		});
 
 	icon = new Icon({ props: { iconName: "plus-with-circle" } });
-	let if_block3 = /*showDrafts*/ ctx[3] && create_if_block$6();
+	let if_block3 = /*showDrafts*/ ctx[3] && create_if_block$5();
 
 	return {
 		c() {
@@ -39287,7 +34820,7 @@ function create_fragment$6(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_7$1(ctx);
+					if_block0 = create_if_block_7(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(div5, t0);
@@ -39310,7 +34843,7 @@ function create_fragment$6(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_5$2(ctx);
+					if_block1 = create_if_block_5$1(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(div5, t1);
@@ -39333,7 +34866,7 @@ function create_fragment$6(ctx) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 				} else {
-					if_block2 = create_if_block_1$6(ctx);
+					if_block2 = create_if_block_1$5(ctx);
 					if_block2.c();
 					if_block2.m(div1, null);
 				}
@@ -39358,7 +34891,7 @@ function create_fragment$6(ctx) {
 						transition_in(if_block3, 1);
 					}
 				} else {
-					if_block3 = create_if_block$6();
+					if_block3 = create_if_block$5();
 					if_block3.c();
 					transition_in(if_block3, 1);
 					if_block3.m(div4, null);
@@ -39421,7 +34954,7 @@ function pluralize(count, noun, pluralNoun = null) {
 	}
 }
 
-function instance$6($$self, $$props, $$invalidate) {
+function instance$5($$self, $$props, $$invalidate) {
 	let $pluginSettings;
 	let $goalProgress;
 	let $selectedDraft;
@@ -39662,7 +35195,7 @@ function instance$6($$self, $$props, $$invalidate) {
 class ProjectDetails extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$6, create_fragment$6, safe_not_equal, {}, add_css$6, [-1, -1]);
+		init(this, options, instance$5, create_fragment$5, safe_not_equal, {}, add_css$5, [-1, -1]);
 	}
 }
 
@@ -39670,7 +35203,6 @@ const LONGFORM_CURRENT_PLUGIN_DATA_VERSION = 3;
 const DEFAULT_SESSION_FILE = "longform-sessions.json";
 const DEFAULT_SETTINGS = {
     version: LONGFORM_CURRENT_PLUGIN_DATA_VERSION,
-    language: "auto",
     selectedDraftVaultPath: null,
     workflows: null,
     userScriptFolder: null,
@@ -39691,17 +35223,9 @@ const DEFAULT_SETTINGS = {
     waitForSync: false,
     fallbackWaitEnabled: true,
     fallbackWaitTime: 5,
-    pandocAssetsUrl: "",
-    pandocAssetsFolder: "",
-    pandocOutputFolder: "",
-    pandocBinary: "pandoc",
-    pandocBibliography: "",
-    pandocSetupDismissed: false,
-    pandocMarketIndexUrl: "",
 };
 const TRACKED_SETTINGS_PATHS = [
     "version",
-    "language",
     "projects",
     "selectedDraftVaultPath",
     "userScriptFolder",
@@ -39721,16 +35245,8 @@ const TRACKED_SETTINGS_PATHS = [
     "fallbackWaitEnabled",
     "fallbackWaitTime",
     "writeProperty",
-    "pandocAssetsUrl",
-    "pandocAssetsFolder",
-    "pandocOutputFolder",
-    "pandocBinary",
-    "pandocBibliography",
-    "pandocSetupDismissed",
-    "pandocMarketIndexUrl",
 ];
 const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
-    "language",
     "sessionStorage",
     "userScriptFolder",
     "showWordCountInStatusBar",
@@ -39747,13 +35263,6 @@ const PASSTHROUGH_SAVE_SETTINGS_PATHS = [
     "fallbackWaitEnabled",
     "fallbackWaitTime",
     "writeProperty",
-    "pandocAssetsUrl",
-    "pandocAssetsFolder",
-    "pandocOutputFolder",
-    "pandocBinary",
-    "pandocBibliography",
-    "pandocSetupDismissed",
-    "pandocMarketIndexUrl",
 ];
 
 const INDEX_MIGRATION_NOTICE = "\n\nThis is a Longform 1.0 Index File, and the project it corresponded to has since been migrated. It has been marked as to-be-ignored in the new project and can be safely deleted.";
@@ -39765,7 +35274,7 @@ function migrate(settings, app) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         if (settings.version >= LONGFORM_CURRENT_PLUGIN_DATA_VERSION) {
-            console.log(`[PaperOut] Attempted to migrate settings with version ${settings.version} > current (${LONGFORM_CURRENT_PLUGIN_DATA_VERSION}); ignoring.`);
+            console.log(`[Longform] Attempted to migrate settings with version ${settings.version} > current (${LONGFORM_CURRENT_PLUGIN_DATA_VERSION}); ignoring.`);
             return;
         }
         let currentVersion = settings.version;
@@ -39778,7 +35287,7 @@ function migrate(settings, app) {
                 // projects with > 1 draft
                 const projectPaths = Object.keys(settings.projects);
                 for (const projectPath of projectPaths) {
-                    console.log(`[PaperOut] Migrating ${projectPath} to Projects 2.0…`);
+                    console.log(`[Longform] Migrating ${projectPath} to Projects 2.0…`);
                     const project = settings.projects[projectPath];
                     const normalizedProjectPath = obsidian.normalizePath(projectPath);
                     const indexPath = obsidian.normalizePath(`${projectPath}/${project.indexFile}.md`);
@@ -39803,7 +35312,7 @@ function migrate(settings, app) {
                         yield app.vault.adapter.append(indexPath, INDEX_MIGRATION_NOTICE);
                     }
                     catch (error) {
-                        console.log(`[PaperOut] Error appending deprecation notice to old index file`, error);
+                        console.log(`[Longform] Error appending deprecation notice to old index file`, error);
                     }
                     if (drafts.length === 1) {
                         const oldDraft = drafts[0];
@@ -39826,7 +35335,7 @@ function migrate(settings, app) {
                         };
                         yield insertDraftIntoFrontmatter(app, vaultPath, draft);
                         yield moveScenes(obsidian.normalizePath(`${projectPath}/${project.draftsPath}/${oldDraft.folder}/`), normalizedProjectPath);
-                        console.log(`[PaperOut] Wrote only draft to ${vaultPath}`);
+                        console.log(`[Longform] Wrote only draft to ${vaultPath}`);
                     }
                     else {
                         for (const oldDraft of drafts) {
@@ -39835,7 +35344,7 @@ function migrate(settings, app) {
                                 yield app.vault.createFolder(vaultPathParent);
                             }
                             catch (error) {
-                                console.log(`[PaperOut] Error creating folder during migration`, error);
+                                console.log(`[Longform] Error creating folder during migration`, error);
                             }
                             const vaultPath = obsidian.normalizePath(`${vaultPathParent}/${oldDraft.name}.md`);
                             const draft = {
@@ -39856,7 +35365,7 @@ function migrate(settings, app) {
                             };
                             yield insertDraftIntoFrontmatter(app, vaultPath, draft);
                             yield moveScenes(obsidian.normalizePath(`${projectPath}/${project.draftsPath}/${oldDraft.folder}/`), vaultPathParent);
-                            console.log(`[PaperOut] Wrote ${oldDraft.name} to ${vaultPath}`);
+                            console.log(`[Longform] Wrote ${oldDraft.name} to ${vaultPath}`);
                         }
                     }
                 }
@@ -39874,12 +35383,12 @@ function migrate(settings, app) {
 
 /* src/view/explorer/Tab.svelte generated by Svelte v3.49.0 */
 
-function add_css$5(target) {
+function add_css$4(target) {
 	append_styles(target, "svelte-1ohhb9z", ".tab-button.svelte-1ohhb9z{background:none;border:none;border-bottom:none;border-radius:var(--tab-radius-active);padding:0 1em 0 0.4em;box-shadow:none;margin:0;color:var(--tab-text-color-focused);font-size:var(--tab-font-size);font-weight:var(--tab-font-weight);white-space:nowrap;border-right:1px solid var(--tab-outline-color)}.tab-button.svelte-1ohhb9z:hover{color:var(--tab-text-color-focused);background-color:var(--background-modifier-hover)}.tab-button.selected.svelte-1ohhb9z{background-color:var(--tab-background-active);color:var(--tab-text-color-focused-active)}");
 }
 
-// (16:2) {#if tab == "Scenes"}
-function create_if_block_2$3(ctx) {
+// (10:2) {#if tab == "Scenes"}
+function create_if_block_2$2(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -39921,8 +35430,8 @@ function create_if_block_2$3(ctx) {
 	};
 }
 
-// (37:2) {#if tab == "Project"}
-function create_if_block_1$5(ctx) {
+// (31:2) {#if tab == "Project"}
+function create_if_block_1$4(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -39960,8 +35469,8 @@ function create_if_block_1$5(ctx) {
 	};
 }
 
-// (54:2) {#if tab == "Compile"}
-function create_if_block$5(ctx) {
+// (48:2) {#if tab == "Compile"}
+function create_if_block$4(ctx) {
 	let svg;
 	let rect;
 	let path;
@@ -39999,18 +35508,17 @@ function create_if_block$5(ctx) {
 	};
 }
 
-function create_fragment$5(ctx) {
+function create_fragment$4(ctx) {
 	let button;
 	let t0;
 	let t1;
 	let t2;
-	let t3_value = /*$t*/ ctx[2](/*tabLabelKeys*/ ctx[3][/*tab*/ ctx[0]]) + "";
 	let t3;
 	let mounted;
 	let dispose;
-	let if_block0 = /*tab*/ ctx[0] == "Scenes" && create_if_block_2$3();
-	let if_block1 = /*tab*/ ctx[0] == "Project" && create_if_block_1$5();
-	let if_block2 = /*tab*/ ctx[0] == "Compile" && create_if_block$5();
+	let if_block0 = /*tab*/ ctx[0] == "Scenes" && create_if_block_2$2();
+	let if_block1 = /*tab*/ ctx[0] == "Project" && create_if_block_1$4();
+	let if_block2 = /*tab*/ ctx[0] == "Compile" && create_if_block$4();
 
 	return {
 		c() {
@@ -40021,7 +35529,7 @@ function create_fragment$5(ctx) {
 			t1 = space();
 			if (if_block2) if_block2.c();
 			t2 = space();
-			t3 = text(t3_value);
+			t3 = text(/*tab*/ ctx[0]);
 			attr(button, "class", "tab-button svelte-1ohhb9z");
 			toggle_class(button, "selected", /*$selectedTab*/ ctx[1] === /*tab*/ ctx[0]);
 		},
@@ -40036,14 +35544,14 @@ function create_fragment$5(ctx) {
 			append(button, t3);
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler*/ ctx[4]);
+				dispose = listen(button, "click", /*click_handler*/ ctx[2]);
 				mounted = true;
 			}
 		},
 		p(ctx, [dirty]) {
 			if (/*tab*/ ctx[0] == "Scenes") {
 				if (if_block0) ; else {
-					if_block0 = create_if_block_2$3();
+					if_block0 = create_if_block_2$2();
 					if_block0.c();
 					if_block0.m(button, t0);
 				}
@@ -40054,7 +35562,7 @@ function create_fragment$5(ctx) {
 
 			if (/*tab*/ ctx[0] == "Project") {
 				if (if_block1) ; else {
-					if_block1 = create_if_block_1$5();
+					if_block1 = create_if_block_1$4();
 					if_block1.c();
 					if_block1.m(button, t1);
 				}
@@ -40065,7 +35573,7 @@ function create_fragment$5(ctx) {
 
 			if (/*tab*/ ctx[0] == "Compile") {
 				if (if_block2) ; else {
-					if_block2 = create_if_block$5();
+					if_block2 = create_if_block$4();
 					if_block2.c();
 					if_block2.m(button, t2);
 				}
@@ -40074,7 +35582,7 @@ function create_fragment$5(ctx) {
 				if_block2 = null;
 			}
 
-			if (dirty & /*$t, tab*/ 5 && t3_value !== (t3_value = /*$t*/ ctx[2](/*tabLabelKeys*/ ctx[3][/*tab*/ ctx[0]]) + "")) set_data(t3, t3_value);
+			if (dirty & /*tab*/ 1) set_data(t3, /*tab*/ ctx[0]);
 
 			if (dirty & /*$selectedTab, tab*/ 3) {
 				toggle_class(button, "selected", /*$selectedTab*/ ctx[1] === /*tab*/ ctx[0]);
@@ -40093,51 +35601,42 @@ function create_fragment$5(ctx) {
 	};
 }
 
-function instance$5($$self, $$props, $$invalidate) {
+function instance$4($$self, $$props, $$invalidate) {
 	let $selectedTab;
-	let $t;
 	component_subscribe($$self, selectedTab, $$value => $$invalidate(1, $selectedTab = $$value));
-	component_subscribe($$self, t, $$value => $$invalidate(2, $t = $$value));
 	let { tab } = $$props;
-
-	const tabLabelKeys = {
-		Scenes: "explorer.tab.scenes",
-		Project: "explorer.tab.project",
-		Compile: "explorer.tab.compile"
-	};
-
 	const click_handler = () => selectedTab.set(tab);
 
 	$$self.$$set = $$props => {
 		if ('tab' in $$props) $$invalidate(0, tab = $$props.tab);
 	};
 
-	return [tab, $selectedTab, $t, tabLabelKeys, click_handler];
+	return [tab, $selectedTab, click_handler];
 }
 
 class Tab extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$5, create_fragment$5, safe_not_equal, { tab: 0 }, add_css$5);
+		init(this, options, instance$4, create_fragment$4, safe_not_equal, { tab: 0 }, add_css$4);
 	}
 }
 
 /* src/view/explorer/ExplorerView.svelte generated by Svelte v3.49.0 */
 
-function add_css$4(target) {
+function add_css$3(target) {
 	append_styles(target, "svelte-1v1mbat", ".longform-explorer.svelte-1v1mbat{font-size:var(--longform-explorer-font-size)}.longform-migrate-button.svelte-1v1mbat{background-color:var(--interactive-accent);color:var(--text-on-accent)}.longform-migrate-button.svelte-1v1mbat:hover{background-color:var(--interactive-accent-hover)}.tab-list.svelte-1v1mbat{margin:0;font-size:0}.tab-panel-container.svelte-1v1mbat{background:var(--background-primary);padding:var(--size-4-1) var(--size-4-2)}.tab-panel-container.disconnected.svelte-1v1mbat{background:none;padding:0}.longform-sync-wait.svelte-1v1mbat{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:2rem;gap:1rem}.longform-spinner.svelte-1v1mbat{border:3px solid var(--background-modifier-border);border-top:3px solid var(--text-accent);border-radius:50%;width:24px;height:24px;animation:svelte-1v1mbat-spin 1s linear infinite}.longform-sync-message.svelte-1v1mbat{color:var(--text-muted);font-size:0.8em;text-align:center}@keyframes svelte-1v1mbat-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}");
 }
 
-// (46:0) {:else}
-function create_else_block$3(ctx) {
+// (49:0) {:else}
+function create_else_block$2(ctx) {
 	let div;
 	let projectpicker;
-	let t_1;
+	let t;
 	let current_block_type_index;
 	let if_block;
 	let current;
 	projectpicker = new ProjectPicker({});
-	const if_block_creators = [create_if_block_2$2, create_else_block_2];
+	const if_block_creators = [create_if_block_2$1, create_else_block_2];
 	const if_blocks = [];
 
 	function select_block_type_1(ctx, dirty) {
@@ -40152,14 +35651,14 @@ function create_else_block$3(ctx) {
 		c() {
 			div = element("div");
 			create_component(projectpicker.$$.fragment);
-			t_1 = space();
+			t = space();
 			if_block.c();
 			attr(div, "class", "longform-explorer svelte-1v1mbat");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
 			mount_component(projectpicker, div, null);
-			append(div, t_1);
+			append(div, t);
 			if_blocks[current_block_type_index].m(div, null);
 			current = true;
 		},
@@ -40209,36 +35708,23 @@ function create_else_block$3(ctx) {
 	};
 }
 
-// (39:26) 
-function create_if_block_1$4(ctx) {
+// (42:26) 
+function create_if_block_1$3(ctx) {
 	let div2;
-	let div0;
-	let t0;
-	let div1;
-	let t1_value = /*$t*/ ctx[3]("explorer.syncWaiting") + "";
-	let t1;
 
 	return {
 		c() {
 			div2 = element("div");
-			div0 = element("div");
-			t0 = space();
-			div1 = element("div");
-			t1 = text(t1_value);
-			attr(div0, "class", "longform-spinner svelte-1v1mbat");
-			attr(div1, "class", "longform-sync-message svelte-1v1mbat");
+
+			div2.innerHTML = `<div class="longform-spinner svelte-1v1mbat"></div> 
+    <div class="longform-sync-message svelte-1v1mbat">Waiting for Obsidian Sync to complete...</div>`;
+
 			attr(div2, "class", "longform-sync-wait svelte-1v1mbat");
 		},
 		m(target, anchor) {
 			insert(target, div2, anchor);
-			append(div2, div0);
-			append(div2, t0);
-			append(div2, div1);
-			append(div1, t1);
 		},
-		p(ctx, dirty) {
-			if (dirty & /*$t*/ 8 && t1_value !== (t1_value = /*$t*/ ctx[3]("explorer.syncWaiting") + "")) set_data(t1, t1_value);
-		},
+		p: noop,
 		i: noop,
 		o: noop,
 		d(detaching) {
@@ -40247,24 +35733,14 @@ function create_if_block_1$4(ctx) {
 	};
 }
 
-// (26:0) {#if $needsMigration}
-function create_if_block$4(ctx) {
+// (25:0) {#if $needsMigration}
+function create_if_block$3(ctx) {
 	let div;
 	let p0;
-	let t0_value = /*$t*/ ctx[3]("explorer.migration.body1") + "";
-	let t0;
 	let t1;
 	let p1;
-	let t2_value = /*$t*/ ctx[3]("explorer.migration.body2Prefix") + "";
-	let t2;
-	let a;
-	let t3_value = /*$t*/ ctx[3]("explorer.migration.body2Link") + "";
-	let t3;
-	let t4;
 	let t5;
 	let button;
-	let t6_value = /*$t*/ ctx[3]("explorer.migration.button") + "";
-	let t6;
 	let mounted;
 	let dispose;
 
@@ -40272,17 +35748,13 @@ function create_if_block$4(ctx) {
 		c() {
 			div = element("div");
 			p0 = element("p");
-			t0 = text(t0_value);
+			p0.textContent = "Longform has been upgraded and requires a migration to a new format.\n      Deprecated index files will be deleted, and some scene files may move.\n      It’s recommended to back up your vault before migrating.";
 			t1 = space();
 			p1 = element("p");
-			t2 = text(t2_value);
-			a = element("a");
-			t3 = text(t3_value);
-			t4 = text(".");
+			p1.innerHTML = `You can view the docs and an explanation of what this migration does <a href="https://github.com/kevboh/longform/blob/main/docs/MIGRATING_FROM_VERSION_1_TO_2.md">here</a>.`;
 			t5 = space();
 			button = element("button");
-			t6 = text(t6_value);
-			attr(a, "href", "https://github.com/kevboh/longform/blob/main/docs/MIGRATING_FROM_VERSION_1_TO_2.md");
+			button.textContent = "Migrate";
 			attr(button, "class", "longform-migrate-button svelte-1v1mbat");
 			attr(button, "type", "button");
 			attr(div, "class", "longform-explorer svelte-1v1mbat");
@@ -40290,28 +35762,17 @@ function create_if_block$4(ctx) {
 		m(target, anchor) {
 			insert(target, div, anchor);
 			append(div, p0);
-			append(p0, t0);
 			append(div, t1);
 			append(div, p1);
-			append(p1, t2);
-			append(p1, a);
-			append(a, t3);
-			append(p1, t4);
 			append(div, t5);
 			append(div, button);
-			append(button, t6);
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*doMigration*/ ctx[5]);
+				dispose = listen(button, "click", /*doMigration*/ ctx[4]);
 				mounted = true;
 			}
 		},
-		p(ctx, dirty) {
-			if (dirty & /*$t*/ 8 && t0_value !== (t0_value = /*$t*/ ctx[3]("explorer.migration.body1") + "")) set_data(t0, t0_value);
-			if (dirty & /*$t*/ 8 && t2_value !== (t2_value = /*$t*/ ctx[3]("explorer.migration.body2Prefix") + "")) set_data(t2, t2_value);
-			if (dirty & /*$t*/ 8 && t3_value !== (t3_value = /*$t*/ ctx[3]("explorer.migration.body2Link") + "")) set_data(t3, t3_value);
-			if (dirty & /*$t*/ 8 && t6_value !== (t6_value = /*$t*/ ctx[3]("explorer.migration.button") + "")) set_data(t6, t6_value);
-		},
+		p: noop,
 		i: noop,
 		o: noop,
 		d(detaching) {
@@ -40322,7 +35783,7 @@ function create_if_block$4(ctx) {
 	};
 }
 
-// (73:4) {:else}
+// (76:4) {:else}
 function create_else_block_2(ctx) {
 	let div2;
 	let div1;
@@ -40336,7 +35797,7 @@ function create_else_block_2(ctx) {
 	let current;
 	tab0 = new Tab({ props: { tab: "Project" } });
 	tab1 = new Tab({ props: { tab: "Compile" } });
-	const if_block_creators = [create_if_block_5$1, create_else_block_3];
+	const if_block_creators = [create_if_block_5, create_else_block_3];
 	const if_blocks = [];
 
 	function select_block_type_3(ctx, dirty) {
@@ -40416,8 +35877,8 @@ function create_else_block_2(ctx) {
 	};
 }
 
-// (49:4) {#if $selectedDraft && $selectedDraft.format === "scenes"}
-function create_if_block_2$2(ctx) {
+// (52:4) {#if $selectedDraft && $selectedDraft.format === "scenes"}
+function create_if_block_2$1(ctx) {
 	let div2;
 	let div1;
 	let div0;
@@ -40433,7 +35894,7 @@ function create_if_block_2$2(ctx) {
 	tab0 = new Tab({ props: { tab: "Scenes" } });
 	tab1 = new Tab({ props: { tab: "Project" } });
 	tab2 = new Tab({ props: { tab: "Compile" } });
-	const if_block_creators = [create_if_block_3$1, create_if_block_4$1, create_else_block_1];
+	const if_block_creators = [create_if_block_3, create_if_block_4, create_else_block_1];
 	const if_blocks = [];
 
 	function select_block_type_2(ctx, dirty) {
@@ -40521,7 +35982,7 @@ function create_if_block_2$2(ctx) {
 	};
 }
 
-// (85:8) {:else}
+// (88:8) {:else}
 function create_else_block_3(ctx) {
 	let div;
 	let compileview;
@@ -40555,8 +36016,8 @@ function create_else_block_3(ctx) {
 	};
 }
 
-// (81:8) {#if $selectedTab === "Project"}
-function create_if_block_5$1(ctx) {
+// (84:8) {#if $selectedTab === "Project"}
+function create_if_block_5(ctx) {
 	let div;
 	let projectdetails;
 	let current;
@@ -40589,7 +36050,7 @@ function create_if_block_5$1(ctx) {
 	};
 }
 
-// (67:8) {:else}
+// (70:8) {:else}
 function create_else_block_1(ctx) {
 	let div;
 	let compileview;
@@ -40623,8 +36084,8 @@ function create_else_block_1(ctx) {
 	};
 }
 
-// (63:45) 
-function create_if_block_4$1(ctx) {
+// (66:45) 
+function create_if_block_4(ctx) {
 	let div;
 	let projectdetails;
 	let current;
@@ -40657,11 +36118,11 @@ function create_if_block_4$1(ctx) {
 	};
 }
 
-// (58:8) {#if $selectedTab === "Scenes"}
-function create_if_block_3$1(ctx) {
+// (61:8) {#if $selectedTab === "Scenes"}
+function create_if_block_3(ctx) {
 	let div;
 	let scenelist;
-	let t_1;
+	let t;
 	let newscenefield;
 	let current;
 	scenelist = new SceneList({});
@@ -40671,14 +36132,14 @@ function create_if_block_3$1(ctx) {
 		c() {
 			div = element("div");
 			create_component(scenelist.$$.fragment);
-			t_1 = space();
+			t = space();
 			create_component(newscenefield.$$.fragment);
 			attr(div, "class", "tab-panel-container svelte-1v1mbat");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
 			mount_component(scenelist, div, null);
-			append(div, t_1);
+			append(div, t);
 			mount_component(newscenefield, div, null);
 			current = true;
 		},
@@ -40701,17 +36162,17 @@ function create_if_block_3$1(ctx) {
 	};
 }
 
-function create_fragment$4(ctx) {
+function create_fragment$3(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$4, create_if_block_1$4, create_else_block$3];
+	const if_block_creators = [create_if_block$3, create_if_block_1$3, create_else_block$2];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
 		if (/*$needsMigration*/ ctx[2]) return 0;
-		if (/*$waitingForSync*/ ctx[4]) return 1;
+		if (/*$waitingForSync*/ ctx[3]) return 1;
 		return 2;
 	}
 
@@ -40771,17 +36232,15 @@ function create_fragment$4(ctx) {
 	};
 }
 
-function instance$4($$self, $$props, $$invalidate) {
+function instance$3($$self, $$props, $$invalidate) {
 	let $selectedTab;
 	let $selectedDraft;
 	let $needsMigration;
-	let $t;
 	let $waitingForSync;
 	component_subscribe($$self, selectedTab, $$value => $$invalidate(0, $selectedTab = $$value));
 	component_subscribe($$self, selectedDraft, $$value => $$invalidate(1, $selectedDraft = $$value));
 	component_subscribe($$self, needsMigration, $$value => $$invalidate(2, $needsMigration = $$value));
-	component_subscribe($$self, t, $$value => $$invalidate(3, $t = $$value));
-	component_subscribe($$self, waitingForSync, $$value => $$invalidate(4, $waitingForSync = $$value));
+	component_subscribe($$self, waitingForSync, $$value => $$invalidate(3, $waitingForSync = $$value));
 	const _migrate = getContext("migrate");
 
 	function doMigration() {
@@ -40798,31 +36257,24 @@ function instance$4($$self, $$props, $$invalidate) {
 		}
 	};
 
-	return [
-		$selectedTab,
-		$selectedDraft,
-		$needsMigration,
-		$t,
-		$waitingForSync,
-		doMigration
-	];
+	return [$selectedTab, $selectedDraft, $needsMigration, $waitingForSync, doMigration];
 }
 
 class ExplorerView extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$4, create_fragment$4, safe_not_equal, {}, add_css$4);
+		init(this, options, instance$3, create_fragment$3, safe_not_equal, {}, add_css$3);
 	}
 }
 
 /* src/view/project-lifecycle/new-draft-modal/NewDraftModal.svelte generated by Svelte v3.49.0 */
 
-function add_css$3(target) {
+function add_css$2(target) {
 	append_styles(target, "svelte-1kaigjd", ".draft-title-container.svelte-1kaigjd.svelte-1kaigjd{margin-bottom:var(--size-4-4)}label.svelte-1kaigjd.svelte-1kaigjd{font-weight:bold;color:var(--text-muted);display:block;font-size:var(--font-smallest)}input[type=\"text\"].svelte-1kaigjd.svelte-1kaigjd{width:100%;font-size:var(--h2-size);height:var(--size-4-12);padding:var(--size-4-2)}.source-path.svelte-1kaigjd.svelte-1kaigjd{color:var(--text-muted)}.target-path.svelte-1kaigjd.svelte-1kaigjd{color:var(--text-accent)}.draft-creation-container.svelte-1kaigjd.svelte-1kaigjd{display:flex;flex-direction:row;justify-content:end}.draft-creation-container.svelte-1kaigjd button.svelte-1kaigjd{font-weight:bold;background-color:var(--interactive-accent);color:var(--text-on-accent);margin:0}");
 }
 
 // (73:4) {#if valid && $selectedDraft}
-function create_if_block$3(ctx) {
+function create_if_block$2(ctx) {
 	let p;
 	let t0;
 	let t1;
@@ -40837,7 +36289,7 @@ function create_if_block$3(ctx) {
 	let button;
 	let mounted;
 	let dispose;
-	let if_block = /*copyScenes*/ ctx[3] && create_if_block_1$3();
+	let if_block = /*copyScenes*/ ctx[3] && create_if_block_1$2();
 
 	return {
 		c() {
@@ -40882,7 +36334,7 @@ function create_if_block$3(ctx) {
 		p(ctx, dirty) {
 			if (/*copyScenes*/ ctx[3]) {
 				if (if_block) ; else {
-					if_block = create_if_block_1$3();
+					if_block = create_if_block_1$2();
 					if_block.c();
 					if_block.m(p, t1);
 				}
@@ -40906,7 +36358,7 @@ function create_if_block$3(ctx) {
 }
 
 // (75:36) {#if copyScenes}
-function create_if_block_1$3(ctx) {
+function create_if_block_1$2(ctx) {
 	let b;
 
 	return {
@@ -40923,7 +36375,7 @@ function create_if_block_1$3(ctx) {
 	};
 }
 
-function create_fragment$3(ctx) {
+function create_fragment$2(ctx) {
 	let div3;
 	let p;
 	let t1;
@@ -40938,7 +36390,7 @@ function create_fragment$3(ctx) {
 	let div2;
 	let mounted;
 	let dispose;
-	let if_block = /*valid*/ ctx[1] && /*$selectedDraft*/ ctx[2] && create_if_block$3(ctx);
+	let if_block = /*valid*/ ctx[1] && /*$selectedDraft*/ ctx[2] && create_if_block$2(ctx);
 
 	return {
 		c() {
@@ -41003,7 +36455,7 @@ function create_fragment$3(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$3(ctx);
+					if_block = create_if_block$2(ctx);
 					if_block.c();
 					if_block.m(div2, null);
 				}
@@ -41026,7 +36478,7 @@ function create_fragment$3(ctx) {
 
 const regex$1 = /[:\\\/]/;
 
-function instance$3($$self, $$props, $$invalidate) {
+function instance$2($$self, $$props, $$invalidate) {
 	let $selectedDraft;
 	component_subscribe($$self, selectedDraft, $$value => $$invalidate(2, $selectedDraft = $$value));
 	let title;
@@ -41112,7 +36564,7 @@ function instance$3($$self, $$props, $$invalidate) {
 class NewDraftModal extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$3, create_fragment$3, safe_not_equal, {}, add_css$3);
+		init(this, options, instance$2, create_fragment$2, safe_not_equal, {}, add_css$2);
 	}
 }
 
@@ -41171,36 +36623,35 @@ class NewDraftModalContainer extends obsidian.Modal {
 
 /* src/view/metadata-modal/MetadataModal.svelte generated by Svelte v3.49.0 */
 
-function add_css$2(target) {
-	append_styles(target, "svelte-1blte8z", ".metadata-modal-root.svelte-1blte8z.svelte-1blte8z{display:block;width:100%;max-width:640px;margin:0 auto}.muted.svelte-1blte8z.svelte-1blte8z{color:var(--text-muted)}.small.svelte-1blte8z.svelte-1blte8z{font-size:var(--font-ui-smaller);line-height:var(--line-height-tight)}.req.svelte-1blte8z.svelte-1blte8z{color:var(--text-error);margin-left:2px}section.svelte-1blte8z.svelte-1blte8z{border-top:var(--border-width) solid var(--background-modifier-border);padding:var(--size-4-4) 0 var(--size-4-2) 0}section.svelte-1blte8z.svelte-1blte8z:first-of-type{border-top:none;padding-top:0}section.svelte-1blte8z h3.svelte-1blte8z{margin:0 0 var(--size-4-2) 0;font-size:var(--font-ui-medium);font-weight:600;color:var(--text-normal)}.section-head.svelte-1blte8z.svelte-1blte8z{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--size-4-1)}.section-head.svelte-1blte8z h3.svelte-1blte8z{margin:0}.field.svelte-1blte8z.svelte-1blte8z{display:flex;flex-direction:column;margin-top:var(--size-4-3)}.field.svelte-1blte8z>span.svelte-1blte8z{font-size:var(--font-ui-smaller);color:var(--text-muted);margin-bottom:var(--size-4-1)}.field.svelte-1blte8z input.svelte-1blte8z,.field.svelte-1blte8z textarea.svelte-1blte8z{width:100%}.field.svelte-1blte8z textarea.svelte-1blte8z{font-family:var(--font-text);resize:vertical;min-height:6em}.row.two-col.svelte-1blte8z.svelte-1blte8z{display:grid;grid-template-columns:1fr 1fr;gap:var(--size-4-3)}.row.two-col.svelte-1blte8z .field.svelte-1blte8z{margin-top:var(--size-4-3)}.row.title-row.svelte-1blte8z.svelte-1blte8z{display:grid;grid-template-columns:3fr 1fr;gap:var(--size-4-3)}.creators.svelte-1blte8z.svelte-1blte8z{display:flex;flex-direction:column;gap:var(--size-4-2);margin-top:var(--size-4-2)}.creator-row.svelte-1blte8z.svelte-1blte8z{display:flex;align-items:stretch;gap:var(--size-4-2);padding:var(--size-4-2);border:var(--border-width) solid var(--background-modifier-border);border-radius:var(--radius-s);background:var(--background-secondary)}.creator-main.svelte-1blte8z.svelte-1blte8z{display:flex;flex-direction:column;gap:var(--size-4-2);flex:1}.creator-fields.svelte-1blte8z.svelte-1blte8z{display:grid;grid-template-columns:1.2fr 1.6fr 1fr 1.4fr;gap:var(--size-4-2)}.creator-fields.svelte-1blte8z input.svelte-1blte8z{width:100%}.creator-corresponding.svelte-1blte8z.svelte-1blte8z{display:flex;align-items:center;gap:var(--size-4-1);font-size:var(--font-ui-smaller);color:var(--text-muted)}.creator-corresponding.svelte-1blte8z input.svelte-1blte8z{width:auto}.creator-actions.svelte-1blte8z.svelte-1blte8z{display:flex;flex-direction:column;gap:2px;align-items:stretch;justify-content:center}.creator-actions.svelte-1blte8z button.svelte-1blte8z{padding:var(--size-2-1) var(--size-4-2);line-height:1;font-size:var(--font-ui-smaller);min-width:1.8em}button.ghost.svelte-1blte8z.svelte-1blte8z{background:transparent;color:var(--text-muted);box-shadow:none;border:var(--border-width) solid var(--background-modifier-border)}button.ghost.svelte-1blte8z.svelte-1blte8z:hover:not(:disabled){color:var(--text-normal);background:var(--background-modifier-hover)}button.ghost.svelte-1blte8z.svelte-1blte8z:disabled{opacity:0.4;cursor:not-allowed}button.ghost.danger.svelte-1blte8z.svelte-1blte8z:hover:not(:disabled){color:var(--text-error);border-color:var(--text-error)}button.primary.svelte-1blte8z.svelte-1blte8z{background-color:var(--interactive-accent);color:var(--text-on-accent)}button.primary.svelte-1blte8z.svelte-1blte8z:disabled{opacity:0.5;cursor:not-allowed}footer.svelte-1blte8z.svelte-1blte8z{margin-top:var(--size-4-4);padding-top:var(--size-4-3);border-top:var(--border-width) solid var(--background-modifier-border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--size-4-2)}footer.svelte-1blte8z .file-path.svelte-1blte8z{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}footer.svelte-1blte8z .actions.svelte-1blte8z{display:flex;gap:var(--size-4-2)}.empty-state.svelte-1blte8z.svelte-1blte8z{display:flex;flex-direction:column;align-items:center;text-align:center;padding:var(--size-4-8) var(--size-4-4);gap:var(--size-4-3);min-height:320px;box-sizing:border-box}.empty-state.svelte-1blte8z>.svelte-1blte8z{flex-shrink:0}.empty-icon.svelte-1blte8z.svelte-1blte8z{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:var(--background-modifier-hover);color:var(--text-muted)}.empty-icon.svelte-1blte8z svg{width:26px;height:26px}.empty-title.svelte-1blte8z.svelte-1blte8z{margin:0;font-size:var(--font-ui-medium);font-weight:600;color:var(--text-normal)}.empty-message.svelte-1blte8z.svelte-1blte8z{margin:0;max-width:440px;color:var(--text-muted);line-height:var(--line-height-normal)}.empty-path.svelte-1blte8z.svelte-1blte8z{margin:0;word-break:break-all}.empty-actions.svelte-1blte8z.svelte-1blte8z{display:flex;gap:var(--size-4-2);margin-top:var(--size-4-2)}code.svelte-1blte8z.svelte-1blte8z{font-size:0.9em}");
+function add_css$1(target) {
+	append_styles(target, "svelte-1k3e56", ".metadata-modal-root.svelte-1k3e56.svelte-1k3e56{display:block;width:100%;max-width:640px;margin:0 auto}.muted.svelte-1k3e56.svelte-1k3e56{color:var(--text-muted)}.small.svelte-1k3e56.svelte-1k3e56{font-size:var(--font-ui-smaller);line-height:var(--line-height-tight)}.req.svelte-1k3e56.svelte-1k3e56{color:var(--text-error);margin-left:2px}section.svelte-1k3e56.svelte-1k3e56{border-top:var(--border-width) solid var(--background-modifier-border);padding:var(--size-4-4) 0 var(--size-4-2) 0}section.svelte-1k3e56.svelte-1k3e56:first-of-type{border-top:none;padding-top:0}section.svelte-1k3e56 h3.svelte-1k3e56{margin:0 0 var(--size-4-2) 0;font-size:var(--font-ui-medium);font-weight:600;color:var(--text-normal)}.section-head.svelte-1k3e56.svelte-1k3e56{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--size-4-1)}.section-head.svelte-1k3e56 h3.svelte-1k3e56{margin:0}.field.svelte-1k3e56.svelte-1k3e56{display:flex;flex-direction:column;margin-top:var(--size-4-3)}.field.svelte-1k3e56>span.svelte-1k3e56{font-size:var(--font-ui-smaller);color:var(--text-muted);margin-bottom:var(--size-4-1)}.field.svelte-1k3e56 input.svelte-1k3e56,.field.svelte-1k3e56 textarea.svelte-1k3e56{width:100%}.field.svelte-1k3e56 textarea.svelte-1k3e56{font-family:var(--font-text);resize:vertical;min-height:6em}.row.two-col.svelte-1k3e56.svelte-1k3e56{display:grid;grid-template-columns:1fr 1fr;gap:var(--size-4-3)}.row.two-col.svelte-1k3e56 .field.svelte-1k3e56{margin-top:var(--size-4-3)}.toggles.svelte-1k3e56.svelte-1k3e56{align-items:center;margin-top:var(--size-4-3)}.toggle.svelte-1k3e56.svelte-1k3e56{display:flex;align-items:center;gap:var(--size-4-2);color:var(--text-normal);font-size:var(--font-ui-small)}.toggle.svelte-1k3e56 input.svelte-1k3e56{margin:0}.creators.svelte-1k3e56.svelte-1k3e56{display:flex;flex-direction:column;gap:var(--size-4-2);margin-top:var(--size-4-2)}.creator-row.svelte-1k3e56.svelte-1k3e56{display:flex;align-items:stretch;gap:var(--size-4-2);padding:var(--size-4-2);border:var(--border-width) solid var(--background-modifier-border);border-radius:var(--radius-s);background:var(--background-secondary)}.creator-fields.svelte-1k3e56.svelte-1k3e56{display:grid;grid-template-columns:1.2fr 1.6fr 1fr;gap:var(--size-4-2);flex:1}.creator-fields.svelte-1k3e56 input.svelte-1k3e56{width:100%}.creator-actions.svelte-1k3e56.svelte-1k3e56{display:flex;flex-direction:column;gap:2px;align-items:stretch;justify-content:center}.creator-actions.svelte-1k3e56 button.svelte-1k3e56{padding:var(--size-2-1) var(--size-4-2);line-height:1;font-size:var(--font-ui-smaller);min-width:1.8em}button.ghost.svelte-1k3e56.svelte-1k3e56{background:transparent;color:var(--text-muted);box-shadow:none;border:var(--border-width) solid var(--background-modifier-border)}button.ghost.svelte-1k3e56.svelte-1k3e56:hover:not(:disabled){color:var(--text-normal);background:var(--background-modifier-hover)}button.ghost.svelte-1k3e56.svelte-1k3e56:disabled{opacity:0.4;cursor:not-allowed}button.ghost.danger.svelte-1k3e56.svelte-1k3e56:hover:not(:disabled){color:var(--text-error);border-color:var(--text-error)}button.primary.svelte-1k3e56.svelte-1k3e56{background-color:var(--interactive-accent);color:var(--text-on-accent)}button.primary.svelte-1k3e56.svelte-1k3e56:disabled{opacity:0.5;cursor:not-allowed}footer.svelte-1k3e56.svelte-1k3e56{margin-top:var(--size-4-4);padding-top:var(--size-4-3);border-top:var(--border-width) solid var(--background-modifier-border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--size-4-2)}footer.svelte-1k3e56 .file-path.svelte-1k3e56{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}footer.svelte-1k3e56 .actions.svelte-1k3e56{display:flex;gap:var(--size-4-2)}.empty-state.svelte-1k3e56.svelte-1k3e56{display:flex;flex-direction:column;align-items:center;text-align:center;padding:var(--size-4-8) var(--size-4-4);gap:var(--size-4-3);min-height:320px;box-sizing:border-box}.empty-state.svelte-1k3e56>.svelte-1k3e56{flex-shrink:0}.empty-icon.svelte-1k3e56.svelte-1k3e56{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:var(--background-modifier-hover);color:var(--text-muted)}.empty-icon.svelte-1k3e56 svg{width:26px;height:26px}.empty-title.svelte-1k3e56.svelte-1k3e56{margin:0;font-size:var(--font-ui-medium);font-weight:600;color:var(--text-normal)}.empty-message.svelte-1k3e56.svelte-1k3e56{margin:0;max-width:440px;color:var(--text-muted);line-height:var(--line-height-normal)}.empty-path.svelte-1k3e56.svelte-1k3e56{margin:0;word-break:break-all}.empty-actions.svelte-1k3e56.svelte-1k3e56{display:flex;gap:var(--size-4-2);margin-top:var(--size-4-2)}code.svelte-1k3e56.svelte-1k3e56{font-size:0.9em}");
 }
 
-function get_each_context$1(ctx, list, i) {
+function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[35] = list[i];
-	child_ctx[36] = list;
-	child_ctx[37] = i;
+	child_ctx[37] = list[i];
+	child_ctx[38] = list;
+	child_ctx[39] = i;
 	return child_ctx;
 }
 
-// (236:2) {:else}
-function create_else_block$2(ctx) {
+// (229:2) {:else}
+function create_else_block$1(ctx) {
 	let form_1;
 	let section0;
 	let h30;
 	let t1;
-	let div0;
 	let label0;
 	let span1;
 	let t4;
 	let input0;
 	let t5;
+	let div0;
 	let label1;
 	let span2;
 	let t7;
 	let input1;
 	let t8;
-	let div1;
 	let label2;
 	let span3;
 	let t10;
@@ -41214,56 +36665,83 @@ function create_else_block$2(ctx) {
 	let label4;
 	let span5;
 	let t16;
-	let input4;
+	let textarea;
 	let t17;
 	let label5;
 	let span6;
 	let t19;
-	let textarea;
+	let input4;
 	let t20;
-	let label6;
-	let span7;
-	let t22;
-	let input5;
-	let t23;
 	let section1;
-	let div2;
+	let div1;
 	let h31;
-	let t24;
-	let t25;
+	let t21;
+	let t22;
 	let button0;
 	let icon;
-	let t26;
+	let t23;
 	let p0;
-	let t36;
-	let div3;
+	let t29;
+	let div2;
 	let each_blocks = [];
 	let each_1_lookup = new Map();
-	let t37;
-	let footer;
+	let t30;
+	let section2;
+	let h32;
+	let t32;
 	let p1;
+	let t36;
+	let div3;
+	let label6;
+	let span7;
 	let t38;
-	let code3;
+	let input5;
 	let t39;
-	let t40;
-	let div4;
-	let button1;
+	let label7;
+	let span8;
+	let t41;
+	let input6;
 	let t42;
+	let label8;
+	let span9;
+	let t44;
+	let input7;
+	let t45;
+	let div4;
+	let label9;
+	let input8;
+	let t46;
+	let span10;
+	let t48;
+	let label10;
+	let input9;
+	let t49;
+	let span11;
+	let t51;
+	let footer;
+	let p2;
+	let t52;
+	let code3;
+	let t53;
+	let t54;
+	let div5;
+	let button1;
+	let t56;
 	let button2;
-	let t43;
+	let t57;
 	let button2_disabled_value;
 	let current;
 	let mounted;
 	let dispose;
-	let if_block = !/*creatorsOk*/ ctx[3] && create_if_block_2$1();
+	let if_block = !/*creatorsOk*/ ctx[3] && create_if_block_2();
 	icon = new Icon({ props: { iconName: "plus-with-circle" } });
 	let each_value = /*form*/ ctx[2].creators;
-	const get_key = ctx => /*i*/ ctx[37];
+	const get_key = ctx => /*i*/ ctx[39];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		let child_ctx = get_each_context$1(ctx, each_value, i);
+		let child_ctx = get_each_context(ctx, each_value, i);
 		let key = get_key(child_ctx);
-		each_1_lookup.set(key, each_blocks[i] = create_each_block$1(key, child_ctx));
+		each_1_lookup.set(key, each_blocks[i] = create_each_block(key, child_ctx));
 	}
 
 	return {
@@ -41273,221 +36751,304 @@ function create_else_block$2(ctx) {
 			h30 = element("h3");
 			h30.textContent = "Basics";
 			t1 = space();
-			div0 = element("div");
 			label0 = element("label");
 			span1 = element("span");
-			span1.innerHTML = `Title<span class="req svelte-1blte8z">*</span>`;
+			span1.innerHTML = `Title<span class="req svelte-1k3e56">*</span>`;
 			t4 = space();
 			input0 = element("input");
 			t5 = space();
+			div0 = element("div");
 			label1 = element("label");
 			span2 = element("span");
-			span2.textContent = "Acronym";
+			span2.textContent = "Publication date";
 			t7 = space();
 			input1 = element("input");
 			t8 = space();
-			div1 = element("div");
 			label2 = element("label");
 			span3 = element("span");
-			span3.textContent = "Publication date";
+			span3.textContent = "Version";
 			t10 = space();
 			input2 = element("input");
 			t11 = space();
 			label3 = element("label");
 			span4 = element("span");
-			span4.textContent = "Version";
+			span4.textContent = "Journal";
 			t13 = space();
 			input3 = element("input");
 			t14 = space();
 			label4 = element("label");
 			span5 = element("span");
-			span5.textContent = "Journal";
+			span5.textContent = "Abstract / description";
 			t16 = space();
-			input4 = element("input");
+			textarea = element("textarea");
 			t17 = space();
 			label5 = element("label");
 			span6 = element("span");
-			span6.textContent = "Abstract / description";
+			span6.textContent = "Keywords";
 			t19 = space();
-			textarea = element("textarea");
+			input4 = element("input");
 			t20 = space();
-			label6 = element("label");
-			span7 = element("span");
-			span7.textContent = "Keywords";
-			t22 = space();
-			input5 = element("input");
-			t23 = space();
 			section1 = element("section");
-			div2 = element("div");
+			div1 = element("div");
 			h31 = element("h3");
-			t24 = text("Creators\n            ");
+			t21 = text("Creators\n            ");
 			if (if_block) if_block.c();
-			t25 = space();
+			t22 = space();
 			button0 = element("button");
 			create_component(icon.$$.fragment);
-			t26 = space();
+			t23 = space();
 			p0 = element("p");
 
-			p0.innerHTML = `Zenodo treats <code class="svelte-1blte8z">affiliation</code> as a single string. For
+			p0.innerHTML = `Zenodo treats <code class="svelte-1k3e56">affiliation</code> as a single string. For
           multi-affiliation authors, edit
-          <code class="svelte-1blte8z">_longform.author_affiliations</code> directly in the JSON file.
-          Check <strong>Corresponding</strong> to mark an author; their
-          <code class="svelte-1blte8z">email</code> is printed as the “Corresponding author” line.`;
+          <code class="svelte-1k3e56">_longform.author_affiliations</code> directly in the JSON file.`;
 
-			t36 = space();
-			div3 = element("div");
+			t29 = space();
+			div2 = element("div");
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].c();
 			}
 
-			t37 = space();
-			footer = element("footer");
+			t30 = space();
+			section2 = element("section");
+			h32 = element("h3");
+			h32.textContent = "Longform extras";
+			t32 = space();
 			p1 = element("p");
-			t38 = text("Saving to ");
-			code3 = element("code");
-			t39 = text(/*filePath*/ ctx[4]);
-			t40 = space();
+
+			p1.innerHTML = `Plugin-specific keys under <code class="svelte-1k3e56">_longform</code>. Zenodo ignores
+          these on upload.`;
+
+			t36 = space();
+			div3 = element("div");
+			label6 = element("label");
+			span7 = element("span");
+			span7.textContent = "Acronym";
+			t38 = space();
+			input5 = element("input");
+			t39 = space();
+			label7 = element("label");
+			span8 = element("span");
+			span8.textContent = "CSL style";
+			t41 = space();
+			input6 = element("input");
+			t42 = space();
+			label8 = element("label");
+			span9 = element("span");
+			span9.textContent = "Pandoc template";
+			t44 = space();
+			input7 = element("input");
+			t45 = space();
 			div4 = element("div");
+			label9 = element("label");
+			input8 = element("input");
+			t46 = space();
+			span10 = element("span");
+			span10.textContent = "Line numbers";
+			t48 = space();
+			label10 = element("label");
+			input9 = element("input");
+			t49 = space();
+			span11 = element("span");
+			span11.textContent = "Figures at end";
+			t51 = space();
+			footer = element("footer");
+			p2 = element("p");
+			t52 = text("Saving to ");
+			code3 = element("code");
+			t53 = text(/*filePath*/ ctx[4]);
+			t54 = space();
+			div5 = element("div");
 			button1 = element("button");
 			button1.textContent = "Cancel";
-			t42 = space();
+			t56 = space();
 			button2 = element("button");
-			t43 = text("Save");
-			attr(h30, "class", "svelte-1blte8z");
-			attr(span1, "class", "svelte-1blte8z");
+			t57 = text("Save");
+			attr(h30, "class", "svelte-1k3e56");
+			attr(span1, "class", "svelte-1k3e56");
 			attr(input0, "type", "text");
 			attr(input0, "placeholder", "Manuscript title");
-			attr(input0, "class", "svelte-1blte8z");
-			attr(label0, "class", "field svelte-1blte8z");
-			attr(span2, "class", "svelte-1blte8z");
-			attr(input1, "type", "text");
-			attr(input1, "placeholder", "MYPAPER");
-			attr(input1, "class", "svelte-1blte8z");
-			attr(label1, "class", "field svelte-1blte8z");
-			attr(div0, "class", "row title-row svelte-1blte8z");
-			attr(span3, "class", "svelte-1blte8z");
-			attr(input2, "type", "date");
-			attr(input2, "class", "svelte-1blte8z");
-			attr(label2, "class", "field svelte-1blte8z");
-			attr(span4, "class", "svelte-1blte8z");
+			attr(input0, "class", "svelte-1k3e56");
+			attr(label0, "class", "field svelte-1k3e56");
+			attr(span2, "class", "svelte-1k3e56");
+			attr(input1, "type", "date");
+			attr(input1, "class", "svelte-1k3e56");
+			attr(label1, "class", "field svelte-1k3e56");
+			attr(span3, "class", "svelte-1k3e56");
+			attr(input2, "type", "text");
+			attr(input2, "placeholder", "v1.0");
+			attr(input2, "class", "svelte-1k3e56");
+			attr(label2, "class", "field svelte-1k3e56");
+			attr(div0, "class", "row two-col svelte-1k3e56");
+			attr(span4, "class", "svelte-1k3e56");
 			attr(input3, "type", "text");
-			attr(input3, "placeholder", "v1.0");
-			attr(input3, "class", "svelte-1blte8z");
-			attr(label3, "class", "field svelte-1blte8z");
-			attr(div1, "class", "row two-col svelte-1blte8z");
-			attr(span5, "class", "svelte-1blte8z");
-			attr(input4, "type", "text");
-			attr(input4, "placeholder", "Nature");
-			attr(input4, "class", "svelte-1blte8z");
-			attr(label4, "class", "field svelte-1blte8z");
-			attr(span6, "class", "svelte-1blte8z");
+			attr(input3, "placeholder", "Nature");
+			attr(input3, "class", "svelte-1k3e56");
+			attr(label3, "class", "field svelte-1k3e56");
+			attr(span5, "class", "svelte-1k3e56");
 			attr(textarea, "rows", "5");
 			attr(textarea, "placeholder", "Manuscript abstract.");
-			attr(textarea, "class", "svelte-1blte8z");
-			attr(label5, "class", "field svelte-1blte8z");
-			attr(span7, "class", "svelte-1blte8z");
-			attr(input5, "type", "text");
-			attr(input5, "placeholder", "comma, separated, list");
-			attr(input5, "class", "svelte-1blte8z");
-			attr(label6, "class", "field svelte-1blte8z");
-			attr(section0, "class", "svelte-1blte8z");
-			attr(h31, "class", "svelte-1blte8z");
+			attr(textarea, "class", "svelte-1k3e56");
+			attr(label4, "class", "field svelte-1k3e56");
+			attr(span6, "class", "svelte-1k3e56");
+			attr(input4, "type", "text");
+			attr(input4, "placeholder", "comma, separated, list");
+			attr(input4, "class", "svelte-1k3e56");
+			attr(label5, "class", "field svelte-1k3e56");
+			attr(section0, "class", "svelte-1k3e56");
+			attr(h31, "class", "svelte-1k3e56");
 			attr(button0, "type", "button");
-			attr(button0, "class", "ghost svelte-1blte8z");
+			attr(button0, "class", "ghost svelte-1k3e56");
 			attr(button0, "title", "Add creator");
-			attr(div2, "class", "section-head svelte-1blte8z");
-			attr(p0, "class", "muted small svelte-1blte8z");
-			attr(div3, "class", "creators svelte-1blte8z");
-			attr(section1, "class", "svelte-1blte8z");
-			attr(code3, "class", "svelte-1blte8z");
-			attr(p1, "class", "muted small file-path svelte-1blte8z");
+			attr(div1, "class", "section-head svelte-1k3e56");
+			attr(p0, "class", "muted small svelte-1k3e56");
+			attr(div2, "class", "creators svelte-1k3e56");
+			attr(section1, "class", "svelte-1k3e56");
+			attr(h32, "class", "svelte-1k3e56");
+			attr(p1, "class", "muted small svelte-1k3e56");
+			attr(span7, "class", "svelte-1k3e56");
+			attr(input5, "type", "text");
+			attr(input5, "placeholder", "MYPAPER");
+			attr(input5, "class", "svelte-1k3e56");
+			attr(label6, "class", "field svelte-1k3e56");
+			attr(span8, "class", "svelte-1k3e56");
+			attr(input6, "type", "text");
+			attr(input6, "placeholder", "nature");
+			attr(input6, "class", "svelte-1k3e56");
+			attr(label7, "class", "field svelte-1k3e56");
+			attr(div3, "class", "row two-col svelte-1k3e56");
+			attr(span9, "class", "svelte-1k3e56");
+			attr(input7, "type", "text");
+			attr(input7, "placeholder", "default");
+			attr(input7, "class", "svelte-1k3e56");
+			attr(label8, "class", "field svelte-1k3e56");
+			attr(input8, "type", "checkbox");
+			attr(input8, "class", "svelte-1k3e56");
+			attr(label9, "class", "toggle svelte-1k3e56");
+			attr(input9, "type", "checkbox");
+			attr(input9, "class", "svelte-1k3e56");
+			attr(label10, "class", "toggle svelte-1k3e56");
+			attr(div4, "class", "row two-col toggles svelte-1k3e56");
+			attr(section2, "class", "svelte-1k3e56");
+			attr(code3, "class", "svelte-1k3e56");
+			attr(p2, "class", "muted small file-path svelte-1k3e56");
 			attr(button1, "type", "button");
-			attr(button1, "class", "ghost svelte-1blte8z");
+			attr(button1, "class", "ghost svelte-1k3e56");
 			attr(button2, "type", "submit");
-			attr(button2, "class", "primary svelte-1blte8z");
+			attr(button2, "class", "primary svelte-1k3e56");
 			button2.disabled = button2_disabled_value = !/*canSave*/ ctx[6];
-			attr(div4, "class", "actions svelte-1blte8z");
-			attr(footer, "class", "svelte-1blte8z");
+			attr(div5, "class", "actions svelte-1k3e56");
+			attr(footer, "class", "svelte-1k3e56");
 		},
 		m(target, anchor) {
 			insert(target, form_1, anchor);
 			append(form_1, section0);
 			append(section0, h30);
 			append(section0, t1);
-			append(section0, div0);
-			append(div0, label0);
+			append(section0, label0);
 			append(label0, span1);
 			append(label0, t4);
 			append(label0, input0);
 			set_input_value(input0, /*form*/ ctx[2].title);
-			append(div0, t5);
+			append(section0, t5);
+			append(section0, div0);
 			append(div0, label1);
 			append(label1, span2);
 			append(label1, t7);
 			append(label1, input1);
-			set_input_value(input1, /*form*/ ctx[2].acronym);
-			append(section0, t8);
-			append(section0, div1);
-			append(div1, label2);
+			set_input_value(input1, /*form*/ ctx[2].publication_date);
+			append(div0, t8);
+			append(div0, label2);
 			append(label2, span3);
 			append(label2, t10);
 			append(label2, input2);
-			set_input_value(input2, /*form*/ ctx[2].publication_date);
-			append(div1, t11);
-			append(div1, label3);
+			set_input_value(input2, /*form*/ ctx[2].version);
+			append(section0, t11);
+			append(section0, label3);
 			append(label3, span4);
 			append(label3, t13);
 			append(label3, input3);
-			set_input_value(input3, /*form*/ ctx[2].version);
+			set_input_value(input3, /*form*/ ctx[2].journal_title);
 			append(section0, t14);
 			append(section0, label4);
 			append(label4, span5);
 			append(label4, t16);
-			append(label4, input4);
-			set_input_value(input4, /*form*/ ctx[2].journal_title);
+			append(label4, textarea);
+			set_input_value(textarea, /*form*/ ctx[2].description);
 			append(section0, t17);
 			append(section0, label5);
 			append(label5, span6);
 			append(label5, t19);
-			append(label5, textarea);
-			set_input_value(textarea, /*form*/ ctx[2].description);
-			append(section0, t20);
-			append(section0, label6);
-			append(label6, span7);
-			append(label6, t22);
-			append(label6, input5);
-			set_input_value(input5, /*form*/ ctx[2].keywords);
-			append(form_1, t23);
+			append(label5, input4);
+			set_input_value(input4, /*form*/ ctx[2].keywords);
+			append(form_1, t20);
 			append(form_1, section1);
-			append(section1, div2);
-			append(div2, h31);
-			append(h31, t24);
+			append(section1, div1);
+			append(div1, h31);
+			append(h31, t21);
 			if (if_block) if_block.m(h31, null);
-			append(div2, t25);
-			append(div2, button0);
+			append(div1, t22);
+			append(div1, button0);
 			mount_component(icon, button0, null);
-			append(section1, t26);
+			append(section1, t23);
 			append(section1, p0);
-			append(section1, t36);
-			append(section1, div3);
+			append(section1, t29);
+			append(section1, div2);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(div3, null);
+				each_blocks[i].m(div2, null);
 			}
 
-			append(form_1, t37);
+			append(form_1, t30);
+			append(form_1, section2);
+			append(section2, h32);
+			append(section2, t32);
+			append(section2, p1);
+			append(section2, t36);
+			append(section2, div3);
+			append(div3, label6);
+			append(label6, span7);
+			append(label6, t38);
+			append(label6, input5);
+			set_input_value(input5, /*form*/ ctx[2].acronym);
+			append(div3, t39);
+			append(div3, label7);
+			append(label7, span8);
+			append(label7, t41);
+			append(label7, input6);
+			set_input_value(input6, /*form*/ ctx[2].csl);
+			append(section2, t42);
+			append(section2, label8);
+			append(label8, span9);
+			append(label8, t44);
+			append(label8, input7);
+			set_input_value(input7, /*form*/ ctx[2].template);
+			append(section2, t45);
+			append(section2, div4);
+			append(div4, label9);
+			append(label9, input8);
+			input8.checked = /*form*/ ctx[2].lineno;
+			append(label9, t46);
+			append(label9, span10);
+			append(div4, t48);
+			append(div4, label10);
+			append(label10, input9);
+			input9.checked = /*form*/ ctx[2].figuresAtEnd;
+			append(label10, t49);
+			append(label10, span11);
+			append(form_1, t51);
 			append(form_1, footer);
-			append(footer, p1);
-			append(p1, t38);
-			append(p1, code3);
-			append(code3, t39);
-			append(footer, t40);
-			append(footer, div4);
-			append(div4, button1);
-			append(div4, t42);
-			append(div4, button2);
-			append(button2, t43);
+			append(footer, p2);
+			append(p2, t52);
+			append(p2, code3);
+			append(code3, t53);
+			append(footer, t54);
+			append(footer, div5);
+			append(div5, button1);
+			append(div5, t56);
+			append(div5, button2);
+			append(button2, t57);
 			current = true;
 
 			if (!mounted) {
@@ -41496,10 +37057,14 @@ function create_else_block$2(ctx) {
 					listen(input1, "input", /*input1_input_handler*/ ctx[16]),
 					listen(input2, "input", /*input2_input_handler*/ ctx[17]),
 					listen(input3, "input", /*input3_input_handler*/ ctx[18]),
-					listen(input4, "input", /*input4_input_handler*/ ctx[19]),
-					listen(textarea, "input", /*textarea_input_handler*/ ctx[20]),
-					listen(input5, "input", /*input5_input_handler*/ ctx[21]),
+					listen(textarea, "input", /*textarea_input_handler*/ ctx[19]),
+					listen(input4, "input", /*input4_input_handler*/ ctx[20]),
 					listen(button0, "click", /*addCreator*/ ctx[8]),
+					listen(input5, "input", /*input5_input_handler*/ ctx[27]),
+					listen(input6, "input", /*input6_input_handler*/ ctx[28]),
+					listen(input7, "input", /*input7_input_handler*/ ctx[29]),
+					listen(input8, "change", /*input8_change_handler*/ ctx[30]),
+					listen(input9, "change", /*input9_change_handler*/ ctx[31]),
 					listen(button1, "click", /*close*/ ctx[7]),
 					listen(form_1, "submit", prevent_default(/*onSave*/ ctx[11]))
 				];
@@ -41512,33 +37077,29 @@ function create_else_block$2(ctx) {
 				set_input_value(input0, /*form*/ ctx[2].title);
 			}
 
-			if (dirty[0] & /*form*/ 4 && input1.value !== /*form*/ ctx[2].acronym) {
-				set_input_value(input1, /*form*/ ctx[2].acronym);
-			}
-
 			if (dirty[0] & /*form*/ 4) {
-				set_input_value(input2, /*form*/ ctx[2].publication_date);
+				set_input_value(input1, /*form*/ ctx[2].publication_date);
 			}
 
-			if (dirty[0] & /*form*/ 4 && input3.value !== /*form*/ ctx[2].version) {
-				set_input_value(input3, /*form*/ ctx[2].version);
+			if (dirty[0] & /*form*/ 4 && input2.value !== /*form*/ ctx[2].version) {
+				set_input_value(input2, /*form*/ ctx[2].version);
 			}
 
-			if (dirty[0] & /*form*/ 4 && input4.value !== /*form*/ ctx[2].journal_title) {
-				set_input_value(input4, /*form*/ ctx[2].journal_title);
+			if (dirty[0] & /*form*/ 4 && input3.value !== /*form*/ ctx[2].journal_title) {
+				set_input_value(input3, /*form*/ ctx[2].journal_title);
 			}
 
 			if (dirty[0] & /*form*/ 4) {
 				set_input_value(textarea, /*form*/ ctx[2].description);
 			}
 
-			if (dirty[0] & /*form*/ 4 && input5.value !== /*form*/ ctx[2].keywords) {
-				set_input_value(input5, /*form*/ ctx[2].keywords);
+			if (dirty[0] & /*form*/ 4 && input4.value !== /*form*/ ctx[2].keywords) {
+				set_input_value(input4, /*form*/ ctx[2].keywords);
 			}
 
 			if (!/*creatorsOk*/ ctx[3]) {
 				if (if_block) ; else {
-					if_block = create_if_block_2$1();
+					if_block = create_if_block_2();
 					if_block.c();
 					if_block.m(h31, null);
 				}
@@ -41549,10 +37110,30 @@ function create_else_block$2(ctx) {
 
 			if (dirty[0] & /*removeCreator, form, moveCreator*/ 1540) {
 				each_value = /*form*/ ctx[2].creators;
-				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div3, destroy_block, create_each_block$1, null, get_each_context$1);
+				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div2, destroy_block, create_each_block, null, get_each_context);
 			}
 
-			if (!current || dirty[0] & /*filePath*/ 16) set_data(t39, /*filePath*/ ctx[4]);
+			if (dirty[0] & /*form*/ 4 && input5.value !== /*form*/ ctx[2].acronym) {
+				set_input_value(input5, /*form*/ ctx[2].acronym);
+			}
+
+			if (dirty[0] & /*form*/ 4 && input6.value !== /*form*/ ctx[2].csl) {
+				set_input_value(input6, /*form*/ ctx[2].csl);
+			}
+
+			if (dirty[0] & /*form*/ 4 && input7.value !== /*form*/ ctx[2].template) {
+				set_input_value(input7, /*form*/ ctx[2].template);
+			}
+
+			if (dirty[0] & /*form*/ 4) {
+				input8.checked = /*form*/ ctx[2].lineno;
+			}
+
+			if (dirty[0] & /*form*/ 4) {
+				input9.checked = /*form*/ ctx[2].figuresAtEnd;
+			}
+
+			if (!current || dirty[0] & /*filePath*/ 16) set_data(t53, /*filePath*/ ctx[4]);
 
 			if (!current || dirty[0] & /*canSave*/ 64 && button2_disabled_value !== (button2_disabled_value = !/*canSave*/ ctx[6])) {
 				button2.disabled = button2_disabled_value;
@@ -41582,8 +37163,8 @@ function create_else_block$2(ctx) {
 	};
 }
 
-// (215:24) 
-function create_if_block_1$2(ctx) {
+// (208:24) 
+function create_if_block_1$1(ctx) {
 	let div2;
 	let div0;
 	let icon;
@@ -41618,7 +37199,7 @@ function create_if_block_1$2(ctx) {
 			t2 = space();
 			p0 = element("p");
 
-			p0.innerHTML = `This project doesn&#39;t have a <code class="svelte-1blte8z">metadata.json</code> file. Create
+			p0.innerHTML = `This project doesn&#39;t have a <code class="svelte-1k3e56">metadata.json</code> file. Create
         one to describe authors, abstract, journal, and more for the
         <em>Add Zenodo Frontmatter</em> compile step.`;
 
@@ -41635,17 +37216,17 @@ function create_if_block_1$2(ctx) {
 			t14 = space();
 			button1 = element("button");
 			button1.textContent = "Create metadata.json";
-			attr(div0, "class", "empty-icon svelte-1blte8z");
-			attr(h2, "class", "empty-title svelte-1blte8z");
-			attr(p0, "class", "empty-message svelte-1blte8z");
-			attr(code1, "class", "svelte-1blte8z");
-			attr(p1, "class", "empty-path muted small svelte-1blte8z");
+			attr(div0, "class", "empty-icon svelte-1k3e56");
+			attr(h2, "class", "empty-title svelte-1k3e56");
+			attr(p0, "class", "empty-message svelte-1k3e56");
+			attr(code1, "class", "svelte-1k3e56");
+			attr(p1, "class", "empty-path muted small svelte-1k3e56");
 			attr(button0, "type", "button");
-			attr(button0, "class", "ghost svelte-1blte8z");
+			attr(button0, "class", "ghost svelte-1k3e56");
 			attr(button1, "type", "button");
-			attr(button1, "class", "primary svelte-1blte8z");
-			attr(div1, "class", "empty-actions svelte-1blte8z");
-			attr(div2, "class", "empty-state svelte-1blte8z");
+			attr(button1, "class", "primary svelte-1k3e56");
+			attr(div1, "class", "empty-actions svelte-1k3e56");
+			attr(div2, "class", "empty-state svelte-1k3e56");
 		},
 		m(target, anchor) {
 			insert(target, div2, anchor);
@@ -41698,15 +37279,15 @@ function create_if_block_1$2(ctx) {
 	};
 }
 
-// (213:2) {#if loading}
-function create_if_block$2(ctx) {
+// (206:2) {#if loading}
+function create_if_block$1(ctx) {
 	let p;
 
 	return {
 		c() {
 			p = element("p");
 			p.textContent = "Loading metadata…";
-			attr(p, "class", "muted svelte-1blte8z");
+			attr(p, "class", "muted svelte-1k3e56");
 		},
 		m(target, anchor) {
 			insert(target, p, anchor);
@@ -41720,15 +37301,15 @@ function create_if_block$2(ctx) {
 	};
 }
 
-// (290:12) {#if !creatorsOk}
-function create_if_block_2$1(ctx) {
+// (277:12) {#if !creatorsOk}
+function create_if_block_2(ctx) {
 	let span;
 
 	return {
 		c() {
 			span = element("span");
 			span.textContent = "*";
-			attr(span, "class", "req svelte-1blte8z");
+			attr(span, "class", "req svelte-1k3e56");
 		},
 		m(target, anchor) {
 			insert(target, span, anchor);
@@ -41739,10 +37320,9 @@ function create_if_block_2$1(ctx) {
 	};
 }
 
-// (304:10) {#each form.creators as creator, i (i)}
-function create_each_block$1(key_1, ctx) {
-	let div3;
-	let div1;
+// (289:10) {#each form.creators as creator, i (i)}
+function create_each_block(key_1, ctx) {
+	let div2;
 	let div0;
 	let input0;
 	let t0;
@@ -41750,64 +37330,49 @@ function create_each_block$1(key_1, ctx) {
 	let t1;
 	let input2;
 	let t2;
-	let input3;
-	let t3;
-	let label;
-	let input4;
-	let t4;
-	let t5;
-	let div2;
+	let div1;
 	let button0;
-	let t6;
+	let t3;
 	let button0_disabled_value;
-	let t7;
+	let t4;
 	let button1;
-	let t8;
+	let t5;
 	let button1_disabled_value;
-	let t9;
+	let t6;
 	let button2;
-	let t11;
+	let t8;
 	let mounted;
 	let dispose;
 
 	function input0_input_handler_1() {
-		/*input0_input_handler_1*/ ctx[22].call(input0, /*each_value*/ ctx[36], /*i*/ ctx[37]);
+		/*input0_input_handler_1*/ ctx[21].call(input0, /*each_value*/ ctx[38], /*i*/ ctx[39]);
 	}
 
 	function input1_input_handler_1() {
-		/*input1_input_handler_1*/ ctx[23].call(input1, /*each_value*/ ctx[36], /*i*/ ctx[37]);
+		/*input1_input_handler_1*/ ctx[22].call(input1, /*each_value*/ ctx[38], /*i*/ ctx[39]);
 	}
 
 	function input2_input_handler_1() {
-		/*input2_input_handler_1*/ ctx[24].call(input2, /*each_value*/ ctx[36], /*i*/ ctx[37]);
-	}
-
-	function input3_input_handler_1() {
-		/*input3_input_handler_1*/ ctx[25].call(input3, /*each_value*/ ctx[36], /*i*/ ctx[37]);
-	}
-
-	function input4_change_handler() {
-		/*input4_change_handler*/ ctx[26].call(input4, /*each_value*/ ctx[36], /*i*/ ctx[37]);
+		/*input2_input_handler_1*/ ctx[23].call(input2, /*each_value*/ ctx[38], /*i*/ ctx[39]);
 	}
 
 	function click_handler() {
-		return /*click_handler*/ ctx[27](/*i*/ ctx[37]);
+		return /*click_handler*/ ctx[24](/*i*/ ctx[39]);
 	}
 
 	function click_handler_1() {
-		return /*click_handler_1*/ ctx[28](/*i*/ ctx[37]);
+		return /*click_handler_1*/ ctx[25](/*i*/ ctx[39]);
 	}
 
 	function click_handler_2() {
-		return /*click_handler_2*/ ctx[29](/*i*/ ctx[37]);
+		return /*click_handler_2*/ ctx[26](/*i*/ ctx[39]);
 	}
 
 	return {
 		key: key_1,
 		first: null,
 		c() {
-			div3 = element("div");
-			div1 = element("div");
+			div2 = element("div");
 			div0 = element("div");
 			input0 = element("input");
 			t0 = space();
@@ -41815,92 +37380,68 @@ function create_each_block$1(key_1, ctx) {
 			t1 = space();
 			input2 = element("input");
 			t2 = space();
-			input3 = element("input");
-			t3 = space();
-			label = element("label");
-			input4 = element("input");
-			t4 = text("\n                  Corresponding author");
-			t5 = space();
-			div2 = element("div");
+			div1 = element("div");
 			button0 = element("button");
-			t6 = text("▲");
-			t7 = space();
+			t3 = text("▲");
+			t4 = space();
 			button1 = element("button");
-			t8 = text("▼");
-			t9 = space();
+			t5 = text("▼");
+			t6 = space();
 			button2 = element("button");
 			button2.textContent = "✕";
-			t11 = space();
+			t8 = space();
 			attr(input0, "type", "text");
 			attr(input0, "placeholder", "Family, Given");
-			attr(input0, "class", "creator-name svelte-1blte8z");
+			attr(input0, "class", "creator-name svelte-1k3e56");
 			attr(input1, "type", "text");
 			attr(input1, "placeholder", "Affiliation");
-			attr(input1, "class", "creator-affil svelte-1blte8z");
+			attr(input1, "class", "creator-affil svelte-1k3e56");
 			attr(input2, "type", "text");
 			attr(input2, "placeholder", "0000-0000-0000-0000");
-			attr(input2, "class", "creator-orcid svelte-1blte8z");
-			attr(input3, "type", "email");
-			attr(input3, "placeholder", "email@example.org");
-			attr(input3, "class", "creator-email svelte-1blte8z");
-			attr(div0, "class", "creator-fields svelte-1blte8z");
-			attr(input4, "type", "checkbox");
-			attr(input4, "class", "svelte-1blte8z");
-			attr(label, "class", "creator-corresponding svelte-1blte8z");
-			attr(div1, "class", "creator-main svelte-1blte8z");
+			attr(input2, "class", "creator-orcid svelte-1k3e56");
+			attr(div0, "class", "creator-fields svelte-1k3e56");
 			attr(button0, "type", "button");
-			attr(button0, "class", "ghost svelte-1blte8z");
-			button0.disabled = button0_disabled_value = /*i*/ ctx[37] === 0;
+			attr(button0, "class", "ghost svelte-1k3e56");
+			button0.disabled = button0_disabled_value = /*i*/ ctx[39] === 0;
 			attr(button0, "title", "Move up");
 			attr(button1, "type", "button");
-			attr(button1, "class", "ghost svelte-1blte8z");
-			button1.disabled = button1_disabled_value = /*i*/ ctx[37] === /*form*/ ctx[2].creators.length - 1;
+			attr(button1, "class", "ghost svelte-1k3e56");
+			button1.disabled = button1_disabled_value = /*i*/ ctx[39] === /*form*/ ctx[2].creators.length - 1;
 			attr(button1, "title", "Move down");
 			attr(button2, "type", "button");
-			attr(button2, "class", "ghost danger svelte-1blte8z");
+			attr(button2, "class", "ghost danger svelte-1k3e56");
 			attr(button2, "title", "Remove creator");
-			attr(div2, "class", "creator-actions svelte-1blte8z");
-			attr(div3, "class", "creator-row svelte-1blte8z");
-			this.first = div3;
+			attr(div1, "class", "creator-actions svelte-1k3e56");
+			attr(div2, "class", "creator-row svelte-1k3e56");
+			this.first = div2;
 		},
 		m(target, anchor) {
-			insert(target, div3, anchor);
-			append(div3, div1);
-			append(div1, div0);
+			insert(target, div2, anchor);
+			append(div2, div0);
 			append(div0, input0);
-			set_input_value(input0, /*creator*/ ctx[35].name);
+			set_input_value(input0, /*creator*/ ctx[37].name);
 			append(div0, t0);
 			append(div0, input1);
-			set_input_value(input1, /*creator*/ ctx[35].affiliation);
+			set_input_value(input1, /*creator*/ ctx[37].affiliation);
 			append(div0, t1);
 			append(div0, input2);
-			set_input_value(input2, /*creator*/ ctx[35].orcid);
-			append(div0, t2);
-			append(div0, input3);
-			set_input_value(input3, /*creator*/ ctx[35].email);
-			append(div1, t3);
-			append(div1, label);
-			append(label, input4);
-			input4.checked = /*creator*/ ctx[35].corresponding;
-			append(label, t4);
-			append(div3, t5);
-			append(div3, div2);
-			append(div2, button0);
-			append(button0, t6);
-			append(div2, t7);
-			append(div2, button1);
-			append(button1, t8);
-			append(div2, t9);
-			append(div2, button2);
-			append(div3, t11);
+			set_input_value(input2, /*creator*/ ctx[37].orcid);
+			append(div2, t2);
+			append(div2, div1);
+			append(div1, button0);
+			append(button0, t3);
+			append(div1, t4);
+			append(div1, button1);
+			append(button1, t5);
+			append(div1, t6);
+			append(div1, button2);
+			append(div2, t8);
 
 			if (!mounted) {
 				dispose = [
 					listen(input0, "input", input0_input_handler_1),
 					listen(input1, "input", input1_input_handler_1),
 					listen(input2, "input", input2_input_handler_1),
-					listen(input3, "input", input3_input_handler_1),
-					listen(input4, "change", input4_change_handler),
 					listen(button0, "click", click_handler),
 					listen(button1, "click", click_handler_1),
 					listen(button2, "click", click_handler_2)
@@ -41912,48 +37453,40 @@ function create_each_block$1(key_1, ctx) {
 		p(new_ctx, dirty) {
 			ctx = new_ctx;
 
-			if (dirty[0] & /*form*/ 4 && input0.value !== /*creator*/ ctx[35].name) {
-				set_input_value(input0, /*creator*/ ctx[35].name);
+			if (dirty[0] & /*form*/ 4 && input0.value !== /*creator*/ ctx[37].name) {
+				set_input_value(input0, /*creator*/ ctx[37].name);
 			}
 
-			if (dirty[0] & /*form*/ 4 && input1.value !== /*creator*/ ctx[35].affiliation) {
-				set_input_value(input1, /*creator*/ ctx[35].affiliation);
+			if (dirty[0] & /*form*/ 4 && input1.value !== /*creator*/ ctx[37].affiliation) {
+				set_input_value(input1, /*creator*/ ctx[37].affiliation);
 			}
 
-			if (dirty[0] & /*form*/ 4 && input2.value !== /*creator*/ ctx[35].orcid) {
-				set_input_value(input2, /*creator*/ ctx[35].orcid);
+			if (dirty[0] & /*form*/ 4 && input2.value !== /*creator*/ ctx[37].orcid) {
+				set_input_value(input2, /*creator*/ ctx[37].orcid);
 			}
 
-			if (dirty[0] & /*form*/ 4 && input3.value !== /*creator*/ ctx[35].email) {
-				set_input_value(input3, /*creator*/ ctx[35].email);
-			}
-
-			if (dirty[0] & /*form*/ 4) {
-				input4.checked = /*creator*/ ctx[35].corresponding;
-			}
-
-			if (dirty[0] & /*form*/ 4 && button0_disabled_value !== (button0_disabled_value = /*i*/ ctx[37] === 0)) {
+			if (dirty[0] & /*form*/ 4 && button0_disabled_value !== (button0_disabled_value = /*i*/ ctx[39] === 0)) {
 				button0.disabled = button0_disabled_value;
 			}
 
-			if (dirty[0] & /*form*/ 4 && button1_disabled_value !== (button1_disabled_value = /*i*/ ctx[37] === /*form*/ ctx[2].creators.length - 1)) {
+			if (dirty[0] & /*form*/ 4 && button1_disabled_value !== (button1_disabled_value = /*i*/ ctx[39] === /*form*/ ctx[2].creators.length - 1)) {
 				button1.disabled = button1_disabled_value;
 			}
 		},
 		d(detaching) {
-			if (detaching) detach(div3);
+			if (detaching) detach(div2);
 			mounted = false;
 			run_all(dispose);
 		}
 	};
 }
 
-function create_fragment$2(ctx) {
+function create_fragment$1(ctx) {
 	let div;
 	let current_block_type_index;
 	let if_block;
 	let current;
-	const if_block_creators = [create_if_block$2, create_if_block_1$2, create_else_block$2];
+	const if_block_creators = [create_if_block$1, create_if_block_1$1, create_else_block$1];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -41969,7 +37502,7 @@ function create_fragment$2(ctx) {
 		c() {
 			div = element("div");
 			if_block.c();
-			attr(div, "class", "metadata-modal-root svelte-1blte8z");
+			attr(div, "class", "metadata-modal-root svelte-1k3e56");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -42023,7 +37556,7 @@ function setOrDelete(obj, key, value) {
 	if (value && value.length > 0) obj[key] = value; else delete obj[key];
 }
 
-function instance$2($$self, $$props, $$invalidate) {
+function instance$1($$self, $$props, $$invalidate) {
 	let titleOk;
 	let creatorsOk;
 	let canSave;
@@ -42050,16 +37583,12 @@ function instance$2($$self, $$props, $$invalidate) {
 			keywords: "",
 			journal_title: "",
 			version: "",
-			creators: [
-				{
-					name: "",
-					affiliation: "",
-					orcid: "",
-					email: "",
-					corresponding: false
-				}
-			],
-			acronym: ""
+			creators: [{ name: "", affiliation: "", orcid: "" }],
+			acronym: "",
+			csl: "",
+			template: "",
+			lineno: false,
+			figuresAtEnd: false
 		};
 	}
 
@@ -42096,16 +37625,12 @@ function instance$2($$self, $$props, $$invalidate) {
 	}));
 
 	function parsedToForm(j) {
-		var _a, _b, _c, _d, _e, _f, _g, _h;
+		var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 		const ext = (_a = j._longform) !== null && _a !== void 0 ? _a : {};
-
-		const correspondingSet = new Set(Array.isArray(ext.corresponding)
-			? ext.corresponding.map(n => String(n))
-			: []);
 
 		const creators = Array.isArray(j.creators)
 		? j.creators.map(c => {
-				var _a, _b, _c, _d, _e;
+				var _a, _b, _c;
 
 				return {
 					name: String((_a = c === null || c === void 0 ? void 0 : c.name) !== null && _a !== void 0
@@ -42116,24 +37641,10 @@ function instance$2($$self, $$props, $$invalidate) {
 					: ""),
 					orcid: String((_c = c === null || c === void 0 ? void 0 : c.orcid) !== null && _c !== void 0
 					? _c
-					: ""),
-					email: String((_d = c === null || c === void 0 ? void 0 : c.email) !== null && _d !== void 0
-					? _d
-					: ""),
-					corresponding: correspondingSet.has(String((_e = c === null || c === void 0 ? void 0 : c.name) !== null && _e !== void 0
-					? _e
-					: ""))
+					: "")
 				};
 			})
-		: [
-				{
-					name: "",
-					affiliation: "",
-					orcid: "",
-					email: "",
-					corresponding: false
-				}
-			];
+		: [{ name: "", affiliation: "", orcid: "" }];
 
 		const keywords = Array.isArray(j.keywords)
 		? j.keywords.map(k => String(k)).join(", ")
@@ -42156,16 +37667,12 @@ function instance$2($$self, $$props, $$invalidate) {
 			version: String((_g = j.version) !== null && _g !== void 0 ? _g : ""),
 			creators: creators.length > 0
 			? creators
-			: [
-					{
-						name: "",
-						affiliation: "",
-						orcid: "",
-						email: "",
-						corresponding: false
-					}
-				],
-			acronym: String((_h = ext.acronym) !== null && _h !== void 0 ? _h : "")
+			: [{ name: "", affiliation: "", orcid: "" }],
+			acronym: String((_h = ext.acronym) !== null && _h !== void 0 ? _h : ""),
+			csl: String((_j = ext.csl) !== null && _j !== void 0 ? _j : ""),
+			template: String((_k = ext.template) !== null && _k !== void 0 ? _k : ""),
+			lineno: Boolean(ext.lineno),
+			figuresAtEnd: Boolean(ext.figures_at_end)
 		};
 	}
 
@@ -42182,7 +37689,6 @@ function instance$2($$self, $$props, $$invalidate) {
 			const o = { name: c.name.trim() };
 			if (c.affiliation.trim()) o.affiliation = c.affiliation.trim();
 			if (c.orcid.trim()) o.orcid = c.orcid.trim();
-			if (c.email.trim()) o.email = c.email.trim();
 			return o;
 		});
 
@@ -42197,59 +37703,25 @@ function instance$2($$self, $$props, $$invalidate) {
 
 		const ext = Object.assign({}, prevExt);
 		setOrDelete(ext, "acronym", form.acronym.trim());
-
-		// CSL, Pandoc template, line numbers, and figures-at-end are managed by the
-		// Pandoc config (defaults/*.yaml), not per-project metadata — strip any
-		// legacy copies so metadata.json doesn't shadow the config.
-		delete ext.csl;
-
-		delete ext.template;
-		delete ext.lineno;
-		delete ext.figures_at_end;
-
-		// Corresponding authors: names of the checked creators. Their email (above)
-		// is what the Add Zenodo Frontmatter step emits as the `corresponding:` value.
-		const corresponding = form.creators.filter(c => c.corresponding && c.name.trim() !== "").map(c => c.name.trim());
-
-		if (corresponding.length > 0) ext.corresponding = corresponding; else delete ext.corresponding;
+		setOrDelete(ext, "csl", form.csl.trim());
+		setOrDelete(ext, "template", form.template.trim());
+		ext.lineno = form.lineno;
+		ext.figures_at_end = form.figuresAtEnd;
+		if (!form.lineno) delete ext.lineno;
+		if (!form.figuresAtEnd) delete ext.figures_at_end;
 		if (Object.keys(ext).length > 0) out._longform = ext; else delete out._longform;
 		return out;
 	}
 
 	function addCreator() {
-		$$invalidate(
-			2,
-			form.creators = [
-				...form.creators,
-				{
-					name: "",
-					affiliation: "",
-					orcid: "",
-					email: "",
-					corresponding: false
-				}
-			],
-			form
-		);
+		$$invalidate(2, form.creators = [...form.creators, { name: "", affiliation: "", orcid: "" }], form);
 	}
 
 	function removeCreator(i) {
 		$$invalidate(2, form.creators = form.creators.filter((_, idx) => idx !== i), form);
 
 		if (form.creators.length === 0) {
-			$$invalidate(
-				2,
-				form.creators = [
-					{
-						name: "",
-						affiliation: "",
-						orcid: "",
-						email: "",
-						corresponding: false
-					}
-				],
-				form
-			);
+			$$invalidate(2, form.creators = [{ name: "", affiliation: "", orcid: "" }], form);
 		}
 	}
 
@@ -42302,21 +37774,16 @@ function instance$2($$self, $$props, $$invalidate) {
 	}
 
 	function input1_input_handler() {
-		form.acronym = this.value;
-		$$invalidate(2, form);
-	}
-
-	function input2_input_handler() {
 		form.publication_date = this.value;
 		$$invalidate(2, form);
 	}
 
-	function input3_input_handler() {
+	function input2_input_handler() {
 		form.version = this.value;
 		$$invalidate(2, form);
 	}
 
-	function input4_input_handler() {
+	function input3_input_handler() {
 		form.journal_title = this.value;
 		$$invalidate(2, form);
 	}
@@ -42326,7 +37793,7 @@ function instance$2($$self, $$props, $$invalidate) {
 		$$invalidate(2, form);
 	}
 
-	function input5_input_handler() {
+	function input4_input_handler() {
 		form.keywords = this.value;
 		$$invalidate(2, form);
 	}
@@ -42346,19 +37813,34 @@ function instance$2($$self, $$props, $$invalidate) {
 		$$invalidate(2, form);
 	}
 
-	function input3_input_handler_1(each_value, i) {
-		each_value[i].email = this.value;
-		$$invalidate(2, form);
-	}
-
-	function input4_change_handler(each_value, i) {
-		each_value[i].corresponding = this.checked;
-		$$invalidate(2, form);
-	}
-
 	const click_handler = i => moveCreator(i, -1);
 	const click_handler_1 = i => moveCreator(i, 1);
 	const click_handler_2 = i => removeCreator(i);
+
+	function input5_input_handler() {
+		form.acronym = this.value;
+		$$invalidate(2, form);
+	}
+
+	function input6_input_handler() {
+		form.csl = this.value;
+		$$invalidate(2, form);
+	}
+
+	function input7_input_handler() {
+		form.template = this.value;
+		$$invalidate(2, form);
+	}
+
+	function input8_change_handler() {
+		form.lineno = this.checked;
+		$$invalidate(2, form);
+	}
+
+	function input9_change_handler() {
+		form.figuresAtEnd = this.checked;
+		$$invalidate(2, form);
+	}
 
 	$$self.$$set = $$props => {
 		if ('projectPath' in $$props) $$invalidate(0, projectPath = $$props.projectPath);
@@ -42399,24 +37881,26 @@ function instance$2($$self, $$props, $$invalidate) {
 		input1_input_handler,
 		input2_input_handler,
 		input3_input_handler,
-		input4_input_handler,
 		textarea_input_handler,
-		input5_input_handler,
+		input4_input_handler,
 		input0_input_handler_1,
 		input1_input_handler_1,
 		input2_input_handler_1,
-		input3_input_handler_1,
-		input4_change_handler,
 		click_handler,
 		click_handler_1,
-		click_handler_2
+		click_handler_2,
+		input5_input_handler,
+		input6_input_handler,
+		input7_input_handler,
+		input8_change_handler,
+		input9_change_handler
 	];
 }
 
 class MetadataModal$1 extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$2, create_fragment$2, safe_not_equal, { projectPath: 0, projectTitle: 13 }, add_css$2, [-1, -1]);
+		init(this, options, instance$1, create_fragment$1, safe_not_equal, { projectPath: 0, projectTitle: 13 }, add_css$1, [-1, -1]);
 	}
 }
 
@@ -42481,7 +37965,7 @@ class ExplorerPane extends obsidian.ItemView {
         return VIEW_TYPE_LONGFORM_EXPLORER;
     }
     getDisplayText() {
-        return translate("explorer.paneTitle");
+        return "Longform";
     }
     getIcon() {
         return ICON_NAME;
@@ -42629,8 +38113,8 @@ class ExplorerPane extends obsidian.ItemView {
             context.set("renameFolder", (oldPath, newPath) => {
                 this.app.vault.adapter.rename(oldPath, newPath);
             });
-            context.set("compile", (draft, workflow, kinds, statusCallback, options) => {
-                return compile(this.app, draft, workflow, kinds, statusCallback, options);
+            context.set("compile", (draft, workflow, kinds, statusCallback) => {
+                compile(this.app, draft, workflow, kinds, statusCallback);
             });
             context.set("openCompileStepMenu", () => new AddStepModalContainer(this.app).open());
             context.set("showCompileActionsMenu", (x, y, currentWorkflowName, action) => {
@@ -42661,11 +38145,13 @@ class ExplorerPane extends obsidian.ItemView {
                 new NewDraftModalContainer(this.app).open();
             });
             context.set("showMetadataModal", () => {
-                var _a;
                 const draft = get_store_value(selectedDraft);
                 if (!draft)
                     return;
-                const projectPath = projectRootPath((_a = get_store_value(selectedProject)) !== null && _a !== void 0 ? _a : [draft]);
+                const projectPath = draft.vaultPath
+                    .split("/")
+                    .slice(0, -1)
+                    .join("/");
                 new MetadataModal(this.app, projectPath, draft.title).open();
             });
             this.explorerView = new ExplorerView({
@@ -42683,13 +38169,6 @@ class ExplorerPane extends obsidian.ItemView {
         });
     }
 }
-
-const DISCONNECTED = {
-    connected: false,
-    config: null,
-    capabilities: [],
-};
-const paperbell = writable(Object.assign({}, DISCONNECTED));
 
 function resolveIfLongformFile(metadataCache, file) {
     const metadata = metadataCache.getFileCache(file);
@@ -42753,22 +38232,22 @@ class StoreVaultSync {
                         resolve();
                         return;
                     }
-                    console.log("[PaperOut] Waiting for active sync to complete...");
+                    console.log("[Longform] Waiting for active sync to complete...");
                     // Poll sync status every second
                     const interval = setInterval(() => {
                         if (!sync.syncing) {
                             clearInterval(interval);
                             clearTimeout(timeout); // Clear the timeout when sync completes
-                            console.log("[PaperOut] Sync complete.");
+                            console.log("[Longform] Sync complete.");
                             waitingForSync.set(false);
                             resolve();
                         }
-                        console.log("[PaperOut] Sync status:", sync.syncStatus);
+                        console.log("[Longform] Sync status:", sync.syncStatus);
                     }, 1000);
                     // Add a timeout just in case sync never completes
                     const timeout = setTimeout(() => {
                         clearInterval(interval);
-                        console.log("[PaperOut] Sync wait timed out");
+                        console.log("[Longform] Sync wait timed out");
                         waitingForSync.set(false);
                         resolve();
                     }, this.settlingTime);
@@ -42821,7 +38300,7 @@ class StoreVaultSync {
                 return acc;
             }, {}));
             drafts.set(draftsToWrite);
-            const message = `[PaperOut] Loaded and watching projects. Found ${draftFiles.length} drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
+            const message = `[Longform] Loaded and watching projects. Found ${draftFiles.length} drafts in ${(new Date().getTime() - start) / 1000.0}s.`;
             console.log(message);
             this.unsubscribeDraftsStore = drafts.subscribe(this.draftsStoreChanged.bind(this));
         });
@@ -43081,7 +38560,7 @@ class StoreVaultSync {
                         });
                     }
                     catch (error) {
-                        console.error("[PaperOut] error manually loading frontmatter:", error);
+                        console.error("[Longform] error manually loading frontmatter:", error);
                     }
                     if (fm) {
                         rawScenes = fm["longform"]["scenes"];
@@ -43139,7 +38618,7 @@ class StoreVaultSync {
                 };
             }
             else {
-                console.log(`[PaperOut] Error loading draft at ${fileWithMetadata.file.path}: invalid longform.format. Ignoring.`);
+                console.log(`[Longform] Error loading draft at ${fileWithMetadata.file.path}: invalid longform.format. Ignoring.`);
                 return null;
             }
         });
@@ -43251,2971 +38730,252 @@ function ignoredPatternToRegex(pattern) {
     return new RegExp(`^${regex}$`);
 }
 
-// DEFLATE is a complex format; to read this code, you should probably check the RFC first:
-
-// aliases for shorter compressed code (most minifers don't do this)
-var u8 = Uint8Array, u16 = Uint16Array, i32 = Int32Array;
-// fixed length extra bits
-var fleb = new u8([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, /* unused */ 0, 0, /* impossible */ 0]);
-// fixed distance extra bits
-var fdeb = new u8([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, /* unused */ 0, 0]);
-// code length index map
-var clim = new u8([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
-// get base, reverse index map from extra bits
-var freb = function (eb, start) {
-    var b = new u16(31);
-    for (var i = 0; i < 31; ++i) {
-        b[i] = start += 1 << eb[i - 1];
+class LongformSettingsTab extends obsidian.PluginSettingTab {
+    constructor(app, plugin) {
+        super(app, plugin);
+        this.plugin = plugin;
     }
-    // numbers here are at max 18 bits
-    var r = new i32(b[30]);
-    for (var i = 1; i < 30; ++i) {
-        for (var j = b[i]; j < b[i + 1]; ++j) {
-            r[j] = ((j - b[i]) << 5) | i;
-        }
-    }
-    return { b: b, r: r };
-};
-var _a = freb(fleb, 2), fl = _a.b, revfl = _a.r;
-// we can ignore the fact that the other numbers are wrong; they never happen anyway
-fl[28] = 258, revfl[258] = 28;
-var _b = freb(fdeb, 0), fd = _b.b;
-// map of value to reverse (assuming 16 bits)
-var rev = new u16(32768);
-for (var i = 0; i < 32768; ++i) {
-    // reverse table algorithm from SO
-    var x = ((i & 0xAAAA) >> 1) | ((i & 0x5555) << 1);
-    x = ((x & 0xCCCC) >> 2) | ((x & 0x3333) << 2);
-    x = ((x & 0xF0F0) >> 4) | ((x & 0x0F0F) << 4);
-    rev[i] = (((x & 0xFF00) >> 8) | ((x & 0x00FF) << 8)) >> 1;
-}
-// create huffman tree from u8 "map": index -> code length for code index
-// mb (max bits) must be at most 15
-// TODO: optimize/split up?
-var hMap = (function (cd, mb, r) {
-    var s = cd.length;
-    // index
-    var i = 0;
-    // u16 "map": index -> # of codes with bit length = index
-    var l = new u16(mb);
-    // length of cd must be 288 (total # of codes)
-    for (; i < s; ++i) {
-        if (cd[i])
-            ++l[cd[i] - 1];
-    }
-    // u16 "map": index -> minimum code for bit length = index
-    var le = new u16(mb);
-    for (i = 1; i < mb; ++i) {
-        le[i] = (le[i - 1] + l[i - 1]) << 1;
-    }
-    var co;
-    if (r) {
-        // u16 "map": index -> number of actual bits, symbol for code
-        co = new u16(1 << mb);
-        // bits to remove for reverser
-        var rvb = 15 - mb;
-        for (i = 0; i < s; ++i) {
-            // ignore 0 lengths
-            if (cd[i]) {
-                // num encoding both symbol and bits read
-                var sv = (i << 4) | cd[i];
-                // free bits
-                var r_1 = mb - cd[i];
-                // start value
-                var v = le[cd[i] - 1]++ << r_1;
-                // m is end value
-                for (var m = v | ((1 << r_1) - 1); v <= m; ++v) {
-                    // every 16 bit value starting with the code yields the same result
-                    co[rev[v] >> rvb] = sv;
+    display() {
+        const settings = get_store_value(pluginSettings);
+        const { containerEl } = this;
+        containerEl.empty();
+        new obsidian.Setting(containerEl).setName("Composition").setHeading();
+        new obsidian.Setting(containerEl).setName("New scene template").addSearch((cb) => {
+            new FileSuggest(this.app, cb.inputEl);
+            cb.setPlaceholder("templates/Scene.md")
+                .setValue(settings.sceneTemplate)
+                .onChange((v) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { sceneTemplate: v })));
+            });
+        });
+        containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
+            el.innerHTML =
+                "This file will be used as a template when creating new scenes via the New Scene… field. If you use a templating plugin (Templater or the core plugin) it will be used to process this template. This setting applies to all projects and can be overridden per-project in the Project > Project Metadata settings in the Longform pane.";
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Show scene numbers in Scenes tab")
+            .setDesc("If on, shows numbers for scenes with subscenes separated by periods, e.g. 1.1.2. Create subscenes by dragging a scene to an indent under an existing scene, or us an indent command.")
+            .addToggle((cb) => {
+            cb.setValue(settings.numberScenes);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { numberScenes: value })));
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Write scene index to frontmatter")
+            .setDesc("If enabled, will add a scene index, and scene number, to the frontmatter of scene files.")
+            .addToggle((toggle) => {
+            toggle.setValue(settings.writeProperty);
+            toggle.onChange((value) => {
+                pluginSettings.update((settings) => (Object.assign(Object.assign({}, settings), { writeProperty: value })));
+                if (value) {
+                    syncSceneIndices(this.app);
                 }
-            }
-        }
-    }
-    else {
-        co = new u16(s);
-        for (i = 0; i < s; ++i) {
-            if (cd[i]) {
-                co[i] = rev[le[cd[i] - 1]++] >> (15 - cd[i]);
-            }
-        }
-    }
-    return co;
-});
-// fixed length tree
-var flt = new u8(288);
-for (var i = 0; i < 144; ++i)
-    flt[i] = 8;
-for (var i = 144; i < 256; ++i)
-    flt[i] = 9;
-for (var i = 256; i < 280; ++i)
-    flt[i] = 7;
-for (var i = 280; i < 288; ++i)
-    flt[i] = 8;
-// fixed distance tree
-var fdt = new u8(32);
-for (var i = 0; i < 32; ++i)
-    fdt[i] = 5;
-// fixed length map
-var flrm = /*#__PURE__*/ hMap(flt, 9, 1);
-// fixed distance map
-var fdrm = /*#__PURE__*/ hMap(fdt, 5, 1);
-// find max of array
-var max = function (a) {
-    var m = a[0];
-    for (var i = 1; i < a.length; ++i) {
-        if (a[i] > m)
-            m = a[i];
-    }
-    return m;
-};
-// read d, starting at bit p and mask with m
-var bits = function (d, p, m) {
-    var o = (p / 8) | 0;
-    return ((d[o] | (d[o + 1] << 8)) >> (p & 7)) & m;
-};
-// read d, starting at bit p continuing for at least 16 bits
-var bits16 = function (d, p) {
-    var o = (p / 8) | 0;
-    return ((d[o] | (d[o + 1] << 8) | (d[o + 2] << 16)) >> (p & 7));
-};
-// get end of byte
-var shft = function (p) { return ((p + 7) / 8) | 0; };
-// typed array slice - allows garbage collector to free original reference,
-// while being more compatible than .slice
-var slc = function (v, s, e) {
-    if (s == null || s < 0)
-        s = 0;
-    if (e == null || e > v.length)
-        e = v.length;
-    // can't use .constructor in case user-supplied
-    return new u8(v.subarray(s, e));
-};
-// error codes
-var ec = [
-    'unexpected EOF',
-    'invalid block type',
-    'invalid length/literal',
-    'invalid distance',
-    'stream finished',
-    'no stream handler',
-    , // determined by compression function
-    'no callback',
-    'invalid UTF-8 data',
-    'extra field too long',
-    'date not in range 1980-2099',
-    'filename too long',
-    'stream finishing',
-    'invalid zip data'
-    // determined by unknown compression method
-];
-var err = function (ind, msg, nt) {
-    var e = new Error(msg || ec[ind]);
-    e.code = ind;
-    if (Error.captureStackTrace)
-        Error.captureStackTrace(e, err);
-    if (!nt)
-        throw e;
-    return e;
-};
-// expands raw DEFLATE data
-var inflt = function (dat, st, buf, dict) {
-    // source length       dict length
-    var sl = dat.length, dl = dict ? dict.length : 0;
-    if (!sl || st.f && !st.l)
-        return buf || new u8(0);
-    var noBuf = !buf;
-    // have to estimate size
-    var resize = noBuf || st.i != 2;
-    // no state
-    var noSt = st.i;
-    // Assumes roughly 33% compression ratio average
-    if (noBuf)
-        buf = new u8(sl * 3);
-    // ensure buffer can fit at least l elements
-    var cbuf = function (l) {
-        var bl = buf.length;
-        // need to increase size to fit
-        if (l > bl) {
-            // Double or set to necessary, whichever is greater
-            var nbuf = new u8(Math.max(bl * 2, l));
-            nbuf.set(buf);
-            buf = nbuf;
-        }
-    };
-    //  last chunk         bitpos           bytes
-    var final = st.f || 0, pos = st.p || 0, bt = st.b || 0, lm = st.l, dm = st.d, lbt = st.m, dbt = st.n;
-    // total bits
-    var tbts = sl * 8;
-    do {
-        if (!lm) {
-            // BFINAL - this is only 1 when last chunk is next
-            final = bits(dat, pos, 1);
-            // type: 0 = no compression, 1 = fixed huffman, 2 = dynamic huffman
-            var type = bits(dat, pos + 1, 3);
-            pos += 3;
-            if (!type) {
-                // go to end of byte boundary
-                var s = shft(pos) + 4, l = dat[s - 4] | (dat[s - 3] << 8), t = s + l;
-                if (t > sl) {
-                    if (noSt)
-                        err(0);
-                    break;
-                }
-                // ensure size
-                if (resize)
-                    cbuf(bt + l);
-                // Copy over uncompressed data
-                buf.set(dat.subarray(s, t), bt);
-                // Get new bitpos, update byte count
-                st.b = bt += l, st.p = pos = t * 8, st.f = final;
-                continue;
-            }
-            else if (type == 1)
-                lm = flrm, dm = fdrm, lbt = 9, dbt = 5;
-            else if (type == 2) {
-                //  literal                            lengths
-                var hLit = bits(dat, pos, 31) + 257, hcLen = bits(dat, pos + 10, 15) + 4;
-                var tl = hLit + bits(dat, pos + 5, 31) + 1;
-                pos += 14;
-                // length+distance tree
-                var ldt = new u8(tl);
-                // code length tree
-                var clt = new u8(19);
-                for (var i = 0; i < hcLen; ++i) {
-                    // use index map to get real code
-                    clt[clim[i]] = bits(dat, pos + i * 3, 7);
-                }
-                pos += hcLen * 3;
-                // code lengths bits
-                var clb = max(clt), clbmsk = (1 << clb) - 1;
-                // code lengths map
-                var clm = hMap(clt, clb, 1);
-                for (var i = 0; i < tl;) {
-                    var r = clm[bits(dat, pos, clbmsk)];
-                    // bits read
-                    pos += r & 15;
-                    // symbol
-                    var s = r >> 4;
-                    // code length to copy
-                    if (s < 16) {
-                        ldt[i++] = s;
-                    }
-                    else {
-                        //  copy   count
-                        var c = 0, n = 0;
-                        if (s == 16)
-                            n = 3 + bits(dat, pos, 3), pos += 2, c = ldt[i - 1];
-                        else if (s == 17)
-                            n = 3 + bits(dat, pos, 7), pos += 3;
-                        else if (s == 18)
-                            n = 11 + bits(dat, pos, 127), pos += 7;
-                        while (n--)
-                            ldt[i++] = c;
-                    }
-                }
-                //    length tree                 distance tree
-                var lt = ldt.subarray(0, hLit), dt = ldt.subarray(hLit);
-                // max length bits
-                lbt = max(lt);
-                // max dist bits
-                dbt = max(dt);
-                lm = hMap(lt, lbt, 1);
-                dm = hMap(dt, dbt, 1);
-            }
-            else
-                err(1);
-            if (pos > tbts) {
-                if (noSt)
-                    err(0);
-                break;
-            }
-        }
-        // Make sure the buffer can hold this + the largest possible addition
-        // Maximum chunk size (practically, theoretically infinite) is 2^17
-        if (resize)
-            cbuf(bt + 131072);
-        var lms = (1 << lbt) - 1, dms = (1 << dbt) - 1;
-        var lpos = pos;
-        for (;; lpos = pos) {
-            // bits read, code
-            var c = lm[bits16(dat, pos) & lms], sym = c >> 4;
-            pos += c & 15;
-            if (pos > tbts) {
-                if (noSt)
-                    err(0);
-                break;
-            }
-            if (!c)
-                err(2);
-            if (sym < 256)
-                buf[bt++] = sym;
-            else if (sym == 256) {
-                lpos = pos, lm = null;
-                break;
+            });
+        });
+        new obsidian.Setting(containerEl).setName("Compile").setHeading();
+        new obsidian.Setting(containerEl)
+            .setName("User script step folder")
+            .setDesc(".js files in this folder will be available as User Script Steps in the Compile panel.")
+            .addSearch((cb) => {
+            new FolderSuggest(this.app, cb.inputEl);
+            cb.setPlaceholder("my/script/steps/")
+                .setValue(settings.userScriptFolder)
+                .onChange((v) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { userScriptFolder: v })));
+            });
+        });
+        this.stepsSummary = containerEl.createSpan();
+        this.stepsList = containerEl.createEl("ul", {
+            cls: "longform-settings-user-steps",
+        });
+        this.unsubscribeUserScripts = userScriptSteps.subscribe((steps) => {
+            if (steps && steps.length > 0) {
+                this.stepsSummary.innerText = `Loaded ${steps.length} step${steps.length !== 1 ? "s" : ""}:`;
             }
             else {
-                var add = sym - 254;
-                // no extra bits needed if less
-                if (sym > 264) {
-                    // index
-                    var i = sym - 257, b = fleb[i];
-                    add = bits(dat, pos, (1 << b) - 1) + fl[i];
-                    pos += b;
-                }
-                // dist
-                var d = dm[bits16(dat, pos) & dms], dsym = d >> 4;
-                if (!d)
-                    err(3);
-                pos += d & 15;
-                var dt = fd[dsym];
-                if (dsym > 3) {
-                    var b = fdeb[dsym];
-                    dt += bits16(dat, pos) & (1 << b) - 1, pos += b;
-                }
-                if (pos > tbts) {
-                    if (noSt)
-                        err(0);
-                    break;
-                }
-                if (resize)
-                    cbuf(bt + 131072);
-                var end = bt + add;
-                if (bt < dt) {
-                    var shift = dl - dt, dend = Math.min(dt, end);
-                    if (shift + bt < 0)
-                        err(3);
-                    for (; bt < dend; ++bt)
-                        buf[bt] = dict[shift + bt];
-                }
-                for (; bt < end; ++bt)
-                    buf[bt] = buf[bt - dt];
+                this.stepsSummary.innerText = "No steps loaded.";
             }
-        }
-        st.l = lm, st.p = lpos, st.b = bt, st.f = final;
-        if (lm)
-            final = 1, st.m = lbt, st.d = dm, st.n = dbt;
-    } while (!final);
-    // don't reallocate for streams or user buffers
-    return bt != buf.length && noBuf ? slc(buf, 0, bt) : buf.subarray(0, bt);
-};
-// empty
-var et = /*#__PURE__*/ new u8(0);
-// read 2 bytes
-var b2 = function (d, b) { return d[b] | (d[b + 1] << 8); };
-// read 4 bytes
-var b4 = function (d, b) { return (d[b] | (d[b + 1] << 8) | (d[b + 2] << 16) | (d[b + 3] << 24)) >>> 0; };
-// read 8 bytes
-var b8 = function (d, b) { return b4(d, b) + (b4(d, b + 4) * 4294967296); };
-function inflateSync(data, opts) {
-    return inflt(data, { i: 2 }, opts && opts.out, opts && opts.dictionary);
-}
-// text decoder
-var td = typeof TextDecoder != 'undefined' && /*#__PURE__*/ new TextDecoder();
-// text decoder stream
-var tds = 0;
-try {
-    td.decode(et, { stream: true });
-    tds = 1;
-}
-catch (e) { }
-// decode UTF8
-var dutf8 = function (d) {
-    for (var r = '', i = 0;;) {
-        var c = d[i++];
-        var eb = (c > 127) + (c > 223) + (c > 239);
-        if (i + eb > d.length)
-            return { s: r, r: slc(d, i - 1) };
-        if (!eb)
-            r += String.fromCharCode(c);
-        else if (eb == 3) {
-            c = ((c & 15) << 18 | (d[i++] & 63) << 12 | (d[i++] & 63) << 6 | (d[i++] & 63)) - 65536,
-                r += String.fromCharCode(55296 | (c >> 10), 56320 | (c & 1023));
-        }
-        else if (eb & 1)
-            r += String.fromCharCode((c & 31) << 6 | (d[i++] & 63));
-        else
-            r += String.fromCharCode((c & 15) << 12 | (d[i++] & 63) << 6 | (d[i++] & 63));
-    }
-};
-/**
- * Converts a Uint8Array to a string
- * @param dat The data to decode to string
- * @param latin1 Whether or not to interpret the data as Latin-1. This should
- *               not need to be true unless encoding to binary string.
- * @returns The original UTF-8/Latin-1 string
- */
-function strFromU8(dat, latin1) {
-    if (latin1) {
-        var r = '';
-        for (var i = 0; i < dat.length; i += 16384)
-            r += String.fromCharCode.apply(null, dat.subarray(i, i + 16384));
-        return r;
-    }
-    else if (td) {
-        return td.decode(dat);
-    }
-    else {
-        var _a = dutf8(dat), s = _a.s, r = _a.r;
-        if (r.length)
-            err(8);
-        return s;
-    }
-}
-// skip local zip header
-var slzh = function (d, b) { return b + 30 + b2(d, b + 26) + b2(d, b + 28); };
-// read zip header
-var zh = function (d, b, z) {
-    var fnl = b2(d, b + 28), efl = b2(d, b + 30), fn = strFromU8(d.subarray(b + 46, b + 46 + fnl), !(b2(d, b + 8) & 2048)), es = b + 46 + fnl;
-    var _a = z64hs(d, es, efl, z, b4(d, b + 20), b4(d, b + 24), b4(d, b + 42)), sc = _a[0], su = _a[1], off = _a[2];
-    return [b2(d, b + 10), sc, su, fn, es + efl + b2(d, b + 32), off];
-};
-// read zip64 header sizes
-var z64hs = function (d, b, l, z, sc, su, off) {
-    var nsc = sc == 4294967295, nsu = su == 4294967295, noff = off == 4294967295, e = b + l;
-    var nf = nsc + nsu + noff;
-    if (z && nf) {
-        for (; b + 4 < e; b += 4 + b2(d, b + 2)) {
-            if (b2(d, b) == 1) {
-                return [
-                    nsc ? b8(d, b + 4 + 8 * nsu) : sc,
-                    nsu ? b8(d, b + 4) : su,
-                    noff ? b8(d, b + 4 + 8 * (nsu + nsc)) : off,
-                    1
-                ];
+            if (this.stepsList) {
+                this.stepsList.empty();
+                if (steps) {
+                    steps.forEach((s) => {
+                        const stepEl = this.stepsList.createEl("li");
+                        stepEl.createSpan({
+                            text: s.description.name,
+                            cls: "longform-settings-user-step-name",
+                        });
+                        stepEl.createSpan({
+                            text: `(${s.description.canonicalID})`,
+                            cls: "longform-settings-user-step-id",
+                        });
+                    });
+                }
             }
-        }
-        // z == 2 for unknown whether or not zip64
-        if (z < 2)
-            err(13);
-    }
-    return [sc, su, off, 0];
-};
-/**
- * Synchronously decompresses a ZIP archive. Prefer using `unzip` for better
- * performance with more than one file.
- * @param data The raw compressed ZIP file
- * @param opts The ZIP extraction options
- * @returns The decompressed files
- */
-function unzipSync(data, opts) {
-    var files = {};
-    var e = data.length - 22;
-    for (; b4(data, e) != 0x6054B50; --e) {
-        if (!e || data.length - e > 65558)
-            err(13);
-    }
-    var c = b2(data, e + 8);
-    if (!c)
-        return {};
-    var o = b4(data, e + 16);
-    var z = b4(data, e - 20) == 0x7064B50;
-    if (z) {
-        var ze = b4(data, e - 12);
-        z = b4(data, ze) == 0x6064B50;
-        if (z) {
-            c = b4(data, ze + 32);
-            o = b4(data, ze + 48);
-        }
-    }
-    var fltr = opts && opts.filter;
-    for (var i = 0; i < c; ++i) {
-        var _a = zh(data, o, z), c_2 = _a[0], sc = _a[1], su = _a[2], fn = _a[3], no = _a[4], off = _a[5], b = slzh(data, off);
-        o = no;
-        if (!fltr || fltr({
-            name: fn,
-            size: sc,
-            originalSize: su,
-            compression: c_2
-        })) {
-            if (!c_2)
-                files[fn] = slc(data, b, b + sc);
-            else if (c_2 == 8)
-                files[fn] = inflateSync(data.subarray(b, b + sc), { out: new u8(su) });
-            else
-                err(14, 'unknown compression type ' + c_2);
-        }
-    }
-    return files;
-}
-
-/**
- * The Pandoc asset marketplace: types + pure logic for a machine-readable index
- * of downloadable Pandoc assets (recipes / filters / templates / CSL) and bundles,
- * hosted as a single `index.json` in an external assets repository. This module is
- * pure and unit-tested (no obsidian import); fetching (`fetchMarketIndex`) and
- * installing live in `pandoc-assets.ts`, the browse UI in `src/view/pandoc-market/`.
- * See docs/ASSET_MARKETPLACE_SPEC.md for the repo spec.
- */
-/**
- * Default marketplace index — the `index.json` published as a release asset of the
- * assets repo. `releases/latest/download/…` always resolves to the newest release,
- * so this URL is stable across versions. Overridable in settings.
- */
-const DEFAULT_MARKET_INDEX_URL = "https://github.com/PaperBell-Org/paperout-assets-market/releases/latest/download/index.json";
-/** The index schema version this plugin understands. */
-const MARKET_SCHEMA_VERSION = 1;
-/** File name of the install manifest, written at the assets root. */
-const INSTALLED_MANIFEST_NAME = "installed.json";
-/** Validate a parsed index against the schema this plugin supports. Throws on mismatch. */
-function validateIndex(parsed) {
-    const idx = parsed;
-    if (!idx || typeof idx !== "object") {
-        throw new Error("Marketplace index is empty or not an object.");
-    }
-    if (idx.schemaVersion !== MARKET_SCHEMA_VERSION) {
-        throw new Error(`Unsupported marketplace schemaVersion ${idx.schemaVersion} (this plugin supports ${MARKET_SCHEMA_VERSION}). Update the plugin or the index.`);
-    }
-    if (!Array.isArray(idx.assets) || !Array.isArray(idx.bundles)) {
-        throw new Error("Marketplace index must have `assets` and `bundles` arrays.");
-    }
-    return idx;
-}
-/**
- * Normalize an index entry from the assets repo's published shape into the shape
- * the plugin consumes. The `build-index.mjs` output uses `title`, a single `url` +
- * `sourcePath` (+ `extraFiles`), and bundle `url`; internally we use `name` and a
- * `files[]` array with a `download` URL each. Already-internal entries pass through.
- */
-function normalizeAssetFiles(raw) {
-    var _a;
-    if (Array.isArray(raw.files))
-        return raw.files;
-    const files = [];
-    const src = ((_a = raw.sourcePath) !== null && _a !== void 0 ? _a : raw.path);
-    const url = raw.url;
-    if (src && url) {
-        files.push({ path: src, download: url, sha256: raw.sha256 });
-        // extraFiles are bare repo-relative paths; derive their URL from the main
-        // one's base (the `.../<tag>/` prefix before sourcePath).
-        const extra = raw.extraFiles;
-        if (Array.isArray(extra) && url.endsWith(src)) {
-            const base = url.slice(0, url.length - src.length);
-            for (const ef of extra)
-                files.push({ path: ef, download: base + ef });
-        }
-    }
-    return files;
-}
-/** Pick a localized string from a plain string or a `{ locale: string }` map. */
-function pickLocalized(v, locale) {
-    var _a, _b;
-    if (v == null)
-        return undefined;
-    if (typeof v === "string")
-        return v;
-    if (typeof v === "object") {
-        const o = v;
-        return (_b = (_a = o[locale]) !== null && _a !== void 0 ? _a : o.en) !== null && _b !== void 0 ? _b : Object.values(o)[0];
-    }
-    return String(v);
-}
-function normalizeIndex(idx, locale = "en") {
-    const raw = idx;
-    const repo = raw.repo;
-    const tag = raw.tag;
-    const rawBase = repo && tag ? `https://raw.githubusercontent.com/${repo}/${tag}/` : "";
-    const url = (path) => typeof path === "string" && rawBase ? rawBase + path : undefined;
-    const asset = (a) => {
-        var _a, _b, _c;
-        return ({
-            id: a.id,
-            type: a.type,
-            name: (_b = pickLocalized((_a = a.title) !== null && _a !== void 0 ? _a : a.name, locale)) !== null && _b !== void 0 ? _b : a.id,
-            description: pickLocalized(a.description, locale),
-            version: ((_c = a.version) !== null && _c !== void 0 ? _c : "0.0.0"),
-            author: a.author,
-            tags: a.tags,
-            files: normalizeAssetFiles(a),
-            requires: a.requires,
-            systemDeps: a.systemDeps,
-            tier: a.tier,
-            reviewed: a.reviewed,
-            readmePath: a.readmePath,
-            previewPath: a.previewPath,
-            readmeUrl: url(a.readmePath),
-            previewUrl: url(a.previewPath),
         });
-    };
-    const assets = idx.assets.map((a) => asset(a));
-    // A bundle is a recipe's packaging and shares its id. Upstream only localizes
-    // recipes (bundle title/description stay English), so reuse the same-id recipe's
-    // localized name/description when present; fall back to the bundle's own.
-    const recipeName = new Map();
-    const recipeDesc = new Map();
-    for (const a of assets)
-        if (a.type === "recipe") {
-            recipeName.set(a.id, a.name);
-            recipeDesc.set(a.id, a.description);
-        }
-    const bundle = (b) => {
-        var _a, _b, _c, _d, _e, _f;
-        const id = b.id;
-        return {
-            id,
-            name: (_c = (_a = recipeName.get(id)) !== null && _a !== void 0 ? _a : pickLocalized((_b = b.title) !== null && _b !== void 0 ? _b : b.name, locale)) !== null && _c !== void 0 ? _c : id,
-            description: (_d = recipeDesc.get(id)) !== null && _d !== void 0 ? _d : pickLocalized(b.description, locale),
-            version: ((_e = b.version) !== null && _e !== void 0 ? _e : "0.0.0"),
-            author: b.author,
-            tags: b.tags,
-            download: ((_f = b.download) !== null && _f !== void 0 ? _f : b.url),
-            sha256: b.sha256,
-            assets: b.assets,
-            workflows: b.workflows,
-            tier: b.tier,
-            reviewed: b.reviewed,
-            readmePath: b.readmePath,
-            previewPath: b.previewPath,
-            readmeUrl: url(b.readmePath),
-            previewUrl: url(b.previewPath),
-        };
-    };
-    return Object.assign(Object.assign({}, idx), { assets, bundles: idx.bundles.map((b) => bundle(b)) });
-}
-/**
- * Expand an asset id into the ordered install set: its `requires` closure first,
- * then the asset itself, deduplicated. Throws on an unknown dependency id; cycles
- * are tolerated (each id installs once). Used to auto-install a recipe's
- * filters/template/csl alongside it.
- */
-function resolveInstallSet(index, assetId) {
-    const byId = new Map(index.assets.map((a) => [a.id, a]));
-    const out = [];
-    const seen = new Set();
-    const visit = (id) => {
-        var _a;
-        if (seen.has(id))
-            return;
-        const asset = byId.get(id);
-        if (!asset)
-            throw new Error(`Unknown asset id referenced as a dependency: ${id}`);
-        seen.add(id); // mark before recursing so a cycle back to `id` short-circuits
-        for (const dep of (_a = asset.requires) !== null && _a !== void 0 ? _a : [])
-            visit(dep);
-        out.push(asset);
-    };
-    visit(assetId);
-    return out;
-}
-/**
- * Minimal numeric semver compare (ignores pre-release tags): returns -1 / 0 / 1
- * for a < / = / > b. Used to flag "update available".
- */
-function compareVersions(a, b) {
-    var _a, _b;
-    const norm = (v) => v
-        .split("-")[0]
-        .split(".")
-        .map((n) => parseInt(n, 10) || 0);
-    const pa = norm(a);
-    const pb = norm(b);
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-        const d = ((_a = pa[i]) !== null && _a !== void 0 ? _a : 0) - ((_b = pb[i]) !== null && _b !== void 0 ? _b : 0);
-        if (d !== 0)
-            return d < 0 ? -1 : 1;
-    }
-    return 0;
-}
-function installStateFor(manifest, id, marketVersion, presentIds) {
-    const rec = manifest[id];
-    if (rec) {
-        return compareVersions(rec.version, marketVersion) < 0
-            ? "update-available"
-            : "installed";
-    }
-    if (presentIds === null || presentIds === void 0 ? void 0 : presentIds.has(id))
-        return "present";
-    return "not-installed";
-}
-
-function ensureFolder$1(adapter, folder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const parts = folder.split("/").filter((p) => p.length > 0);
-        let cur = "";
-        for (const p of parts) {
-            cur = cur ? `${cur}/${p}` : p;
-            if (!(yield adapter.exists(cur))) {
-                try {
-                    yield adapter.mkdir(cur);
+        containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
+            el.innerHTML =
+                "User Script Steps are automatically loaded from this folder. Changes to .js files in this folder are synced with Longform after a slight delay. If your script does not appear here or in the Compile tab, you may have an error in your script—check the dev console for it.";
+        });
+        new obsidian.Setting(containerEl).setName("Word Counts & Sessions").setHeading();
+        new obsidian.Setting(containerEl)
+            .setName("Show word counts in status bar")
+            .setDesc("Click the status item to show the focused note’s project.")
+            .addToggle((cb) => {
+            cb.setValue(settings.showWordCountInStatusBar);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { showWordCountInStatusBar: value })));
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Start new writing sessions each day")
+            .setDesc("You can always manually start a new session by running the Longform: Start New Writing Session command. Turning this off will cause writing sessions to carry over across multiple days until you manually start a new one.")
+            .addToggle((cb) => {
+            cb.setValue(settings.startNewSessionEachDay);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { startNewSessionEachDay: value })));
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Session word count goal")
+            .setDesc("A number of words to target for a given writing session.")
+            .addText((cb) => {
+            cb.setValue(settings.sessionGoal.toString());
+            cb.onChange((value) => {
+                const numberValue = +value;
+                if (numberValue && numberValue > 0) {
+                    pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { sessionGoal: numberValue })));
                 }
-                catch (e) {
-                    // already exists / concurrent create — ignore
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Goal applies to")
+            .setDesc("You can set your word count goal to target all Longform writing, or you can make each project or scene have its own discrete goal.")
+            .addDropdown((cb) => {
+            cb.addOption("all", "words written across all projects");
+            cb.addOption("project", "each project individually");
+            cb.addOption("note", "each scene or single-scene project");
+            cb.setValue(settings.applyGoalTo);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { applyGoalTo: value })));
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Notify on goal reached")
+            .addToggle((cb) => {
+            cb.setValue(settings.notifyOnGoal);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { notifyOnGoal: value })));
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Count deletions against goal")
+            .setDesc("If on, deleting words will count as negative words written. You cannot go below zero for a session.")
+            .addToggle((cb) => {
+            cb.setValue(settings.countDeletionsForGoal);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { countDeletionsForGoal: value })));
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Sessions to keep")
+            .setDesc("Number of sessions to store locally.")
+            .addText((cb) => {
+            cb.setValue(settings.keepSessionCount.toString());
+            cb.onChange((value) => {
+                const numberValue = +value;
+                if (numberValue && numberValue > 0) {
+                    pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { keepSessionCount: numberValue })));
                 }
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Store session data")
+            .setDesc("Where your writing session data is stored. By default, data is stored alongside other Longform settings in the plugin’s data.json file. You may instead store it in a separate .json file in the plugin folder, or in a file in your vault. You may want to do this for selective sync or git reasons.")
+            .addDropdown((cb) => {
+            cb.addOption("data", "with Longform settings");
+            cb.addOption("plugin-folder", "as a .json file in the longform/ plugin folder");
+            cb.addOption("file", "as a file in your vault");
+            cb.setValue(settings.sessionStorage);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { sessionStorage: value })));
+            });
+        });
+        const updateSessionFile = obsidian.debounce((value) => {
+            // Normalize file to end in .json
+            let fileName = value;
+            if (!fileName || fileName.length === 0) {
+                fileName = DEFAULT_SESSION_FILE;
             }
-        }
-    });
-}
-/**
- * Download the Pandoc toolchain zip from `url` and extract it into the
- * vault-relative `destFolder`. Files (filters, templates, CSL, defaults) are
- * managed in a separate assets repository and published as a release zip, so
- * they are not bundled with the plugin. A single wrapping top-level directory
- * (as in GitHub source zipballs) is stripped.
- */
-function downloadPandocAssets(app, url, destFolder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!url || !/^https?:\/\//.test(url)) {
-            throw new Error("No valid assets URL configured. Set the 'Pandoc assets URL' in Longform settings to a link to the toolchain zip.");
-        }
-        const res = yield obsidian.requestUrl({ url, method: "GET" });
-        if (res.status < 200 || res.status >= 300) {
-            throw new Error(`Download failed (HTTP ${res.status}) from ${url}`);
-        }
-        const bytes = new Uint8Array(res.arrayBuffer);
-        let files;
-        try {
-            files = unzipSync(bytes);
-        }
-        catch (e) {
-            throw new Error(`Could not unzip the downloaded file — is the URL a .zip? (${e.message})`);
-        }
-        const filePaths = Object.keys(files).filter((p) => !p.endsWith("/"));
-        const top = commonTopDir(filePaths);
-        const adapter = app.vault.adapter;
-        const written = [];
-        for (const p of filePaths) {
-            const rel = top ? p.slice(top.length) : p;
-            if (!rel)
-                continue;
-            const full = `${destFolder}/${rel}`;
-            const parent = full.split("/").slice(0, -1).join("/");
-            if (parent)
-                yield ensureFolder$1(adapter, parent);
-            const data = files[p];
-            const ab = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-            yield adapter.writeBinary(full, ab);
-            written.push(rel);
-        }
-        if (written.length === 0) {
-            throw new Error("The downloaded archive contained no files.");
-        }
-        return { count: written.length, dest: destFolder, files: written };
-    });
-}
-/** SHA-256 of an ArrayBuffer as lowercase hex, for optional integrity checks. */
-function sha256Hex(ab) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const digest = yield crypto.subtle.digest("SHA-256", ab);
-        return Array.from(new Uint8Array(digest))
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-    });
-}
-/**
- * Fetch and validate the marketplace index from a raw `index.json` URL. The pure
- * validation/logic lives in `pandoc-market.ts`; this is the obsidian-facing fetch.
- */
-function fetchMarketIndex(url, locale = "en") {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!url || !/^https?:\/\//.test(url)) {
-            throw new Error("No valid marketplace index URL configured. Set it in Longform settings → Compile → Pandoc export.");
-        }
-        const res = yield obsidian.requestUrl({ url, method: "GET" });
-        if (res.status < 200 || res.status >= 300) {
-            throw new Error(`Marketplace index fetch failed (HTTP ${res.status}) from ${url}`);
-        }
-        let parsed;
-        try {
-            parsed = JSON.parse(res.text);
-        }
-        catch (e) {
-            throw new Error(`Marketplace index is not valid JSON: ${e.message}`);
-        }
-        return normalizeIndex(validateIndex(parsed), locale);
-    });
-}
-/** Fetch an asset/bundle's README markdown (for the in-modal "how to use" panel). */
-function fetchMarketReadme(url) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const res = yield obsidian.requestUrl({ url, method: "GET" });
-        if (res.status < 200 || res.status >= 300) {
-            throw new Error(`README fetch failed (HTTP ${res.status}).`);
-        }
-        return res.text;
-    });
-}
-/**
- * Detect which assets/bundles are already present on disk (files exist under the
- * assets root) — even if not tracked in the install manifest, e.g. synced or
- * downloaded via the legacy zip. An asset is "present" when all its files exist;
- * a bundle when all its listed files exist.
- */
-function detectPresentIds(app, index, destFolder) {
-    var _a, _b, _c;
-    return __awaiter(this, void 0, void 0, function* () {
-        const adapter = app.vault.adapter;
-        const paths = new Set();
-        for (const a of index.assets)
-            for (const f of (_a = a.files) !== null && _a !== void 0 ? _a : [])
-                paths.add(f.path);
-        const onDisk = new Set();
-        yield Promise.all([...paths].map((p) => __awaiter(this, void 0, void 0, function* () {
-            if (yield adapter.exists(`${destFolder}/${p}`))
-                onDisk.add(p);
-        })));
-        const ids = new Set();
-        for (const a of index.assets) {
-            const files = (_b = a.files) !== null && _b !== void 0 ? _b : [];
-            if (files.length > 0 && files.every((f) => onDisk.has(f.path)))
-                ids.add(a.id);
-        }
-        for (const b of index.bundles) {
-            const assets = (_c = b.assets) !== null && _c !== void 0 ? _c : [];
-            if (assets.length > 0 && assets.every((p) => onDisk.has(p)))
-                ids.add(b.id);
-        }
-        return ids;
-    });
-}
-/** Read the install manifest at the assets root; missing/corrupt → empty object. */
-function readInstalledManifest(app, destFolder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const path = `${destFolder}/${INSTALLED_MANIFEST_NAME}`;
-        try {
-            if (!(yield app.vault.adapter.exists(path)))
-                return {};
-            return JSON.parse(yield app.vault.adapter.read(path));
-        }
-        catch (_a) {
-            return {};
-        }
-    });
-}
-function writeInstalledManifest(app, destFolder, manifest) {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield ensureFolder$1(app.vault.adapter, destFolder);
-        yield app.vault.adapter.write(`${destFolder}/${INSTALLED_MANIFEST_NAME}`, JSON.stringify(manifest, null, 2) + "\n");
-    });
-}
-/** Download one asset's files into `destFolder`; verify sha256 when provided. */
-function installMarketAsset(app, asset, destFolder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const adapter = app.vault.adapter;
-        const written = [];
-        for (const file of asset.files) {
-            const res = yield obsidian.requestUrl({ url: file.download, method: "GET" });
-            if (res.status < 200 || res.status >= 300) {
-                throw new Error(`Download failed (HTTP ${res.status}) for ${file.path}`);
+            fileName = obsidian.normalizePath(fileName);
+            if (!fileName.endsWith(".json")) {
+                fileName = `${fileName}.json`;
             }
-            const ab = res.arrayBuffer;
-            if (file.sha256) {
-                const actual = yield sha256Hex(ab);
-                if (actual.toLowerCase() !== file.sha256.toLowerCase()) {
-                    throw new Error(`Checksum mismatch for ${file.path}.`);
+            pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { sessionFile: fileName })));
+        }, 1000);
+        const sessionFileStorageSettings = new obsidian.Setting(containerEl)
+            .setName("Session storage file")
+            .setDesc("Location in your vault to store session JSON. Created if does not exist, overwritten if it does.")
+            .addText((cb) => {
+            var _a;
+            cb.setPlaceholder(DEFAULT_SESSION_FILE);
+            cb.setValue((_a = settings.sessionFile) !== null && _a !== void 0 ? _a : DEFAULT_SESSION_FILE);
+            cb.onChange(updateSessionFile);
+        });
+        sessionFileStorageSettings.settingEl.style.display = "none";
+        this.unsubscribeSettings = pluginSettings.subscribe((settings) => {
+            sessionFileStorageSettings.settingEl.style.display =
+                settings.sessionStorage === "file" ? "flex" : "none";
+        });
+        new obsidian.Setting(containerEl).setName("Troubleshooting").setHeading();
+        new obsidian.Setting(containerEl)
+            .setName("Wait for Obsidian Sync")
+            .setDesc("Prevent Longform from running until Obsidian Sync completes its first sync. If you are using Sync, you may want to enable this if you experience issues with scenes disappearing or falsely being shown as new.")
+            .addToggle((cb) => {
+            cb.setValue(settings.waitForSync);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { waitForSync: value })));
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Enable fallback wait")
+            .setDesc("If sync status cannot be detected, wait for the time specified below before looking for scenes.")
+            .addToggle((cb) => {
+            cb.setValue(settings.fallbackWaitEnabled);
+            cb.onChange((value) => {
+                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { fallbackWaitEnabled: value })));
+            });
+        });
+        new obsidian.Setting(containerEl)
+            .setName("Fallback wait time")
+            .setDesc("Time to wait in seconds if sync status cannot be detected.")
+            .addText((cb) => {
+            cb.setValue(settings.fallbackWaitTime.toString());
+            cb.onChange((value) => {
+                const numberValue = parseInt(value);
+                if (!isNaN(numberValue) && numberValue > 0) {
+                    pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { fallbackWaitTime: numberValue })));
                 }
-            }
-            const full = `${destFolder}/${file.path}`;
-            const parent = full.split("/").slice(0, -1).join("/");
-            if (parent)
-                yield ensureFolder$1(adapter, parent);
-            yield adapter.writeBinary(full, ab);
-            written.push(file.path);
-        }
-        return written;
-    });
-}
-/**
- * Install an asset and its `requires` closure (recipe → its filters/template/csl),
- * recording each in the install manifest. Returns the added/updated records.
- */
-function installAssetWithDeps(app, index, assetId, destFolder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const set = resolveInstallSet(index, assetId);
-        const manifest = yield readInstalledManifest(app, destFolder);
-        const records = [];
-        for (const asset of set) {
-            const files = yield installMarketAsset(app, asset, destFolder);
-            const rec = {
-                id: asset.id,
-                version: asset.version,
-                kind: "asset",
-                files,
-                installedAt: new Date().toISOString(),
-            };
-            manifest[asset.id] = rec;
-            records.push(rec);
-        }
-        yield writeInstalledManifest(app, destFolder, manifest);
-        return records;
-    });
-}
-/** Install a bundle zip (reusing the zip downloader) and record it in the manifest. */
-function installMarketBundle(app, bundle, destFolder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { files } = yield downloadPandocAssets(app, bundle.download, destFolder);
-        const manifest = yield readInstalledManifest(app, destFolder);
-        const rec = {
-            id: bundle.id,
-            version: bundle.version,
-            kind: "bundle",
-            files,
-            installedAt: new Date().toISOString(),
-        };
-        manifest[bundle.id] = rec;
-        yield writeInstalledManifest(app, destFolder, manifest);
-        return rec;
-    });
-}
-/**
- * Remove an installed asset/bundle's files and its manifest record. If the item
- * isn't tracked in the manifest (present on disk but untracked), `fallbackFiles`
- * (e.g. the index's declared file paths) are removed instead. Returns how many
- * files were deleted.
- */
-function uninstallMarketItem(app, destFolder, id, fallbackFiles = []) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const manifest = yield readInstalledManifest(app, destFolder);
-        const rec = manifest[id];
-        const files = rec ? rec.files : fallbackFiles;
-        let removed = 0;
-        for (const rel of files) {
-            const full = `${destFolder}/${rel}`;
-            if (yield app.vault.adapter.exists(full)) {
-                yield app.vault.adapter.remove(full);
-                removed += 1;
-            }
-        }
-        if (rec) {
-            delete manifest[id];
-            yield writeInstalledManifest(app, destFolder, manifest);
-        }
-        return removed;
-    });
-}
-
-/**
- * Preset basenames that aren't user-selectable manuscript templates: `crossref`
- * is an include fragment, `undefined` is the no-template fallback.
- */
-const EXCLUDED = new Set(["crossref", "undefined"]);
-/**
- * List the downloaded Pandoc presets — the basenames (without `.yaml`) of the
- * files in `<assets>/defaults/`. Desktop only (needs Node fs to read outside the
- * vault); returns `[]` on mobile or if the folder can't be read.
- */
-function listPandocTemplates(app) {
-    var _a;
-    const adapter = app.vault.adapter;
-    if (!(adapter instanceof obsidian.FileSystemAdapter))
-        return [];
-    const settings = get_store_value(pluginSettings);
-    const assetsSetting = ((_a = settings === null || settings === void 0 ? void 0 : settings.pandocAssetsFolder) !== null && _a !== void 0 ? _a : "").trim() || DEFAULT_ASSETS_DIR;
-    const defaultsDir = path__namespace.join(resolveUserPath(assetsSetting, adapter.getBasePath(), os__namespace.homedir()), "defaults");
-    try {
-        return fs__namespace
-            .readdirSync(defaultsDir)
-            .filter((f) => f.endsWith(".yaml"))
-            .map((f) => f.slice(0, -".yaml".length))
-            .filter((name) => !EXCLUDED.has(name))
-            .sort();
+            });
+        });
+        new obsidian.Setting(containerEl).setName("Credits").setHeading();
+        containerEl.createEl("p", {}, (el) => {
+            el.innerHTML =
+                'Longform written and maintained by <a href="https://kevinbarrett.org">Kevin Barrett</a>.';
+        });
+        containerEl.createEl("p", {}, (el) => {
+            el.innerHTML =
+                'Read the source code and report issues at <a href="https://github.com/kevboh/longform">https://github.com/kevboh/longform</a>.';
+        });
+        containerEl.createEl("p", {}, (el) => {
+            el.innerHTML =
+                'Icon made by <a href="https://www.flaticon.com/authors/zlatko-najdenovski" title="Zlatko Najdenovski">Zlatko Najdenovski</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>.';
+        });
     }
-    catch (_b) {
-        return [];
+    hide() {
+        this.unsubscribeUserScripts();
+        this.unsubscribeSettings();
     }
-}
-/** Refresh the `pandocTemplates` store from the current assets folder. */
-function refreshPandocTemplates(app) {
-    pandocTemplates.set(listPandocTemplates(app));
-}
-
-/* src/view/pandoc-market/PandocMarket.svelte generated by Svelte v3.49.0 */
-
-function add_css$1(target) {
-	append_styles(target, "svelte-xbtpff", ".market.svelte-xbtpff{display:flex;flex-direction:column;gap:var(--size-4-2)}.market-header.svelte-xbtpff{display:flex;align-items:center;gap:var(--size-4-2);padding-bottom:var(--size-4-2);border-bottom:1px solid var(--background-modifier-border)}.market-heading.svelte-xbtpff{display:flex;align-items:baseline;gap:var(--size-2-3);margin-right:auto}.market-title.svelte-xbtpff{font-weight:700;font-size:var(--font-ui-large, 1.1em);color:var(--text-normal)}.market-count.svelte-xbtpff{font-size:var(--font-ui-smaller);color:var(--text-faint)}.market-search.svelte-xbtpff{flex:1;max-width:260px;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:var(--radius-s);padding:4px var(--size-2-3);color:var(--text-normal);font-size:var(--font-ui-smaller)}.market-reload.svelte-xbtpff{font-size:var(--font-ui-smaller);color:var(--text-muted);background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:var(--radius-s);padding:4px var(--size-4-2);cursor:pointer}.market-reload.svelte-xbtpff:hover:not(:disabled){color:var(--text-normal);border-color:var(--text-accent)}.market-note.svelte-xbtpff{font-size:var(--font-smallest);color:var(--text-muted);background:var(--background-secondary);border-radius:var(--radius-s);padding:var(--size-2-2) var(--size-2-3)}.market-section-title.svelte-xbtpff{font-size:var(--font-ui-smaller);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-top:var(--size-2-2)}.market-grid.svelte-xbtpff{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:var(--size-2-3)}.card.svelte-xbtpff{display:flex;flex-direction:column;gap:var(--size-2-2);padding:var(--size-4-2) var(--size-4-3);background:var(--background-secondary-alt);border:1px solid var(--background-modifier-border);border-radius:var(--radius-m, 8px)}.card-bundle.svelte-xbtpff{border-color:color-mix(in srgb, var(--interactive-accent) 40%, var(--background-modifier-border))}.card-top.svelte-xbtpff{display:flex;align-items:baseline;gap:var(--size-2-2);flex-wrap:wrap}.card-name.svelte-xbtpff{font-weight:600;color:var(--text-normal);font-size:var(--font-ui-small)}.card-version.svelte-xbtpff{margin-left:auto;font-size:var(--font-smallest);color:var(--text-faint);font-variant-numeric:tabular-nums}.card-type.svelte-xbtpff{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding:1px 5px;border-radius:var(--radius-s);color:var(--text-on-accent);background:var(--text-accent)}.type-filter.svelte-xbtpff{background:var(--color-green, #4caf7d)}.type-template.svelte-xbtpff{background:var(--color-orange, #e0883a)}.type-csl.svelte-xbtpff{background:var(--color-cyan, #3a9bd0)}.card-desc.svelte-xbtpff{margin:0;font-size:var(--font-ui-smaller);color:var(--text-muted)}.card-meta.svelte-xbtpff{font-size:var(--font-smallest);color:var(--text-faint)}.card-sysdep.svelte-xbtpff{color:var(--text-warning, var(--text-muted))}.card-actions.svelte-xbtpff{margin-top:auto;display:flex;justify-content:flex-end}.card-install.svelte-xbtpff{font-weight:600;font-size:var(--font-ui-smaller);color:var(--text-on-accent);background:var(--interactive-accent);border:none;border-radius:var(--radius-s);padding:4px var(--size-4-3);cursor:pointer;transition:background-color 0.15s}.card-install.svelte-xbtpff:hover:not(:disabled){background:var(--interactive-accent-hover)}.card-install.is-installed.svelte-xbtpff{background:transparent;color:var(--interactive-success);border:1px solid color-mix(in srgb, var(--interactive-success) 45%, transparent);cursor:default}.card-install.svelte-xbtpff:disabled:not(.is-installed){opacity:0.6;cursor:default}.installed-check.svelte-xbtpff{color:var(--interactive-success);font-weight:800;font-size:var(--font-ui-smaller)}.clickable.svelte-xbtpff{cursor:pointer;transition:border-color 0.15s, transform 0.1s}.clickable.svelte-xbtpff:hover{border-color:var(--text-accent)}.card-hint.svelte-xbtpff{font-size:var(--font-smallest);color:var(--text-faint);font-style:italic}.detail.svelte-xbtpff{display:flex;flex-direction:column;gap:var(--size-2-3)}.detail-back.svelte-xbtpff{align-self:flex-start;background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:2px 0;font-size:var(--font-ui-smaller)}.detail-back.svelte-xbtpff:hover{color:var(--text-normal)}.detail-head.svelte-xbtpff{display:flex;align-items:baseline;gap:var(--size-2-2);flex-wrap:wrap}.detail-name.svelte-xbtpff{font-weight:700;font-size:var(--font-ui-large);color:var(--text-normal)}.detail-desc.svelte-xbtpff{margin:0;color:var(--text-muted);font-size:var(--font-ui-small)}.detail-readme.svelte-xbtpff{border-top:1px solid var(--background-modifier-border);padding-top:var(--size-4-2);margin-top:var(--size-2-2);max-height:52vh;overflow-y:auto}.detail-readme.svelte-xbtpff h1,.detail-readme.svelte-xbtpff h2,.detail-readme.svelte-xbtpff h3{margin-top:var(--size-4-3)}.detail-readme.svelte-xbtpff pre{overflow-x:auto}.detail-readme.svelte-xbtpff img{max-width:100%}.detail-actions.svelte-xbtpff{display:flex;justify-content:flex-end;align-items:center;gap:var(--size-2-3)}.detail-uninstall.svelte-xbtpff{margin-right:auto;font-size:var(--font-ui-smaller);color:var(--text-error);background:transparent;border:1px solid color-mix(in srgb, var(--text-error) 45%, transparent);border-radius:var(--radius-s);padding:4px var(--size-4-3);cursor:pointer}.detail-uninstall.svelte-xbtpff:hover:not(:disabled){background:color-mix(in srgb, var(--text-error) 12%, transparent)}.detail-uninstall.svelte-xbtpff:disabled{opacity:0.5;cursor:default}.market-state.svelte-xbtpff{display:flex;flex-direction:column;align-items:center;gap:var(--size-2-2);padding:var(--size-4-6, 24px);color:var(--text-muted);font-size:var(--font-ui-smaller)}.market-error-detail.svelte-xbtpff{font-size:var(--font-smallest);color:var(--text-error);font-family:var(--font-monospace);word-break:break-word}.market-spinner.svelte-xbtpff{width:22px;height:22px;border-radius:50%;border:3px solid var(--background-modifier-border);border-top-color:var(--text-accent);animation:svelte-xbtpff-market-spin 0.8s linear infinite}@keyframes svelte-xbtpff-market-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion: reduce){.market-spinner.svelte-xbtpff{animation:none}}");
-}
-
-function get_each_context(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[39] = list[i];
-	const constants_0 = installStateFor(/*manifest*/ child_ctx[3], /*a*/ child_ctx[39].id, /*a*/ child_ctx[39].version, /*present*/ child_ctx[4]);
-	child_ctx[40] = constants_0;
-	return child_ctx;
-}
-
-function get_each_context_1(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[43] = list[i];
-	const constants_0 = installStateFor(/*manifest*/ child_ctx[3], /*b*/ child_ctx[43].id, /*b*/ child_ctx[43].version, /*present*/ child_ctx[4]);
-	child_ctx[40] = constants_0;
-	return child_ctx;
-}
-
-function get_if_ctx(ctx) {
-	const child_ctx = ctx.slice();
-	const constants_0 = installStateFor(/*manifest*/ child_ctx[3], /*detail*/ child_ctx[7].id, /*detail*/ child_ctx[7].version, /*present*/ child_ctx[4]);
-	child_ctx[38] = constants_0;
-	return child_ctx;
-}
-
-// (194:6) {#if index}
-function create_if_block_24(ctx) {
-	let span;
-	let t0_value = /*index*/ ctx[0].bundles.length + /*index*/ ctx[0].assets.length + "";
-	let t0;
-	let t1;
-	let t2_value = /*$t*/ ctx[12]("market.items") + "";
-	let t2;
-
-	return {
-		c() {
-			span = element("span");
-			t0 = text(t0_value);
-			t1 = space();
-			t2 = text(t2_value);
-			attr(span, "class", "market-count svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-			append(span, t0);
-			append(span, t1);
-			append(span, t2);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*index*/ 1 && t0_value !== (t0_value = /*index*/ ctx[0].bundles.length + /*index*/ ctx[0].assets.length + "")) set_data(t0, t0_value);
-			if (dirty[0] & /*$t*/ 4096 && t2_value !== (t2_value = /*$t*/ ctx[12]("market.items") + "")) set_data(t2, t2_value);
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (212:2) {#if !Platform.isDesktop}
-function create_if_block_23(ctx) {
-	let div;
-	let t_1_value = /*$t*/ ctx[12]("market.desktopNote") + "";
-	let t_1;
-
-	return {
-		c() {
-			div = element("div");
-			t_1 = text(t_1_value);
-			attr(div, "class", "market-note svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t_1_value !== (t_1_value = /*$t*/ ctx[12]("market.desktopNote") + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (284:18) 
-function create_if_block_12(ctx) {
-	let t0;
-	let t1;
-	let if_block2_anchor;
-	let if_block0 = /*bundles*/ ctx[11].length && create_if_block_19(ctx);
-	let if_block1 = /*assets*/ ctx[10].length && create_if_block_14(ctx);
-	let if_block2 = !/*bundles*/ ctx[11].length && !/*assets*/ ctx[10].length && create_if_block_13(ctx);
-
-	return {
-		c() {
-			if (if_block0) if_block0.c();
-			t0 = space();
-			if (if_block1) if_block1.c();
-			t1 = space();
-			if (if_block2) if_block2.c();
-			if_block2_anchor = empty();
-		},
-		m(target, anchor) {
-			if (if_block0) if_block0.m(target, anchor);
-			insert(target, t0, anchor);
-			if (if_block1) if_block1.m(target, anchor);
-			insert(target, t1, anchor);
-			if (if_block2) if_block2.m(target, anchor);
-			insert(target, if_block2_anchor, anchor);
-		},
-		p(ctx, dirty) {
-			if (/*bundles*/ ctx[11].length) {
-				if (if_block0) {
-					if_block0.p(ctx, dirty);
-				} else {
-					if_block0 = create_if_block_19(ctx);
-					if_block0.c();
-					if_block0.m(t0.parentNode, t0);
-				}
-			} else if (if_block0) {
-				if_block0.d(1);
-				if_block0 = null;
-			}
-
-			if (/*assets*/ ctx[10].length) {
-				if (if_block1) {
-					if_block1.p(ctx, dirty);
-				} else {
-					if_block1 = create_if_block_14(ctx);
-					if_block1.c();
-					if_block1.m(t1.parentNode, t1);
-				}
-			} else if (if_block1) {
-				if_block1.d(1);
-				if_block1 = null;
-			}
-
-			if (!/*bundles*/ ctx[11].length && !/*assets*/ ctx[10].length) {
-				if (if_block2) {
-					if_block2.p(ctx, dirty);
-				} else {
-					if_block2 = create_if_block_13(ctx);
-					if_block2.c();
-					if_block2.m(if_block2_anchor.parentNode, if_block2_anchor);
-				}
-			} else if (if_block2) {
-				if_block2.d(1);
-				if_block2 = null;
-			}
-		},
-		d(detaching) {
-			if (if_block0) if_block0.d(detaching);
-			if (detaching) detach(t0);
-			if (if_block1) if_block1.d(detaching);
-			if (detaching) detach(t1);
-			if (if_block2) if_block2.d(detaching);
-			if (detaching) detach(if_block2_anchor);
-		}
-	};
-}
-
-// (224:28) 
-function create_if_block_2(ctx) {
-	let div3;
-	let button0;
-	let t0;
-	let t1_value = /*$t*/ ctx[12]("market.back") + "";
-	let t1;
-	let t2;
-	let div0;
-	let span0;
-	let t3_value = (/*detail*/ ctx[7].type ?? "bundle") + "";
-	let t3;
-	let span0_class_value;
-	let t4;
-	let show_if = /*isPresent*/ ctx[17](/*dstate*/ ctx[38]);
-	let t5;
-	let span1;
-	let t6_value = /*detail*/ ctx[7].name + "";
-	let t6;
-	let t7;
-	let span2;
-	let t8;
-	let t9_value = /*detail*/ ctx[7].version + "";
-	let t9;
-	let t10;
-	let t11;
-	let t12;
-	let t13;
-	let t14;
-	let div1;
-	let t15;
-	let div2;
-	let t16;
-	let button1;
-
-	let t17_value = (/*busy*/ ctx[6][/*detail*/ ctx[7].id]
-	? /*$t*/ ctx[12]("market.installing")
-	: /*stateLabel*/ ctx[16](/*dstate*/ ctx[38])) + "";
-
-	let t17;
-	let button1_disabled_value;
-	let mounted;
-	let dispose;
-	let if_block0 = show_if && create_if_block_11(ctx);
-	let if_block1 = /*detail*/ ctx[7].description && create_if_block_10(ctx);
-	let if_block2 = /*detail*/ ctx[7].reviewed === false && create_if_block_9(ctx);
-	let if_block3 = /*detail*/ ctx[7].requires?.length && create_if_block_8(ctx);
-	let if_block4 = /*detail*/ ctx[7].systemDeps?.length && create_if_block_7(ctx);
-
-	function select_block_type_1(ctx, dirty) {
-		if (/*readmeState*/ ctx[9] === "loading") return create_if_block_4;
-		if (/*readmeState*/ ctx[9] === "ok") return create_if_block_5;
-		if (/*readmeState*/ ctx[9] === "error") return create_if_block_6;
-		return create_else_block$1;
-	}
-
-	let current_block_type = select_block_type_1(ctx);
-	let if_block5 = current_block_type(ctx);
-	let if_block6 = /*dstate*/ ctx[38] !== "not-installed" && create_if_block_3(ctx);
-
-	return {
-		c() {
-			div3 = element("div");
-			button0 = element("button");
-			t0 = text("← ");
-			t1 = text(t1_value);
-			t2 = space();
-			div0 = element("div");
-			span0 = element("span");
-			t3 = text(t3_value);
-			t4 = space();
-			if (if_block0) if_block0.c();
-			t5 = space();
-			span1 = element("span");
-			t6 = text(t6_value);
-			t7 = space();
-			span2 = element("span");
-			t8 = text("v");
-			t9 = text(t9_value);
-			t10 = space();
-			if (if_block1) if_block1.c();
-			t11 = space();
-			if (if_block2) if_block2.c();
-			t12 = space();
-			if (if_block3) if_block3.c();
-			t13 = space();
-			if (if_block4) if_block4.c();
-			t14 = space();
-			div1 = element("div");
-			if_block5.c();
-			t15 = space();
-			div2 = element("div");
-			if (if_block6) if_block6.c();
-			t16 = space();
-			button1 = element("button");
-			t17 = text(t17_value);
-			attr(button0, "class", "detail-back svelte-xbtpff");
-			attr(span0, "class", span0_class_value = "card-type type-" + (/*detail*/ ctx[7].type ?? 'bundle') + " svelte-xbtpff");
-			attr(span1, "class", "detail-name svelte-xbtpff");
-			attr(span2, "class", "card-version svelte-xbtpff");
-			attr(div0, "class", "detail-head svelte-xbtpff");
-			attr(div1, "class", "detail-readme svelte-xbtpff");
-			attr(button1, "class", "card-install svelte-xbtpff");
-			button1.disabled = button1_disabled_value = /*busy*/ ctx[6][/*detail*/ ctx[7].id] || /*dstate*/ ctx[38] === "installed";
-			toggle_class(button1, "is-installed", /*dstate*/ ctx[38] === "installed");
-			attr(div2, "class", "detail-actions svelte-xbtpff");
-			attr(div3, "class", "detail svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div3, anchor);
-			append(div3, button0);
-			append(button0, t0);
-			append(button0, t1);
-			append(div3, t2);
-			append(div3, div0);
-			append(div0, span0);
-			append(span0, t3);
-			append(div0, t4);
-			if (if_block0) if_block0.m(div0, null);
-			append(div0, t5);
-			append(div0, span1);
-			append(span1, t6);
-			append(div0, t7);
-			append(div0, span2);
-			append(span2, t8);
-			append(span2, t9);
-			append(div3, t10);
-			if (if_block1) if_block1.m(div3, null);
-			append(div3, t11);
-			if (if_block2) if_block2.m(div3, null);
-			append(div3, t12);
-			if (if_block3) if_block3.m(div3, null);
-			append(div3, t13);
-			if (if_block4) if_block4.m(div3, null);
-			append(div3, t14);
-			append(div3, div1);
-			if_block5.m(div1, null);
-			append(div3, t15);
-			append(div3, div2);
-			if (if_block6) if_block6.m(div2, null);
-			append(div2, t16);
-			append(div2, button1);
-			append(button1, t17);
-
-			if (!mounted) {
-				dispose = [
-					listen(button0, "click", /*click_handler*/ ctx[23]),
-					listen(button1, "click", /*click_handler_2*/ ctx[25])
-				];
-
-				mounted = true;
-			}
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t1_value !== (t1_value = /*$t*/ ctx[12]("market.back") + "")) set_data(t1, t1_value);
-			if (dirty[0] & /*detail*/ 128 && t3_value !== (t3_value = (/*detail*/ ctx[7].type ?? "bundle") + "")) set_data(t3, t3_value);
-
-			if (dirty[0] & /*detail*/ 128 && span0_class_value !== (span0_class_value = "card-type type-" + (/*detail*/ ctx[7].type ?? 'bundle') + " svelte-xbtpff")) {
-				attr(span0, "class", span0_class_value);
-			}
-
-			if (dirty[0] & /*manifest, detail, present*/ 152) show_if = /*isPresent*/ ctx[17](/*dstate*/ ctx[38]);
-
-			if (show_if) {
-				if (if_block0) {
-					if_block0.p(ctx, dirty);
-				} else {
-					if_block0 = create_if_block_11(ctx);
-					if_block0.c();
-					if_block0.m(div0, t5);
-				}
-			} else if (if_block0) {
-				if_block0.d(1);
-				if_block0 = null;
-			}
-
-			if (dirty[0] & /*detail*/ 128 && t6_value !== (t6_value = /*detail*/ ctx[7].name + "")) set_data(t6, t6_value);
-			if (dirty[0] & /*detail*/ 128 && t9_value !== (t9_value = /*detail*/ ctx[7].version + "")) set_data(t9, t9_value);
-
-			if (/*detail*/ ctx[7].description) {
-				if (if_block1) {
-					if_block1.p(ctx, dirty);
-				} else {
-					if_block1 = create_if_block_10(ctx);
-					if_block1.c();
-					if_block1.m(div3, t11);
-				}
-			} else if (if_block1) {
-				if_block1.d(1);
-				if_block1 = null;
-			}
-
-			if (/*detail*/ ctx[7].reviewed === false) {
-				if (if_block2) {
-					if_block2.p(ctx, dirty);
-				} else {
-					if_block2 = create_if_block_9(ctx);
-					if_block2.c();
-					if_block2.m(div3, t12);
-				}
-			} else if (if_block2) {
-				if_block2.d(1);
-				if_block2 = null;
-			}
-
-			if (/*detail*/ ctx[7].requires?.length) {
-				if (if_block3) {
-					if_block3.p(ctx, dirty);
-				} else {
-					if_block3 = create_if_block_8(ctx);
-					if_block3.c();
-					if_block3.m(div3, t13);
-				}
-			} else if (if_block3) {
-				if_block3.d(1);
-				if_block3 = null;
-			}
-
-			if (/*detail*/ ctx[7].systemDeps?.length) {
-				if (if_block4) {
-					if_block4.p(ctx, dirty);
-				} else {
-					if_block4 = create_if_block_7(ctx);
-					if_block4.c();
-					if_block4.m(div3, t14);
-				}
-			} else if (if_block4) {
-				if_block4.d(1);
-				if_block4 = null;
-			}
-
-			if (current_block_type === (current_block_type = select_block_type_1(ctx)) && if_block5) {
-				if_block5.p(ctx, dirty);
-			} else {
-				if_block5.d(1);
-				if_block5 = current_block_type(ctx);
-
-				if (if_block5) {
-					if_block5.c();
-					if_block5.m(div1, null);
-				}
-			}
-
-			if (/*dstate*/ ctx[38] !== "not-installed") {
-				if (if_block6) {
-					if_block6.p(ctx, dirty);
-				} else {
-					if_block6 = create_if_block_3(ctx);
-					if_block6.c();
-					if_block6.m(div2, t16);
-				}
-			} else if (if_block6) {
-				if_block6.d(1);
-				if_block6 = null;
-			}
-
-			if (dirty[0] & /*busy, detail, $t, manifest, present*/ 4312 && t17_value !== (t17_value = (/*busy*/ ctx[6][/*detail*/ ctx[7].id]
-			? /*$t*/ ctx[12]("market.installing")
-			: /*stateLabel*/ ctx[16](/*dstate*/ ctx[38])) + "")) set_data(t17, t17_value);
-
-			if (dirty[0] & /*busy, detail, manifest, present*/ 216 && button1_disabled_value !== (button1_disabled_value = /*busy*/ ctx[6][/*detail*/ ctx[7].id] || /*dstate*/ ctx[38] === "installed")) {
-				button1.disabled = button1_disabled_value;
-			}
-
-			if (dirty[0] & /*manifest, detail, present*/ 152) {
-				toggle_class(button1, "is-installed", /*dstate*/ ctx[38] === "installed");
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div3);
-			if (if_block0) if_block0.d();
-			if (if_block1) if_block1.d();
-			if (if_block2) if_block2.d();
-			if (if_block3) if_block3.d();
-			if (if_block4) if_block4.d();
-			if_block5.d();
-			if (if_block6) if_block6.d();
-			mounted = false;
-			run_all(dispose);
-		}
-	};
-}
-
-// (218:18) 
-function create_if_block_1$1(ctx) {
-	let div;
-	let p0;
-	let t0_value = /*$t*/ ctx[12]("market.loadError") + "";
-	let t0;
-	let t1;
-	let p1;
-	let t2;
-	let t3;
-	let button;
-	let t4_value = /*$t*/ ctx[12]("market.reload") + "";
-	let t4;
-	let mounted;
-	let dispose;
-
-	return {
-		c() {
-			div = element("div");
-			p0 = element("p");
-			t0 = text(t0_value);
-			t1 = space();
-			p1 = element("p");
-			t2 = text(/*error*/ ctx[2]);
-			t3 = space();
-			button = element("button");
-			t4 = text(t4_value);
-			attr(p1, "class", "market-error-detail svelte-xbtpff");
-			attr(button, "class", "market-reload svelte-xbtpff");
-			attr(div, "class", "market-state market-error svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, p0);
-			append(p0, t0);
-			append(div, t1);
-			append(div, p1);
-			append(p1, t2);
-			append(div, t3);
-			append(div, button);
-			append(button, t4);
-
-			if (!mounted) {
-				dispose = listen(button, "click", /*load*/ ctx[13]);
-				mounted = true;
-			}
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t0_value !== (t0_value = /*$t*/ ctx[12]("market.loadError") + "")) set_data(t0, t0_value);
-			if (dirty[0] & /*error*/ 4) set_data(t2, /*error*/ ctx[2]);
-			if (dirty[0] & /*$t*/ 4096 && t4_value !== (t4_value = /*$t*/ ctx[12]("market.reload") + "")) set_data(t4, t4_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (216:2) {#if loading}
-function create_if_block$1(ctx) {
-	let div;
-
-	return {
-		c() {
-			div = element("div");
-			div.innerHTML = `<span class="market-spinner svelte-xbtpff"></span>`;
-			attr(div, "class", "market-state svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-		},
-		p: noop,
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (285:4) {#if bundles.length}
-function create_if_block_19(ctx) {
-	let div0;
-	let t0_value = /*$t*/ ctx[12]("market.bundles") + "";
-	let t0;
-	let t1;
-	let div1;
-	let each_blocks = [];
-	let each_1_lookup = new Map();
-	let each_value_1 = /*bundles*/ ctx[11];
-	const get_key = ctx => /*b*/ ctx[43].id;
-
-	for (let i = 0; i < each_value_1.length; i += 1) {
-		let child_ctx = get_each_context_1(ctx, each_value_1, i);
-		let key = get_key(child_ctx);
-		each_1_lookup.set(key, each_blocks[i] = create_each_block_1(key, child_ctx));
-	}
-
-	return {
-		c() {
-			div0 = element("div");
-			t0 = text(t0_value);
-			t1 = space();
-			div1 = element("div");
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			attr(div0, "class", "market-section-title svelte-xbtpff");
-			attr(div1, "class", "market-grid svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div0, anchor);
-			append(div0, t0);
-			insert(target, t1, anchor);
-			insert(target, div1, anchor);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(div1, null);
-			}
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t0_value !== (t0_value = /*$t*/ ctx[12]("market.bundles") + "")) set_data(t0, t0_value);
-
-			if (dirty[0] & /*openDetail, bundles, busy, manifest, present, installBundle, $t, stateLabel, isPresent*/ 481368) {
-				each_value_1 = /*bundles*/ ctx[11];
-				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value_1, each_1_lookup, div1, destroy_block, create_each_block_1, null, get_each_context_1);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div0);
-			if (detaching) detach(t1);
-			if (detaching) detach(div1);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].d();
-			}
-		}
-	};
-}
-
-// (292:14) {#if isPresent(state)}
-function create_if_block_22(ctx) {
-	let span;
-	let t_1;
-	let span_title_value;
-
-	return {
-		c() {
-			span = element("span");
-			t_1 = text("✓");
-			attr(span, "class", "installed-check svelte-xbtpff");
-			attr(span, "title", span_title_value = /*$t*/ ctx[12]("market.installed"));
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-			append(span, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && span_title_value !== (span_title_value = /*$t*/ ctx[12]("market.installed"))) {
-				attr(span, "title", span_title_value);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (296:12) {#if b.description}
-function create_if_block_21(ctx) {
-	let p;
-	let t_1_value = /*b*/ ctx[43].description + "";
-	let t_1;
-
-	return {
-		c() {
-			p = element("p");
-			t_1 = text(t_1_value);
-			attr(p, "class", "card-desc svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, p, anchor);
-			append(p, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*bundles*/ 2048 && t_1_value !== (t_1_value = /*b*/ ctx[43].description + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(p);
-		}
-	};
-}
-
-// (297:12) {#if b.assets?.length}
-function create_if_block_20(ctx) {
-	let div;
-	let t0_value = /*b*/ ctx[43].assets.length + "";
-	let t0;
-	let t1;
-	let t2_value = /*$t*/ ctx[12]("market.assetsIncluded") + "";
-	let t2;
-
-	return {
-		c() {
-			div = element("div");
-			t0 = text(t0_value);
-			t1 = space();
-			t2 = text(t2_value);
-			attr(div, "class", "card-meta svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t0);
-			append(div, t1);
-			append(div, t2);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*bundles*/ 2048 && t0_value !== (t0_value = /*b*/ ctx[43].assets.length + "")) set_data(t0, t0_value);
-			if (dirty[0] & /*$t*/ 4096 && t2_value !== (t2_value = /*$t*/ ctx[12]("market.assetsIncluded") + "")) set_data(t2, t2_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (288:8) {#each bundles as b (b.id)}
-function create_each_block_1(key_1, ctx) {
-	let div2;
-	let div0;
-	let show_if = /*isPresent*/ ctx[17](/*state*/ ctx[40]);
-	let t0;
-	let span0;
-	let t1_value = /*b*/ ctx[43].name + "";
-	let t1;
-	let t2;
-	let span1;
-	let t3;
-	let t4_value = /*b*/ ctx[43].version + "";
-	let t4;
-	let t5;
-	let t6;
-	let t7;
-	let div1;
-	let button;
-
-	let t8_value = (/*busy*/ ctx[6][/*b*/ ctx[43].id]
-	? /*$t*/ ctx[12]("market.installing")
-	: /*stateLabel*/ ctx[16](/*state*/ ctx[40])) + "";
-
-	let t8;
-	let button_disabled_value;
-	let t9;
-	let mounted;
-	let dispose;
-	let if_block0 = show_if && create_if_block_22(ctx);
-	let if_block1 = /*b*/ ctx[43].description && create_if_block_21(ctx);
-	let if_block2 = /*b*/ ctx[43].assets?.length && create_if_block_20(ctx);
-
-	function click_handler_3() {
-		return /*click_handler_3*/ ctx[26](/*b*/ ctx[43]);
-	}
-
-	function click_handler_4() {
-		return /*click_handler_4*/ ctx[27](/*b*/ ctx[43]);
-	}
-
-	return {
-		key: key_1,
-		first: null,
-		c() {
-			div2 = element("div");
-			div0 = element("div");
-			if (if_block0) if_block0.c();
-			t0 = space();
-			span0 = element("span");
-			t1 = text(t1_value);
-			t2 = space();
-			span1 = element("span");
-			t3 = text("v");
-			t4 = text(t4_value);
-			t5 = space();
-			if (if_block1) if_block1.c();
-			t6 = space();
-			if (if_block2) if_block2.c();
-			t7 = space();
-			div1 = element("div");
-			button = element("button");
-			t8 = text(t8_value);
-			t9 = space();
-			attr(span0, "class", "card-name svelte-xbtpff");
-			attr(span1, "class", "card-version svelte-xbtpff");
-			attr(div0, "class", "card-top svelte-xbtpff");
-			attr(button, "class", "card-install svelte-xbtpff");
-			button.disabled = button_disabled_value = /*busy*/ ctx[6][/*b*/ ctx[43].id] || /*state*/ ctx[40] === "installed";
-			toggle_class(button, "is-installed", /*state*/ ctx[40] === "installed");
-			attr(div1, "class", "card-actions svelte-xbtpff");
-			attr(div2, "class", "card card-bundle clickable svelte-xbtpff");
-			this.first = div2;
-		},
-		m(target, anchor) {
-			insert(target, div2, anchor);
-			append(div2, div0);
-			if (if_block0) if_block0.m(div0, null);
-			append(div0, t0);
-			append(div0, span0);
-			append(span0, t1);
-			append(div0, t2);
-			append(div0, span1);
-			append(span1, t3);
-			append(span1, t4);
-			append(div2, t5);
-			if (if_block1) if_block1.m(div2, null);
-			append(div2, t6);
-			if (if_block2) if_block2.m(div2, null);
-			append(div2, t7);
-			append(div2, div1);
-			append(div1, button);
-			append(button, t8);
-			append(div2, t9);
-
-			if (!mounted) {
-				dispose = [
-					listen(button, "click", stop_propagation(click_handler_3)),
-					listen(div2, "click", click_handler_4)
-				];
-
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty[0] & /*manifest, bundles, present*/ 2072) show_if = /*isPresent*/ ctx[17](/*state*/ ctx[40]);
-
-			if (show_if) {
-				if (if_block0) {
-					if_block0.p(ctx, dirty);
-				} else {
-					if_block0 = create_if_block_22(ctx);
-					if_block0.c();
-					if_block0.m(div0, t0);
-				}
-			} else if (if_block0) {
-				if_block0.d(1);
-				if_block0 = null;
-			}
-
-			if (dirty[0] & /*bundles*/ 2048 && t1_value !== (t1_value = /*b*/ ctx[43].name + "")) set_data(t1, t1_value);
-			if (dirty[0] & /*bundles*/ 2048 && t4_value !== (t4_value = /*b*/ ctx[43].version + "")) set_data(t4, t4_value);
-
-			if (/*b*/ ctx[43].description) {
-				if (if_block1) {
-					if_block1.p(ctx, dirty);
-				} else {
-					if_block1 = create_if_block_21(ctx);
-					if_block1.c();
-					if_block1.m(div2, t6);
-				}
-			} else if (if_block1) {
-				if_block1.d(1);
-				if_block1 = null;
-			}
-
-			if (/*b*/ ctx[43].assets?.length) {
-				if (if_block2) {
-					if_block2.p(ctx, dirty);
-				} else {
-					if_block2 = create_if_block_20(ctx);
-					if_block2.c();
-					if_block2.m(div2, t7);
-				}
-			} else if (if_block2) {
-				if_block2.d(1);
-				if_block2 = null;
-			}
-
-			if (dirty[0] & /*busy, bundles, $t, manifest, present*/ 6232 && t8_value !== (t8_value = (/*busy*/ ctx[6][/*b*/ ctx[43].id]
-			? /*$t*/ ctx[12]("market.installing")
-			: /*stateLabel*/ ctx[16](/*state*/ ctx[40])) + "")) set_data(t8, t8_value);
-
-			if (dirty[0] & /*busy, bundles, manifest, present*/ 2136 && button_disabled_value !== (button_disabled_value = /*busy*/ ctx[6][/*b*/ ctx[43].id] || /*state*/ ctx[40] === "installed")) {
-				button.disabled = button_disabled_value;
-			}
-
-			if (dirty[0] & /*manifest, bundles, present*/ 2072) {
-				toggle_class(button, "is-installed", /*state*/ ctx[40] === "installed");
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div2);
-			if (if_block0) if_block0.d();
-			if (if_block1) if_block1.d();
-			if (if_block2) if_block2.d();
-			mounted = false;
-			run_all(dispose);
-		}
-	};
-}
-
-// (315:4) {#if assets.length}
-function create_if_block_14(ctx) {
-	let div0;
-	let t0_value = /*$t*/ ctx[12]("market.assets") + "";
-	let t0;
-	let t1;
-	let div1;
-	let each_blocks = [];
-	let each_1_lookup = new Map();
-	let each_value = /*assets*/ ctx[10];
-	const get_key = ctx => /*a*/ ctx[39].id;
-
-	for (let i = 0; i < each_value.length; i += 1) {
-		let child_ctx = get_each_context(ctx, each_value, i);
-		let key = get_key(child_ctx);
-		each_1_lookup.set(key, each_blocks[i] = create_each_block(key, child_ctx));
-	}
-
-	return {
-		c() {
-			div0 = element("div");
-			t0 = text(t0_value);
-			t1 = space();
-			div1 = element("div");
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			attr(div0, "class", "market-section-title svelte-xbtpff");
-			attr(div1, "class", "market-grid svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div0, anchor);
-			append(div0, t0);
-			insert(target, t1, anchor);
-			insert(target, div1, anchor);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(div1, null);
-			}
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t0_value !== (t0_value = /*$t*/ ctx[12]("market.assets") + "")) set_data(t0, t0_value);
-
-			if (dirty[0] & /*openDetail, assets, busy, manifest, present, installAsset, $t, stateLabel, isPresent*/ 742488) {
-				each_value = /*assets*/ ctx[10];
-				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div1, destroy_block, create_each_block, null, get_each_context);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div0);
-			if (detaching) detach(t1);
-			if (detaching) detach(div1);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].d();
-			}
-		}
-	};
-}
-
-// (323:14) {#if isPresent(state)}
-function create_if_block_18(ctx) {
-	let span;
-	let t_1;
-	let span_title_value;
-
-	return {
-		c() {
-			span = element("span");
-			t_1 = text("✓");
-			attr(span, "class", "installed-check svelte-xbtpff");
-			attr(span, "title", span_title_value = /*$t*/ ctx[12]("market.installed"));
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-			append(span, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && span_title_value !== (span_title_value = /*$t*/ ctx[12]("market.installed"))) {
-				attr(span, "title", span_title_value);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (327:12) {#if a.description}
-function create_if_block_17(ctx) {
-	let p;
-	let t_1_value = /*a*/ ctx[39].description + "";
-	let t_1;
-
-	return {
-		c() {
-			p = element("p");
-			t_1 = text(t_1_value);
-			attr(p, "class", "card-desc svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, p, anchor);
-			append(p, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*assets*/ 1024 && t_1_value !== (t_1_value = /*a*/ ctx[39].description + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(p);
-		}
-	};
-}
-
-// (328:12) {#if a.reviewed === false}
-function create_if_block_16(ctx) {
-	let div;
-	let t0;
-	let t1_value = /*$t*/ ctx[12]("market.unverified") + "";
-	let t1;
-
-	return {
-		c() {
-			div = element("div");
-			t0 = text("⚠ ");
-			t1 = text(t1_value);
-			attr(div, "class", "card-meta card-sysdep svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t0);
-			append(div, t1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t1_value !== (t1_value = /*$t*/ ctx[12]("market.unverified") + "")) set_data(t1, t1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (331:12) {#if a.systemDeps?.length}
-function create_if_block_15(ctx) {
-	let div;
-	let t0_value = /*$t*/ ctx[12]("market.systemDeps") + "";
-	let t0;
-	let t1;
-	let t2_value = /*a*/ ctx[39].systemDeps.join(", ") + "";
-	let t2;
-
-	return {
-		c() {
-			div = element("div");
-			t0 = text(t0_value);
-			t1 = text(": ");
-			t2 = text(t2_value);
-			attr(div, "class", "card-meta card-sysdep svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t0);
-			append(div, t1);
-			append(div, t2);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t0_value !== (t0_value = /*$t*/ ctx[12]("market.systemDeps") + "")) set_data(t0, t0_value);
-			if (dirty[0] & /*assets*/ 1024 && t2_value !== (t2_value = /*a*/ ctx[39].systemDeps.join(", ") + "")) set_data(t2, t2_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (318:8) {#each assets as a (a.id)}
-function create_each_block(key_1, ctx) {
-	let div3;
-	let div0;
-	let span0;
-	let t0_value = /*a*/ ctx[39].type + "";
-	let t0;
-	let span0_class_value;
-	let t1;
-	let show_if = /*isPresent*/ ctx[17](/*state*/ ctx[40]);
-	let t2;
-	let span1;
-	let t3_value = /*a*/ ctx[39].name + "";
-	let t3;
-	let t4;
-	let span2;
-	let t5;
-	let t6_value = /*a*/ ctx[39].version + "";
-	let t6;
-	let t7;
-	let t8;
-	let t9;
-	let t10;
-	let div1;
-	let t11_value = /*$t*/ ctx[12]("market.clickForDetails") + "";
-	let t11;
-	let t12;
-	let div2;
-	let button;
-
-	let t13_value = (/*busy*/ ctx[6][/*a*/ ctx[39].id]
-	? /*$t*/ ctx[12]("market.installing")
-	: /*stateLabel*/ ctx[16](/*state*/ ctx[40])) + "";
-
-	let t13;
-	let button_disabled_value;
-	let t14;
-	let mounted;
-	let dispose;
-	let if_block0 = show_if && create_if_block_18(ctx);
-	let if_block1 = /*a*/ ctx[39].description && create_if_block_17(ctx);
-	let if_block2 = /*a*/ ctx[39].reviewed === false && create_if_block_16(ctx);
-	let if_block3 = /*a*/ ctx[39].systemDeps?.length && create_if_block_15(ctx);
-
-	function click_handler_5() {
-		return /*click_handler_5*/ ctx[28](/*a*/ ctx[39]);
-	}
-
-	function click_handler_6() {
-		return /*click_handler_6*/ ctx[29](/*a*/ ctx[39]);
-	}
-
-	return {
-		key: key_1,
-		first: null,
-		c() {
-			div3 = element("div");
-			div0 = element("div");
-			span0 = element("span");
-			t0 = text(t0_value);
-			t1 = space();
-			if (if_block0) if_block0.c();
-			t2 = space();
-			span1 = element("span");
-			t3 = text(t3_value);
-			t4 = space();
-			span2 = element("span");
-			t5 = text("v");
-			t6 = text(t6_value);
-			t7 = space();
-			if (if_block1) if_block1.c();
-			t8 = space();
-			if (if_block2) if_block2.c();
-			t9 = space();
-			if (if_block3) if_block3.c();
-			t10 = space();
-			div1 = element("div");
-			t11 = text(t11_value);
-			t12 = space();
-			div2 = element("div");
-			button = element("button");
-			t13 = text(t13_value);
-			t14 = space();
-			attr(span0, "class", span0_class_value = "card-type type-" + /*a*/ ctx[39].type + " svelte-xbtpff");
-			attr(span1, "class", "card-name svelte-xbtpff");
-			attr(span2, "class", "card-version svelte-xbtpff");
-			attr(div0, "class", "card-top svelte-xbtpff");
-			attr(div1, "class", "card-hint svelte-xbtpff");
-			attr(button, "class", "card-install svelte-xbtpff");
-			button.disabled = button_disabled_value = /*busy*/ ctx[6][/*a*/ ctx[39].id] || /*state*/ ctx[40] === "installed";
-			toggle_class(button, "is-installed", /*state*/ ctx[40] === "installed");
-			attr(div2, "class", "card-actions svelte-xbtpff");
-			attr(div3, "class", "card clickable svelte-xbtpff");
-			this.first = div3;
-		},
-		m(target, anchor) {
-			insert(target, div3, anchor);
-			append(div3, div0);
-			append(div0, span0);
-			append(span0, t0);
-			append(div0, t1);
-			if (if_block0) if_block0.m(div0, null);
-			append(div0, t2);
-			append(div0, span1);
-			append(span1, t3);
-			append(div0, t4);
-			append(div0, span2);
-			append(span2, t5);
-			append(span2, t6);
-			append(div3, t7);
-			if (if_block1) if_block1.m(div3, null);
-			append(div3, t8);
-			if (if_block2) if_block2.m(div3, null);
-			append(div3, t9);
-			if (if_block3) if_block3.m(div3, null);
-			append(div3, t10);
-			append(div3, div1);
-			append(div1, t11);
-			append(div3, t12);
-			append(div3, div2);
-			append(div2, button);
-			append(button, t13);
-			append(div3, t14);
-
-			if (!mounted) {
-				dispose = [
-					listen(button, "click", stop_propagation(click_handler_5)),
-					listen(div3, "click", click_handler_6)
-				];
-
-				mounted = true;
-			}
-		},
-		p(new_ctx, dirty) {
-			ctx = new_ctx;
-			if (dirty[0] & /*assets*/ 1024 && t0_value !== (t0_value = /*a*/ ctx[39].type + "")) set_data(t0, t0_value);
-
-			if (dirty[0] & /*assets*/ 1024 && span0_class_value !== (span0_class_value = "card-type type-" + /*a*/ ctx[39].type + " svelte-xbtpff")) {
-				attr(span0, "class", span0_class_value);
-			}
-
-			if (dirty[0] & /*manifest, assets, present*/ 1048) show_if = /*isPresent*/ ctx[17](/*state*/ ctx[40]);
-
-			if (show_if) {
-				if (if_block0) {
-					if_block0.p(ctx, dirty);
-				} else {
-					if_block0 = create_if_block_18(ctx);
-					if_block0.c();
-					if_block0.m(div0, t2);
-				}
-			} else if (if_block0) {
-				if_block0.d(1);
-				if_block0 = null;
-			}
-
-			if (dirty[0] & /*assets*/ 1024 && t3_value !== (t3_value = /*a*/ ctx[39].name + "")) set_data(t3, t3_value);
-			if (dirty[0] & /*assets*/ 1024 && t6_value !== (t6_value = /*a*/ ctx[39].version + "")) set_data(t6, t6_value);
-
-			if (/*a*/ ctx[39].description) {
-				if (if_block1) {
-					if_block1.p(ctx, dirty);
-				} else {
-					if_block1 = create_if_block_17(ctx);
-					if_block1.c();
-					if_block1.m(div3, t8);
-				}
-			} else if (if_block1) {
-				if_block1.d(1);
-				if_block1 = null;
-			}
-
-			if (/*a*/ ctx[39].reviewed === false) {
-				if (if_block2) {
-					if_block2.p(ctx, dirty);
-				} else {
-					if_block2 = create_if_block_16(ctx);
-					if_block2.c();
-					if_block2.m(div3, t9);
-				}
-			} else if (if_block2) {
-				if_block2.d(1);
-				if_block2 = null;
-			}
-
-			if (/*a*/ ctx[39].systemDeps?.length) {
-				if (if_block3) {
-					if_block3.p(ctx, dirty);
-				} else {
-					if_block3 = create_if_block_15(ctx);
-					if_block3.c();
-					if_block3.m(div3, t10);
-				}
-			} else if (if_block3) {
-				if_block3.d(1);
-				if_block3 = null;
-			}
-
-			if (dirty[0] & /*$t*/ 4096 && t11_value !== (t11_value = /*$t*/ ctx[12]("market.clickForDetails") + "")) set_data(t11, t11_value);
-
-			if (dirty[0] & /*busy, assets, $t, manifest, present*/ 5208 && t13_value !== (t13_value = (/*busy*/ ctx[6][/*a*/ ctx[39].id]
-			? /*$t*/ ctx[12]("market.installing")
-			: /*stateLabel*/ ctx[16](/*state*/ ctx[40])) + "")) set_data(t13, t13_value);
-
-			if (dirty[0] & /*busy, assets, manifest, present*/ 1112 && button_disabled_value !== (button_disabled_value = /*busy*/ ctx[6][/*a*/ ctx[39].id] || /*state*/ ctx[40] === "installed")) {
-				button.disabled = button_disabled_value;
-			}
-
-			if (dirty[0] & /*manifest, assets, present*/ 1048) {
-				toggle_class(button, "is-installed", /*state*/ ctx[40] === "installed");
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(div3);
-			if (if_block0) if_block0.d();
-			if (if_block1) if_block1.d();
-			if (if_block2) if_block2.d();
-			if (if_block3) if_block3.d();
-			mounted = false;
-			run_all(dispose);
-		}
-	};
-}
-
-// (352:4) {#if !bundles.length && !assets.length}
-function create_if_block_13(ctx) {
-	let div;
-	let t_1_value = /*$t*/ ctx[12]("market.empty") + "";
-	let t_1;
-
-	return {
-		c() {
-			div = element("div");
-			t_1 = text(t_1_value);
-			attr(div, "class", "market-state svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t_1_value !== (t_1_value = /*$t*/ ctx[12]("market.empty") + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (234:8) {#if isPresent(dstate)}
-function create_if_block_11(ctx) {
-	let span;
-	let t_1;
-	let span_title_value;
-
-	return {
-		c() {
-			span = element("span");
-			t_1 = text("✓");
-			attr(span, "class", "installed-check svelte-xbtpff");
-			attr(span, "title", span_title_value = /*$t*/ ctx[12]("market.installed"));
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-			append(span, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && span_title_value !== (span_title_value = /*$t*/ ctx[12]("market.installed"))) {
-				attr(span, "title", span_title_value);
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (238:6) {#if detail.description}
-function create_if_block_10(ctx) {
-	let p;
-	let t_1_value = /*detail*/ ctx[7].description + "";
-	let t_1;
-
-	return {
-		c() {
-			p = element("p");
-			t_1 = text(t_1_value);
-			attr(p, "class", "detail-desc svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, p, anchor);
-			append(p, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*detail*/ 128 && t_1_value !== (t_1_value = /*detail*/ ctx[7].description + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(p);
-		}
-	};
-}
-
-// (239:6) {#if detail.reviewed === false}
-function create_if_block_9(ctx) {
-	let div;
-	let t0;
-	let t1_value = /*$t*/ ctx[12]("market.unverified") + "";
-	let t1;
-
-	return {
-		c() {
-			div = element("div");
-			t0 = text("⚠ ");
-			t1 = text(t1_value);
-			attr(div, "class", "card-meta card-sysdep svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t0);
-			append(div, t1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t1_value !== (t1_value = /*$t*/ ctx[12]("market.unverified") + "")) set_data(t1, t1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (242:6) {#if detail.requires?.length}
-function create_if_block_8(ctx) {
-	let div;
-	let t0_value = /*$t*/ ctx[12]("market.requires") + "";
-	let t0;
-	let t1;
-	let t2_value = /*detail*/ ctx[7].requires.map(/*assetName*/ ctx[21]).join(", ") + "";
-	let t2;
-
-	return {
-		c() {
-			div = element("div");
-			t0 = text(t0_value);
-			t1 = text(": ");
-			t2 = text(t2_value);
-			attr(div, "class", "card-meta svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t0);
-			append(div, t1);
-			append(div, t2);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t0_value !== (t0_value = /*$t*/ ctx[12]("market.requires") + "")) set_data(t0, t0_value);
-			if (dirty[0] & /*detail*/ 128 && t2_value !== (t2_value = /*detail*/ ctx[7].requires.map(/*assetName*/ ctx[21]).join(", ") + "")) set_data(t2, t2_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (247:6) {#if detail.systemDeps?.length}
-function create_if_block_7(ctx) {
-	let div;
-	let t0_value = /*$t*/ ctx[12]("market.systemDeps") + "";
-	let t0;
-	let t1;
-	let t2_value = /*detail*/ ctx[7].systemDeps.join(", ") + "";
-	let t2;
-
-	return {
-		c() {
-			div = element("div");
-			t0 = text(t0_value);
-			t1 = text(": ");
-			t2 = text(t2_value);
-			attr(div, "class", "card-meta card-sysdep svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, t0);
-			append(div, t1);
-			append(div, t2);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t0_value !== (t0_value = /*$t*/ ctx[12]("market.systemDeps") + "")) set_data(t0, t0_value);
-			if (dirty[0] & /*detail*/ 128 && t2_value !== (t2_value = /*detail*/ ctx[7].systemDeps.join(", ") + "")) set_data(t2, t2_value);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-		}
-	};
-}
-
-// (259:8) {:else}
-function create_else_block$1(ctx) {
-	let p;
-	let t_1_value = /*$t*/ ctx[12]("market.noReadme") + "";
-	let t_1;
-
-	return {
-		c() {
-			p = element("p");
-			t_1 = text(t_1_value);
-			attr(p, "class", "card-meta svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, p, anchor);
-			append(p, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t_1_value !== (t_1_value = /*$t*/ ctx[12]("market.noReadme") + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(p);
-		}
-	};
-}
-
-// (257:42) 
-function create_if_block_6(ctx) {
-	let p;
-	let t_1_value = /*$t*/ ctx[12]("market.readmeError") + "";
-	let t_1;
-
-	return {
-		c() {
-			p = element("p");
-			t_1 = text(t_1_value);
-			attr(p, "class", "card-meta card-sysdep svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, p, anchor);
-			append(p, t_1);
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t_1_value !== (t_1_value = /*$t*/ ctx[12]("market.readmeError") + "")) set_data(t_1, t_1_value);
-		},
-		d(detaching) {
-			if (detaching) detach(p);
-		}
-	};
-}
-
-// (255:39) 
-function create_if_block_5(ctx) {
-	let div;
-	let renderMarkdown_action;
-	let mounted;
-	let dispose;
-
-	return {
-		c() {
-			div = element("div");
-			attr(div, "class", "markdown-rendered");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-
-			if (!mounted) {
-				dispose = action_destroyer(renderMarkdown_action = /*renderMarkdown*/ ctx[15].call(null, div, /*readme*/ ctx[8]));
-				mounted = true;
-			}
-		},
-		p(ctx, dirty) {
-			if (renderMarkdown_action && is_function(renderMarkdown_action.update) && dirty[0] & /*readme*/ 256) renderMarkdown_action.update.call(null, /*readme*/ ctx[8]);
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-// (253:8) {#if readmeState === "loading"}
-function create_if_block_4(ctx) {
-	let span;
-
-	return {
-		c() {
-			span = element("span");
-			attr(span, "class", "market-spinner svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-		},
-		p: noop,
-		d(detaching) {
-			if (detaching) detach(span);
-		}
-	};
-}
-
-// (264:8) {#if dstate !== "not-installed"}
-function create_if_block_3(ctx) {
-	let button;
-	let t_1_value = /*$t*/ ctx[12]("market.uninstall") + "";
-	let t_1;
-	let button_disabled_value;
-	let mounted;
-	let dispose;
-
-	return {
-		c() {
-			button = element("button");
-			t_1 = text(t_1_value);
-			attr(button, "class", "detail-uninstall svelte-xbtpff");
-			button.disabled = button_disabled_value = /*busy*/ ctx[6][/*detail*/ ctx[7].id];
-		},
-		m(target, anchor) {
-			insert(target, button, anchor);
-			append(button, t_1);
-
-			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler_1*/ ctx[24]);
-				mounted = true;
-			}
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t_1_value !== (t_1_value = /*$t*/ ctx[12]("market.uninstall") + "")) set_data(t_1, t_1_value);
-
-			if (dirty[0] & /*busy, detail*/ 192 && button_disabled_value !== (button_disabled_value = /*busy*/ ctx[6][/*detail*/ ctx[7].id])) {
-				button.disabled = button_disabled_value;
-			}
-		},
-		d(detaching) {
-			if (detaching) detach(button);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-function create_fragment$1(ctx) {
-	let div2;
-	let div1;
-	let div0;
-	let span;
-	let t0_value = /*$t*/ ctx[12]("market.title") + "";
-	let t0;
-	let t1;
-	let t2;
-	let input;
-	let input_placeholder_value;
-	let input_disabled_value;
-	let t3;
-	let button;
-	let t4_value = /*$t*/ ctx[12]("market.reload") + "";
-	let t4;
-	let t5;
-	let t6;
-	let mounted;
-	let dispose;
-	let if_block0 = /*index*/ ctx[0] && create_if_block_24(ctx);
-	let if_block1 = !obsidian.Platform.isDesktop && create_if_block_23(ctx);
-
-	function select_block_type(ctx, dirty) {
-		if (/*loading*/ ctx[1]) return create_if_block$1;
-		if (/*error*/ ctx[2]) return create_if_block_1$1;
-		if (/*index*/ ctx[0] && /*detail*/ ctx[7]) return create_if_block_2;
-		if (/*index*/ ctx[0]) return create_if_block_12;
-	}
-
-	function select_block_ctx(ctx, type) {
-		if (type === create_if_block_2) return get_if_ctx(ctx);
-		return ctx;
-	}
-
-	let current_block_type = select_block_type(ctx);
-	let if_block2 = current_block_type && current_block_type(select_block_ctx(ctx, current_block_type));
-
-	return {
-		c() {
-			div2 = element("div");
-			div1 = element("div");
-			div0 = element("div");
-			span = element("span");
-			t0 = text(t0_value);
-			t1 = space();
-			if (if_block0) if_block0.c();
-			t2 = space();
-			input = element("input");
-			t3 = space();
-			button = element("button");
-			t4 = text(t4_value);
-			t5 = space();
-			if (if_block1) if_block1.c();
-			t6 = space();
-			if (if_block2) if_block2.c();
-			attr(span, "class", "market-title svelte-xbtpff");
-			attr(div0, "class", "market-heading svelte-xbtpff");
-			attr(input, "class", "market-search svelte-xbtpff");
-			attr(input, "type", "text");
-			attr(input, "placeholder", input_placeholder_value = /*$t*/ ctx[12]("market.search"));
-			input.disabled = input_disabled_value = !/*index*/ ctx[0];
-			attr(button, "class", "market-reload svelte-xbtpff");
-			button.disabled = /*loading*/ ctx[1];
-			attr(div1, "class", "market-header svelte-xbtpff");
-			attr(div2, "class", "market svelte-xbtpff");
-		},
-		m(target, anchor) {
-			insert(target, div2, anchor);
-			append(div2, div1);
-			append(div1, div0);
-			append(div0, span);
-			append(span, t0);
-			append(div0, t1);
-			if (if_block0) if_block0.m(div0, null);
-			append(div1, t2);
-			append(div1, input);
-			set_input_value(input, /*query*/ ctx[5]);
-			append(div1, t3);
-			append(div1, button);
-			append(button, t4);
-			append(div2, t5);
-			if (if_block1) if_block1.m(div2, null);
-			append(div2, t6);
-			if (if_block2) if_block2.m(div2, null);
-
-			if (!mounted) {
-				dispose = [
-					listen(input, "input", /*input_input_handler*/ ctx[22]),
-					listen(button, "click", /*load*/ ctx[13])
-				];
-
-				mounted = true;
-			}
-		},
-		p(ctx, dirty) {
-			if (dirty[0] & /*$t*/ 4096 && t0_value !== (t0_value = /*$t*/ ctx[12]("market.title") + "")) set_data(t0, t0_value);
-
-			if (/*index*/ ctx[0]) {
-				if (if_block0) {
-					if_block0.p(ctx, dirty);
-				} else {
-					if_block0 = create_if_block_24(ctx);
-					if_block0.c();
-					if_block0.m(div0, null);
-				}
-			} else if (if_block0) {
-				if_block0.d(1);
-				if_block0 = null;
-			}
-
-			if (dirty[0] & /*$t*/ 4096 && input_placeholder_value !== (input_placeholder_value = /*$t*/ ctx[12]("market.search"))) {
-				attr(input, "placeholder", input_placeholder_value);
-			}
-
-			if (dirty[0] & /*index*/ 1 && input_disabled_value !== (input_disabled_value = !/*index*/ ctx[0])) {
-				input.disabled = input_disabled_value;
-			}
-
-			if (dirty[0] & /*query*/ 32 && input.value !== /*query*/ ctx[5]) {
-				set_input_value(input, /*query*/ ctx[5]);
-			}
-
-			if (dirty[0] & /*$t*/ 4096 && t4_value !== (t4_value = /*$t*/ ctx[12]("market.reload") + "")) set_data(t4, t4_value);
-
-			if (dirty[0] & /*loading*/ 2) {
-				button.disabled = /*loading*/ ctx[1];
-			}
-
-			if (!obsidian.Platform.isDesktop) if_block1.p(ctx, dirty);
-
-			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block2) {
-				if_block2.p(select_block_ctx(ctx, current_block_type), dirty);
-			} else {
-				if (if_block2) if_block2.d(1);
-				if_block2 = current_block_type && current_block_type(select_block_ctx(ctx, current_block_type));
-
-				if (if_block2) {
-					if_block2.c();
-					if_block2.m(div2, null);
-				}
-			}
-		},
-		i: noop,
-		o: noop,
-		d(detaching) {
-			if (detaching) detach(div2);
-			if (if_block0) if_block0.d();
-			if (if_block1) if_block1.d();
-
-			if (if_block2) {
-				if_block2.d();
-			}
-
-			mounted = false;
-			run_all(dispose);
-		}
-	};
-}
-
-function instance$1($$self, $$props, $$invalidate) {
-	let bundles;
-	let assets;
-	let $t;
-	component_subscribe($$self, t, $$value => $$invalidate(12, $t = $$value));
-	const app = useApp();
-	getContext("close");
-	const refresh = getContext("refresh");
-	const installWorkflows = getContext("installWorkflows");
-	const settings = get_store_value(pluginSettings);
-	const indexUrl = (settings.pandocMarketIndexUrl || "").trim() || DEFAULT_MARKET_INDEX_URL;
-	const destFolder = (settings.pandocAssetsFolder || "").trim() || DEFAULT_ASSETS_DIR;
-	let loading = true;
-	let error = "";
-	let index = null;
-	let manifest = {};
-	let present = new Set();
-	let query = "";
-	let busy = {};
-
-	function load() {
-		var _a;
-
-		return __awaiter(this, void 0, void 0, function* () {
-			$$invalidate(1, loading = true);
-			$$invalidate(2, error = "");
-
-			try {
-				$$invalidate(0, index = yield fetchMarketIndex(indexUrl, get_store_value(locale)));
-				$$invalidate(3, manifest = yield readInstalledManifest(app, destFolder));
-				$$invalidate(4, present = yield detectPresentIds(app, index, destFolder));
-			} catch(e) {
-				$$invalidate(2, error = String((_a = e === null || e === void 0 ? void 0 : e.message) !== null && _a !== void 0
-				? _a
-				: e));
-			}
-
-			$$invalidate(1, loading = false);
-		});
-	}
-
-	onMount(load);
-
-	// ── Asset detail ("how to use") ─────────────────────────────────────────
-	let detail = null; // the asset/bundle whose README is shown, or null for the grid
-
-	let readme = "";
-	let readmeState = ""; // "loading" | "ok" | "none" | "error"
-
-	function openDetail(item) {
-		return __awaiter(this, void 0, void 0, function* () {
-			$$invalidate(7, detail = item);
-			$$invalidate(8, readme = "");
-
-			if (!item.readmeUrl) {
-				$$invalidate(9, readmeState = "none");
-				return;
-			}
-
-			$$invalidate(9, readmeState = "loading");
-
-			try {
-				$$invalidate(8, readme = yield fetchMarketReadme(item.readmeUrl));
-				$$invalidate(9, readmeState = "ok");
-			} catch(e) {
-				$$invalidate(9, readmeState = "error");
-			}
-		});
-	}
-
-	// Svelte action: render markdown into a node via Obsidian's renderer.
-	function renderMarkdown(node, md) {
-		const comp = new obsidian.Component();
-
-		const draw = m => {
-			node.innerHTML = "";
-			if (m) obsidian.MarkdownRenderer.renderMarkdown(m, node, "", comp);
-		};
-
-		draw(md);
-
-		return {
-			update: draw,
-			destroy: () => comp.unload()
-		};
-	}
-
-	function matches(x) {
-		var _a, _b;
-		const q = query.trim().toLowerCase();
-		if (!q) return true;
-		return `${x.name} ${(_a = x.description) !== null && _a !== void 0 ? _a : ""} ${((_b = x.tags) !== null && _b !== void 0 ? _b : []).join(" ")} ${x.id}`.toLowerCase().includes(q);
-	}
-
-	const stateLabel = s => s === "installed"
-	? $t("market.installed")
-	: s === "update-available"
-		? $t("market.update")
-		: s === "present"
-			? $t("market.reinstall")
-			: $t("market.install");
-
-	const isPresent = s => s !== "not-installed";
-
-	function installBundle(b) {
-		var _a, _b;
-
-		return __awaiter(this, void 0, void 0, function* () {
-			if (busy[b.id]) return;
-			$$invalidate(6, busy = Object.assign(Object.assign({}, busy), { [b.id]: true }));
-			const n = new obsidian.Notice($t("market.installing") + " " + b.name, 0);
-
-			try {
-				const rec = yield installMarketBundle(app, b, destFolder);
-				$$invalidate(3, manifest[rec.id] = rec, manifest);
-
-				if ((_a = b.workflows) === null || _a === void 0
-				? void 0
-				: _a.length) {
-					const added = yield installWorkflows(b.workflows);
-					if (added.length) new obsidian.Notice(`+ ${added.join(", ")}`);
-				}
-
-				refresh();
-				$$invalidate(3, manifest = Object.assign({}, manifest));
-				new obsidian.Notice($t("market.installedNotice") + " " + b.name);
-			} catch(e) {
-				new obsidian.Notice($t("market.failed") + " " + String((_b = e === null || e === void 0 ? void 0 : e.message) !== null && _b !== void 0
-					? _b
-					: e));
-			} finally {
-				n.hide();
-				$$invalidate(6, busy = Object.assign(Object.assign({}, busy), { [b.id]: false }));
-			}
-		});
-	}
-
-	function installAsset(a) {
-		var _a;
-
-		return __awaiter(this, void 0, void 0, function* () {
-			if (busy[a.id]) return;
-			$$invalidate(6, busy = Object.assign(Object.assign({}, busy), { [a.id]: true }));
-			const n = new obsidian.Notice($t("market.installing") + " " + a.name, 0);
-
-			try {
-				const recs = yield installAssetWithDeps(app, index, a.id, destFolder);
-				for (const r of recs) $$invalidate(3, manifest[r.id] = r, manifest);
-				refresh();
-				$$invalidate(3, manifest = Object.assign({}, manifest));
-				const extra = recs.length - 1;
-				new obsidian.Notice($t("market.installedNotice") + " " + a.name + (extra > 0 ? ` (+${extra})` : ""));
-			} catch(e) {
-				new obsidian.Notice($t("market.failed") + " " + String((_a = e === null || e === void 0 ? void 0 : e.message) !== null && _a !== void 0
-					? _a
-					: e));
-			} finally {
-				n.hide();
-				$$invalidate(6, busy = Object.assign(Object.assign({}, busy), { [a.id]: false }));
-			}
-		});
-	}
-
-	function uninstall(item) {
-		var _a, _b, _c;
-
-		return __awaiter(this, void 0, void 0, function* () {
-			if (busy[item.id]) return;
-			if (!window.confirm(translate("market.confirmUninstall", { name: item.name }))) return;
-			$$invalidate(6, busy = Object.assign(Object.assign({}, busy), { [item.id]: true }));
-			const n = new obsidian.Notice(translate("market.uninstalling") + " " + item.name, 0);
-
-			try {
-				// For a bundle we only know its listed file paths; for an asset, its files[].
-				const files = item.download
-				? (_a = item.assets) !== null && _a !== void 0 ? _a : []
-				: ((_b = item.files) !== null && _b !== void 0 ? _b : []).map(f => f.path);
-
-				yield uninstallMarketItem(app, destFolder, item.id, files);
-				delete manifest[item.id];
-				$$invalidate(3, manifest = Object.assign({}, manifest));
-				$$invalidate(4, present = new Set([...present].filter(x => x !== item.id)));
-				refresh();
-				new obsidian.Notice(translate("market.uninstalled") + " " + item.name);
-			} catch(e) {
-				new obsidian.Notice(translate("market.failed") + " " + String((_c = e === null || e === void 0 ? void 0 : e.message) !== null && _c !== void 0
-					? _c
-					: e));
-			} finally {
-				n.hide();
-				$$invalidate(6, busy = Object.assign(Object.assign({}, busy), { [item.id]: false }));
-			}
-		});
-	}
-
-	const assetName = id => {
-		var _a, _b;
-
-		return (_b = (_a = index === null || index === void 0
-		? void 0
-		: index.assets.find(a => a.id === id)) === null || _a === void 0
-		? void 0
-		: _a.name) !== null && _b !== void 0
-		? _b
-		: id;
-	};
-
-	function input_input_handler() {
-		query = this.value;
-		$$invalidate(5, query);
-	}
-
-	const click_handler = () => $$invalidate(7, detail = null);
-	const click_handler_1 = () => uninstall(detail);
-
-	const click_handler_2 = () => detail.download
-	? installBundle(detail)
-	: installAsset(detail);
-
-	const click_handler_3 = b => installBundle(b);
-	const click_handler_4 = b => openDetail(b);
-	const click_handler_5 = a => installAsset(a);
-	const click_handler_6 = a => openDetail(a);
-
-	$$self.$$.update = () => {
-		if ($$self.$$.dirty[0] & /*index*/ 1) {
-			// User-facing assets are recipes and CSL styles. Filters/templates/include
-			// install automatically as a recipe's dependencies, so they aren't listed; CSL
-			// is listed because recipes don't declare a csl dependency (it's injected via
-			// --csl), so a style must be installable on its own.
-			$$invalidate(11, bundles = index ? index.bundles.filter(matches) : []);
-		}
-
-		if ($$self.$$.dirty[0] & /*index*/ 1) {
-			$$invalidate(10, assets = index
-			? index.assets.filter(a => (a.type === "recipe" || a.type === "csl") && matches(a))
-			: []);
-		}
-	};
-
-	return [
-		index,
-		loading,
-		error,
-		manifest,
-		present,
-		query,
-		busy,
-		detail,
-		readme,
-		readmeState,
-		assets,
-		bundles,
-		$t,
-		load,
-		openDetail,
-		renderMarkdown,
-		stateLabel,
-		isPresent,
-		installBundle,
-		installAsset,
-		uninstall,
-		assetName,
-		input_input_handler,
-		click_handler,
-		click_handler_1,
-		click_handler_2,
-		click_handler_3,
-		click_handler_4,
-		click_handler_5,
-		click_handler_6
-	];
-}
-
-class PandocMarket extends SvelteComponent {
-	constructor(options) {
-		super();
-		init(this, options, instance$1, create_fragment$1, safe_not_equal, {}, add_css$1, [-1, -1]);
-	}
 }
 
 /**
@@ -46260,663 +39020,6 @@ function deserializeWorkflow(w) {
     return deserialized;
 }
 
-/**
- * The Pandoc asset marketplace: browse the external index, install bundles or
- * individual assets (with their dependency closure) into the vault's assets root,
- * and register them so recipes appear in the template dropdown immediately.
- */
-class PandocMarketModal extends obsidian.Modal {
-    constructor(app, plugin) {
-        super(app);
-        this.view = null;
-        this.plugin = plugin;
-    }
-    onOpen() {
-        this.modalEl.style.width = "min(820px, 94vw)";
-        const entrypoint = this.contentEl.createDiv("longform-pandoc-market-root");
-        const context = appContext(this);
-        context.set("close", () => this.close());
-        context.set("refresh", () => refreshPandocTemplates(this.app));
-        context.set("installWorkflows", (incoming) => this.installWorkflows(incoming));
-        this.view = new PandocMarket({ target: entrypoint, context });
-    }
-    /**
-     * Inject a bundle's recommended workflows: add only ones the user doesn't have,
-     * skip any that reference a non-built-in step (marketplace workflows must not
-     * carry user scripts), then persist. Returns the names actually added.
-     */
-    installWorkflows(incoming) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const current = get_store_value(workflows);
-            const next = Object.assign({}, current);
-            const added = [];
-            for (const wf of incoming) {
-                if (wf.name in next)
-                    continue; // never overwrite the user's own
-                const unknown = wf.steps.filter((s) => !BUILTIN_STEPS.some((b) => b.id === s.id));
-                if (unknown.length > 0) {
-                    console.warn(`[PaperOut] Skipping bundle workflow "${wf.name}": unknown step id(s) ${unknown
-                        .map((s) => s.id)
-                        .join(", ")}.`);
-                    continue;
-                }
-                next[wf.name] = deserializeWorkflow(wf);
-                added.push(wf.name);
-            }
-            if (added.length > 0) {
-                workflows.set(next);
-                yield this.plugin.saveSettings();
-            }
-            return added;
-        });
-    }
-    onClose() {
-        var _a;
-        (_a = this.view) === null || _a === void 0 ? void 0 : _a.$destroy();
-        this.view = null;
-        this.contentEl.empty();
-    }
-}
-
-function installHint(bin) {
-    if (obsidian.Platform.isMacOS) {
-        if (bin === "xelatex")
-            return "Install MacTeX: https://www.tug.org/mactex/ (or `brew install --cask mactex-no-gui`).";
-        return `Install with Homebrew: \`brew install ${bin}\``;
-    }
-    if (obsidian.Platform.isWin) {
-        if (bin === "xelatex")
-            return "Install MiKTeX (https://miktex.org) or TeX Live.";
-        return `Install ${bin} from https://pandoc.org/installing.html (or \`choco install ${bin}\`).`;
-    }
-    if (bin === "xelatex")
-        return "Install TeX Live: `sudo apt install texlive-xetex` (or your distro's package).";
-    return `Install ${bin} via your package manager (e.g. \`sudo apt install ${bin}\`) or https://pandoc.org/installing.html`;
-}
-class PandocSetupModal extends obsidian.Modal {
-    constructor(app, plugin) {
-        super(app);
-        this.plugin = plugin;
-    }
-    assetsFolderRel() {
-        var _a;
-        return ((_a = get_store_value(pluginSettings).pandocAssetsFolder) !== null && _a !== void 0 ? _a : "").trim() || DEFAULT_ASSETS_DIR;
-    }
-    assetsAbs() {
-        const rel = this.assetsFolderRel();
-        const adapter = this.app.vault.adapter;
-        const base = adapter.getBasePath ? adapter.getBasePath() : "";
-        if (rel.startsWith("/") || rel.startsWith("~")) {
-            return path__namespace.resolve(rel.startsWith("~") ? os__namespace.homedir() + rel.slice(1) : rel);
-        }
-        return path__namespace.join(base, rel);
-    }
-    gatherChecks() {
-        var _a;
-        const home = os__namespace.homedir();
-        const dirs = binSearchDirs(home);
-        const settings = get_store_value(pluginSettings);
-        const nf = translate("setup.notFound");
-        const pandoc = resolveBinary(((_a = settings.pandocBinary) !== null && _a !== void 0 ? _a : "pandoc").trim() || "pandoc", fs__namespace.existsSync, dirs);
-        const xelatex = resolveBinary("xelatex", fs__namespace.existsSync, dirs);
-        const crossref = resolveBinary("pandoc-crossref", fs__namespace.existsSync, dirs);
-        const assets = this.assetsAbs();
-        const assetsOk = fs__namespace.existsSync(path__namespace.join(assets, "defaults")) &&
-            fs__namespace.existsSync(path__namespace.join(assets, "csl"));
-        const checks = [
-            {
-                ok: !!pandoc,
-                label: "pandoc — " + (pandoc || nf),
-                detail: pandoc ? "" : installHint("pandoc"),
-            },
-            {
-                ok: !!xelatex,
-                label: `xelatex (${translate("setup.pdfEngine")}) — ` + (xelatex || nf),
-                detail: xelatex ? "" : installHint("xelatex"),
-            },
-            {
-                ok: !!crossref,
-                label: "pandoc-crossref — " + (crossref || nf),
-                detail: crossref ? "" : installHint("pandoc-crossref"),
-            },
-            {
-                ok: assetsOk,
-                label: translate("setup.assets") + " — " + assets,
-                detail: assetsOk
-                    ? translate("setup.assetsOk")
-                    : translate("setup.assetsMissing"),
-            },
-        ];
-        return { checks, assets };
-    }
-    reportText(checks) {
-        return ("Pandoc export setup:\n\n" +
-            checks
-                .map((c) => `[${c.ok ? "✓" : "✗"}] ${c.label}` +
-                (c.detail ? `\n       ${c.detail}` : ""))
-                .join("\n"));
-    }
-    onOpen() {
-        this.render();
-    }
-    render() {
-        const { contentEl, titleEl } = this;
-        titleEl.setText(translate("setup.title"));
-        contentEl.empty();
-        contentEl.createEl("p", { text: translate("setup.intro") });
-        const { checks } = this.gatherChecks();
-        const list = contentEl.createEl("div", { cls: "longform-pandoc-checklist" });
-        for (const c of checks) {
-            const item = list.createDiv({ cls: "longform-pandoc-check" });
-            item.createSpan({
-                text: c.ok ? "✓ " : "✗ ",
-                cls: c.ok ? "longform-check-ok" : "longform-check-bad",
-            });
-            item.createSpan({ text: c.label });
-            if (c.detail) {
-                item.createEl("div", { text: c.detail, cls: "longform-pandoc-check-detail" });
-            }
-        }
-        // Primary path: the asset marketplace (needs the plugin for its modal).
-        if (this.plugin) {
-            new obsidian.Setting(contentEl)
-                .setName(translate("setup.market.name"))
-                .setDesc(translate("setup.market.desc"))
-                .addButton((cb) => cb
-                .setButtonText(translate("setup.market.button"))
-                .setCta()
-                .onClick(() => {
-                this.close();
-                new PandocMarketModal(this.app, this.plugin).open();
-            }));
-        }
-        new obsidian.Setting(contentEl)
-            .setName(translate("setup.url.name"))
-            .setDesc(translate("setup.url.desc"))
-            .addText((cb) => {
-            cb.setPlaceholder("https://…/pandoc-assets.zip")
-                .setValue(get_store_value(pluginSettings).pandocAssetsUrl)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocAssetsUrl: v })));
-            });
-        });
-        new obsidian.Setting(contentEl)
-            .setName(translate("setup.download.name"))
-            .setDesc(translate("setup.download.desc", { folder: this.assetsFolderRel() }))
-            .addButton((cb) => cb
-            .setButtonText(translate("setup.download.button"))
-            .onClick(() => __awaiter(this, void 0, void 0, function* () {
-            yield this.download();
-        })));
-        const buttons = contentEl.createDiv({ cls: "longform-error-modal-buttons" });
-        const recheck = buttons.createEl("button", { text: translate("setup.recheck") });
-        recheck.addEventListener("click", () => this.render());
-        const copy = buttons.createEl("button", { text: translate("setup.copyReport") });
-        copy.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
-            yield navigator.clipboard.writeText(this.reportText(checks));
-            copy.setText(translate("setup.copied"));
-            window.setTimeout(() => copy.setText(translate("setup.copyReport")), 1500);
-        }));
-        const done = buttons.createEl("button", {
-            text: translate("setup.done"),
-            cls: "mod-cta",
-        });
-        done.addEventListener("click", () => {
-            pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocSetupDismissed: true })));
-            this.close();
-        });
-    }
-    download() {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            const url = ((_a = get_store_value(pluginSettings).pandocAssetsUrl) !== null && _a !== void 0 ? _a : "").trim();
-            const dest = DEFAULT_ASSETS_DIR;
-            const notice = new obsidian.Notice(translate("setup.downloading"), 0);
-            try {
-                const { count } = yield downloadPandocAssets(this.app, url, dest);
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocAssetsFolder: dest })));
-                refreshPandocTemplates(this.app);
-                notice.hide();
-                new obsidian.Notice(translate("setup.downloaded", { count: String(count), dest }));
-                this.render();
-            }
-            catch (e) {
-                notice.hide();
-                new obsidian.Notice(translate("setup.downloadFailed", { error: e.message }), 8000);
-            }
-        });
-    }
-    onClose() {
-        this.contentEl.empty();
-    }
-}
-
-class LongformSettingsTab extends obsidian.PluginSettingTab {
-    constructor(app, plugin) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
-    display() {
-        var _a, _b, _c, _d;
-        // display() can be re-invoked (locale change, PaperBell refresh); tear down any
-        // subscriptions from the previous render before rebuilding.
-        (_a = this.unsubscribeUserScripts) === null || _a === void 0 ? void 0 : _a.call(this);
-        (_b = this.unsubscribeSettings) === null || _b === void 0 ? void 0 : _b.call(this);
-        (_c = this.unsubscribeLocale) === null || _c === void 0 ? void 0 : _c.call(this);
-        const settings = get_store_value(pluginSettings);
-        const { containerEl } = this;
-        containerEl.empty();
-        // ── Language ──────────────────────────────────────────────────────────
-        new obsidian.Setting(containerEl).setName(translate("settings.language.heading")).setHeading();
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.language.name"))
-            .setDesc(translate("settings.language.desc"))
-            .addDropdown((cb) => {
-            var _a;
-            cb.addOption("auto", translate("settings.language.auto"));
-            cb.addOption("en", translate("settings.language.en"));
-            cb.addOption("zh", translate("settings.language.zh"));
-            cb.setValue((_a = settings.language) !== null && _a !== void 0 ? _a : "auto");
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { language: value })));
-            });
-        });
-        // ── Composition ───────────────────────────────────────────────────────
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.composition.heading"))
-            .setHeading();
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.sceneTemplate.name"))
-            .addSearch((cb) => {
-            new FileSuggest(this.app, cb.inputEl);
-            cb.setPlaceholder("templates/Scene.md")
-                .setValue(settings.sceneTemplate)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { sceneTemplate: v })));
-            });
-        });
-        containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
-            el.setText(translate("settings.sceneTemplate.desc"));
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.numberScenes.name"))
-            .setDesc(translate("settings.numberScenes.desc"))
-            .addToggle((cb) => {
-            cb.setValue(settings.numberScenes);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { numberScenes: value })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.writeProperty.name"))
-            .setDesc(translate("settings.writeProperty.desc"))
-            .addToggle((toggle) => {
-            toggle.setValue(settings.writeProperty);
-            toggle.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { writeProperty: value })));
-                if (value) {
-                    syncSceneIndices(this.app);
-                }
-            });
-        });
-        // ── Compile ───────────────────────────────────────────────────────────
-        new obsidian.Setting(containerEl).setName(translate("settings.compile.heading")).setHeading();
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.pandocExport.name"))
-            .setDesc(translate("settings.pandocExport.desc"))
-            .addButton((cb) => {
-            cb.setButtonText(translate("settings.pandocExport.button"))
-                .setCta()
-                .onClick(() => new PandocSetupModal(this.app, this.plugin).open());
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.market.name"))
-            .setDesc(translate("settings.market.desc"))
-            .addButton((cb) => {
-            cb.setButtonText(translate("settings.market.button"))
-                .setCta()
-                .onClick(() => new PandocMarketModal(this.app, this.plugin).open());
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.market.url.name"))
-            .setDesc(translate("settings.market.url.desc"))
-            .addText((cb) => {
-            cb.setPlaceholder(DEFAULT_MARKET_INDEX_URL)
-                .setValue(settings.pandocMarketIndexUrl)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocMarketIndexUrl: v })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.pandocUrl.name"))
-            .setDesc(translate("settings.pandocUrl.desc"))
-            .addText((cb) => {
-            cb.setPlaceholder("https://…/pandoc-assets.zip")
-                .setValue(settings.pandocAssetsUrl)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocAssetsUrl: v })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.pandocFolder.name"))
-            .setDesc(translate("settings.pandocFolder.desc"))
-            .addSearch((cb) => {
-            new FolderSuggest(this.app, cb.inputEl);
-            cb.setPlaceholder("PaperBell/pandoc")
-                .setValue(settings.pandocAssetsFolder)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocAssetsFolder: v })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.pandocOutput.name"))
-            .setDesc(translate("settings.pandocOutput.desc"))
-            .addSearch((cb) => {
-            new FolderSuggest(this.app, cb.inputEl);
-            cb.setPlaceholder("(next to manuscript, or e.g. ~/Papers)")
-                .setValue(settings.pandocOutputFolder)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocOutputFolder: v })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.bibliography.name"))
-            .setDesc(translate("settings.bibliography.desc"))
-            .addSearch((cb) => {
-            new FileSuggest(this.app, cb.inputEl);
-            cb.setPlaceholder("(auto-detect)")
-                .setValue(settings.pandocBibliography)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocBibliography: v })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.pandocBinary.name"))
-            .setDesc(translate("settings.pandocBinary.desc"))
-            .addText((cb) => {
-            cb.setPlaceholder("pandoc")
-                .setValue(settings.pandocBinary)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocBinary: v })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.userScriptFolder.name"))
-            .setDesc(translate("settings.userScriptFolder.desc"))
-            .addSearch((cb) => {
-            new FolderSuggest(this.app, cb.inputEl);
-            cb.setPlaceholder("my/script/steps/")
-                .setValue(settings.userScriptFolder)
-                .onChange((v) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { userScriptFolder: v })));
-            });
-        });
-        this.stepsSummary = containerEl.createSpan();
-        this.stepsList = containerEl.createEl("ul", {
-            cls: "longform-settings-user-steps",
-        });
-        this.unsubscribeUserScripts = userScriptSteps.subscribe((steps) => {
-            if (steps && steps.length > 0) {
-                this.stepsSummary.innerText = translate("settings.userSteps.loaded", {
-                    count: steps.length,
-                    plural: steps.length !== 1 ? "s" : "",
-                });
-            }
-            else {
-                this.stepsSummary.innerText = translate("settings.userSteps.none");
-            }
-            if (this.stepsList) {
-                this.stepsList.empty();
-                if (steps) {
-                    steps.forEach((s) => {
-                        const stepEl = this.stepsList.createEl("li");
-                        stepEl.createSpan({
-                            text: s.description.name,
-                            cls: "longform-settings-user-step-name",
-                        });
-                        stepEl.createSpan({
-                            text: `(${s.description.canonicalID})`,
-                            cls: "longform-settings-user-step-id",
-                        });
-                    });
-                }
-            }
-        });
-        containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
-            el.setText(translate("settings.userSteps.desc"));
-        });
-        // ── Word Counts & Sessions ────────────────────────────────────────────
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.wordCounts.heading"))
-            .setHeading();
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.showWordCount.name"))
-            .setDesc(translate("settings.showWordCount.desc"))
-            .addToggle((cb) => {
-            cb.setValue(settings.showWordCountInStatusBar);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { showWordCountInStatusBar: value })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.newSessionDaily.name"))
-            .setDesc(translate("settings.newSessionDaily.desc"))
-            .addToggle((cb) => {
-            cb.setValue(settings.startNewSessionEachDay);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { startNewSessionEachDay: value })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.sessionGoal.name"))
-            .setDesc(translate("settings.sessionGoal.desc"))
-            .addText((cb) => {
-            cb.setValue(settings.sessionGoal.toString());
-            cb.onChange((value) => {
-                const numberValue = +value;
-                if (numberValue && numberValue > 0) {
-                    pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { sessionGoal: numberValue })));
-                }
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.goalAppliesTo.name"))
-            .setDesc(translate("settings.goalAppliesTo.desc"))
-            .addDropdown((cb) => {
-            cb.addOption("all", translate("settings.goalAppliesTo.all"));
-            cb.addOption("project", translate("settings.goalAppliesTo.project"));
-            cb.addOption("note", translate("settings.goalAppliesTo.note"));
-            cb.setValue(settings.applyGoalTo);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { applyGoalTo: value })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.notifyOnGoal.name"))
-            .addToggle((cb) => {
-            cb.setValue(settings.notifyOnGoal);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { notifyOnGoal: value })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.countDeletions.name"))
-            .setDesc(translate("settings.countDeletions.desc"))
-            .addToggle((cb) => {
-            cb.setValue(settings.countDeletionsForGoal);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { countDeletionsForGoal: value })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.sessionsToKeep.name"))
-            .setDesc(translate("settings.sessionsToKeep.desc"))
-            .addText((cb) => {
-            cb.setValue(settings.keepSessionCount.toString());
-            cb.onChange((value) => {
-                const numberValue = +value;
-                if (numberValue && numberValue > 0) {
-                    pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { keepSessionCount: numberValue })));
-                }
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.storeSession.name"))
-            .setDesc(translate("settings.storeSession.desc"))
-            .addDropdown((cb) => {
-            cb.addOption("data", translate("settings.storeSession.data"));
-            cb.addOption("plugin-folder", translate("settings.storeSession.pluginFolder"));
-            cb.addOption("file", translate("settings.storeSession.file"));
-            cb.setValue(settings.sessionStorage);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { sessionStorage: value })));
-            });
-        });
-        const updateSessionFile = obsidian.debounce((value) => {
-            // Normalize file to end in .json
-            let fileName = value;
-            if (!fileName || fileName.length === 0) {
-                fileName = DEFAULT_SESSION_FILE;
-            }
-            fileName = obsidian.normalizePath(fileName);
-            if (!fileName.endsWith(".json")) {
-                fileName = `${fileName}.json`;
-            }
-            pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { sessionFile: fileName })));
-        }, 1000);
-        const sessionFileStorageSettings = new obsidian.Setting(containerEl)
-            .setName(translate("settings.sessionFile.name"))
-            .setDesc(translate("settings.sessionFile.desc"))
-            .addText((cb) => {
-            var _a;
-            cb.setPlaceholder(DEFAULT_SESSION_FILE);
-            cb.setValue((_a = settings.sessionFile) !== null && _a !== void 0 ? _a : DEFAULT_SESSION_FILE);
-            cb.onChange(updateSessionFile);
-        });
-        sessionFileStorageSettings.settingEl.style.display = "none";
-        this.unsubscribeSettings = pluginSettings.subscribe((settings) => {
-            sessionFileStorageSettings.settingEl.style.display =
-                settings.sessionStorage === "file" ? "flex" : "none";
-        });
-        // ── Troubleshooting ───────────────────────────────────────────────────
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.troubleshooting.heading"))
-            .setHeading();
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.waitForSync.name"))
-            .setDesc(translate("settings.waitForSync.desc"))
-            .addToggle((cb) => {
-            cb.setValue(settings.waitForSync);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { waitForSync: value })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.fallbackWait.name"))
-            .setDesc(translate("settings.fallbackWait.desc"))
-            .addToggle((cb) => {
-            cb.setValue(settings.fallbackWaitEnabled);
-            cb.onChange((value) => {
-                pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { fallbackWaitEnabled: value })));
-            });
-        });
-        new obsidian.Setting(containerEl)
-            .setName(translate("settings.fallbackWaitTime.name"))
-            .setDesc(translate("settings.fallbackWaitTime.desc"))
-            .addText((cb) => {
-            cb.setValue(settings.fallbackWaitTime.toString());
-            cb.onChange((value) => {
-                const numberValue = parseInt(value);
-                if (!isNaN(numberValue) && numberValue > 0) {
-                    pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { fallbackWaitTime: numberValue })));
-                }
-            });
-        });
-        // ── PaperBell host integration (optional; standalone-safe) ────────────
-        new obsidian.Setting(containerEl).setName(translate("settings.paperbell.heading")).setHeading();
-        const pb = get_store_value(paperbell);
-        if (pb.connected) {
-            const account = (_d = pb.config) === null || _d === void 0 ? void 0 : _d.account;
-            const status = (account === null || account === void 0 ? void 0 : account.displayName)
-                ? translate("settings.paperbell.connectedWithName", {
-                    name: account.displayName,
-                    plan: account.plan ? ` (${account.plan})` : "",
-                })
-                : translate("settings.paperbell.connected");
-            containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
-                el.setText(status);
-            });
-            new obsidian.Setting(containerEl)
-                .setName(translate("settings.paperbell.account.name"))
-                .setDesc(translate("settings.paperbell.account.desc"))
-                .addButton((b) => b
-                .setButtonText(pb.config
-                ? translate("settings.paperbell.button.refresh")
-                : translate("settings.paperbell.button.connect"))
-                .onClick(() => __awaiter(this, void 0, void 0, function* () {
-                yield this.plugin.paperBell.fetchSharedConfig();
-                this.display();
-            })));
-            if (pb.capabilities.includes("llm-invoke")) {
-                containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
-                    el.setText(translate("settings.paperbell.aiAvailable"));
-                });
-            }
-        }
-        else {
-            containerEl.createEl("p", { cls: "setting-item-description" }, (el) => {
-                el.setText(translate("settings.paperbell.notConnected"));
-            });
-        }
-        // ── Credits ───────────────────────────────────────────────────────────
-        new obsidian.Setting(containerEl).setName(translate("settings.credits.heading")).setHeading();
-        containerEl.createEl("p", {}, (el) => {
-            el.innerHTML = translate("settings.credits.body");
-        });
-        containerEl.createEl("p", {}, (el) => {
-            el.innerHTML = translate("settings.credits.source");
-        });
-        containerEl.createEl("p", {}, (el) => {
-            el.innerHTML = translate("settings.credits.icon");
-        });
-        // Re-render in the new language whenever the resolved locale changes. Skip the
-        // immediate emission svelte stores send on subscribe (we just rendered).
-        let firstLocaleEmission = true;
-        this.unsubscribeLocale = locale.subscribe(() => {
-            if (firstLocaleEmission) {
-                firstLocaleEmission = false;
-                return;
-            }
-            this.display();
-        });
-    }
-    hide() {
-        var _a, _b, _c;
-        (_a = this.unsubscribeUserScripts) === null || _a === void 0 ? void 0 : _a.call(this);
-        (_b = this.unsubscribeSettings) === null || _b === void 0 ? void 0 : _b.call(this);
-        (_c = this.unsubscribeLocale) === null || _c === void 0 ? void 0 : _c.call(this);
-    }
-}
-
-/**
- * Merge `incoming` workflows into `existing`, adding only keys that are missing —
- * never overwriting a workflow the user already has (possibly customized).
- * Idempotent. Shared by two callers: back-filling `DEFAULT_WORKFLOWS` on load
- * (`src/main.ts`) and injecting a marketplace bundle's recommended workflows on
- * install. Returns the merged map plus the names that were added (for logging/UI).
- */
-function mergeMissingWorkflows(existing, incoming) {
-    const added = Object.keys(incoming).filter((key) => !(key in existing));
-    if (added.length === 0) {
-        return { workflows: existing, added };
-    }
-    const workflows = Object.assign({}, existing);
-    for (const key of added) {
-        workflows[key] = incoming[key];
-    }
-    return { workflows, added };
-}
-
 const DEBOUNCE_SCRIPT_LOAD_DELAY_MS = 10000;
 /**
  * Watches the user's script folder and loads the scripts it finds there.
@@ -46927,7 +39030,7 @@ class UserScriptObserver {
         this.vault = vault;
         this.userScriptFolder = userScriptFolder;
         this.onScriptModify = debounce_1(() => {
-            console.log(`[PaperOut] File in user script folder modified, reloading scripts…`);
+            console.log(`[Longform] File in user script folder modified, reloading scripts…`);
             this.loadUserSteps();
         }, DEBOUNCE_SCRIPT_LOAD_DELAY_MS);
     }
@@ -46956,7 +39059,7 @@ class UserScriptObserver {
             }
             else {
                 userScriptSteps.set(null);
-                console.log("[PaperOut] Cleared user script steps.");
+                console.log("[Longform] Cleared user script steps.");
             }
         }));
     }
@@ -46979,10 +39082,10 @@ class UserScriptObserver {
                     userSteps.push(step);
                 }
                 catch (e) {
-                    console.error(`[PaperOut] skipping user script ${file} due to error:`, e);
+                    console.error(`[Longform] skipping user script ${file} due to error:`, e);
                 }
             }
-            console.log(`[PaperOut] Loaded ${userSteps.length} user script steps.`);
+            console.log(`[Longform] Loaded ${userSteps.length} user script steps.`);
             userScriptSteps.set(userSteps);
             this.initializedSteps = true;
             // if workflows have loaded, merge in user steps to get updated values
@@ -47030,7 +39133,7 @@ class UserScriptObserver {
             evaluateScript(_require, module, exports);
             const loadedStep = exports["default"] || module.exports;
             if (!loadedStep) {
-                console.error(`[PaperOut] Failed to load user script ${path}. No exports detected.`);
+                console.error(`[Longform] Failed to load user script ${path}. No exports detected.`);
                 throw new Error(`Failed to load user script ${path}. No exports detected.`);
             }
             const step = makeBuiltinStep(Object.assign(Object.assign({}, loadedStep), { id: path, description: Object.assign(Object.assign({}, loadedStep.description), { availableKinds: loadedStep.description.availableKinds.map((v) => CompileStepKind[v]), options: loadedStep.description.options
@@ -47092,9 +39195,8 @@ class JumpModal extends obsidian.FuzzySuggestModal {
 
 const compileCurrent = (plugin) => ({
     id: "longform-compile-current",
-    name: translate("cmd.compileCurrent"),
+    name: "Compile current project with current workflow",
     checkCallback: (checking) => {
-        var _a;
         const draft = get_store_value(selectedDraft);
         const workflow = get_store_value(currentWorkflow);
         if (checking) {
@@ -47112,17 +39214,13 @@ const compileCurrent = (plugin) => ({
             if (status.kind == "CompileStatusSuccess") {
                 new obsidian.Notice("Compile complete.");
             }
-            else if (status.kind == "CompileStatusError") {
-                showErrorModal(plugin.app, "Compile failed", status.error);
-            }
         }
-        const projectRoot = projectRootPath((_a = get_store_value(projects)[draft.title]) !== null && _a !== void 0 ? _a : [draft]);
-        compile(plugin.app, draft, workflow, calculatedKinds, onCompileStatusChange, { projectRoot });
+        compile(plugin.app, draft, workflow, calculatedKinds, onCompileStatusChange);
     },
 });
 const compileSelection = (plugin) => ({
     id: "longform-compile-selection",
-    name: translate("cmd.compileProject"),
+    name: "Compile project…",
     checkCallback: (checking) => {
         const allProjects = get_store_value(projects);
         const projectTitles = Object.keys(allProjects);
@@ -47198,11 +39296,8 @@ const compileSelection = (plugin) => ({
                         if (status.kind == "CompileStatusSuccess") {
                             new obsidian.Notice("Compile complete.");
                         }
-                        else if (status.kind == "CompileStatusError") {
-                            showErrorModal(plugin.app, "Compile failed", status.error);
-                        }
                     }
-                    compile(plugin.app, draft, workflow, calculatedKinds, onCompileStatusChange, { projectRoot: projectRootPath(project) });
+                    compile(plugin.app, draft, workflow, calculatedKinds, onCompileStatusChange);
                 }).open();
             }).open();
         }).open();
@@ -47220,7 +39315,7 @@ const checkForLocation = (checking, location, app) => {
 };
 const previousScene = (plugin) => ({
     id: "longform-previous-scene",
-    name: translate("cmd.previousScene"),
+    name: "Previous scene",
     editorCheckCallback: (checking) => checkForLocation(checking, {
         position: "previous",
         maintainIndent: false,
@@ -47228,7 +39323,7 @@ const previousScene = (plugin) => ({
 });
 const previousSceneAtIndent = (plugin) => ({
     id: "longform-previous-scene-at-level",
-    name: translate("cmd.previousSceneAtIndent"),
+    name: "Previous scene at indent level",
     editorCheckCallback: (checking) => checkForLocation(checking, {
         position: "previous",
         maintainIndent: true,
@@ -47236,7 +39331,7 @@ const previousSceneAtIndent = (plugin) => ({
 });
 const nextScene = (plugin) => ({
     id: "longform-next-scene",
-    name: translate("cmd.nextScene"),
+    name: "Next scene",
     editorCheckCallback: (checking) => checkForLocation(checking, {
         position: "next",
         maintainIndent: false,
@@ -47244,7 +39339,7 @@ const nextScene = (plugin) => ({
 });
 const nextSceneAtIndent = (plugin) => ({
     id: "longform-next-scene-at-level",
-    name: translate("cmd.nextSceneAtIndent"),
+    name: "Next scene at indent level",
     editorCheckCallback: (checking) => checkForLocation(checking, {
         position: "next",
         maintainIndent: true,
@@ -47252,7 +39347,7 @@ const nextSceneAtIndent = (plugin) => ({
 });
 const focusCurrentDraft = () => ({
     id: "longform-focus-current-draft",
-    name: translate("cmd.openCurrentProject"),
+    name: "Open current note’s project",
     editorCheckCallback(checking) {
         const path = get_store_value(activeFile).path;
         const drafts$1 = get_store_value(drafts);
@@ -47290,14 +39385,14 @@ const showLeaf = (plugin) => {
 };
 const showLongform = (plugin) => ({
     id: "longform-show-view",
-    name: translate("cmd.openPane"),
+    name: "Open Longform pane",
     callback: () => {
         showLeaf(plugin);
     },
 });
 const jumpToProject = (plugin) => ({
     id: "longform-jump-to-project",
-    name: translate("cmd.jumpToProject"),
+    name: "Jump to project",
     callback: () => {
         const projectCallback = (project) => {
             if (project && project.length > 0) {
@@ -47354,7 +39449,7 @@ const jumpToProject = (plugin) => ({
 });
 const jumpToScene = (plugin) => ({
     id: "longform-jump-to-scene",
-    name: translate("cmd.jumpToScene"),
+    name: "Jump to scene in current project",
     checkCallback(checking) {
         const currentDraft = get_store_value(selectedDraft);
         if (!currentDraft ||
@@ -47396,7 +39491,7 @@ const jumpToScene = (plugin) => ({
 });
 const revealProjectFolder = (plugin) => ({
     id: "longform-reveal-project-folder",
-    name: translate("cmd.revealProject"),
+    name: "Reveal current project in navigation",
     checkCallback(checking) {
         const path = get_store_value(selectedDraftVaultPath);
         if (checking) {
@@ -47411,13 +39506,13 @@ const revealProjectFolder = (plugin) => ({
             plugin.app.internalPlugins.plugins["file-explorer"].instance.revealInFolder(parent);
         }
         catch (error) {
-            console.error("[PaperOut] Error calling file-explorer.revealInFolder:", error);
+            console.error("[Longform] Error calling file-explorer.revealInFolder:", error);
         }
     },
 });
 const focusNewSceneField = (plugin) => ({
     id: "longform-focus-new-scene-field",
-    name: translate("cmd.focusNewScene"),
+    name: "Focus new scene field",
     checkCallback(checking) {
         const draft = get_store_value(selectedDraft);
         if (checking) {
@@ -47456,12 +39551,12 @@ const checkIndent = (checking, action) => {
 };
 const indentScene = (_plugin) => ({
     id: "longform-indent-scene",
-    name: translate("cmd.indentScene"),
+    name: "Indent scene",
     editorCheckCallback: (checking) => checkIndent(checking, "indent"),
 });
 const unindentScene = (_plugin) => ({
     id: "longform-unindent-scene",
-    name: translate("cmd.unindentScene"),
+    name: "Unindent scene",
     editorCheckCallback: (checking) => checkIndent(checking, "unindent"),
 });
 
@@ -47473,7 +39568,7 @@ const callbackForFormat = (format, checking, _editor, view) => {
         return false;
     }
     else if (draft) {
-        console.log(`[PaperOut] Attempted to insert frontmatter into existing draft at ${file.path}; ignoring.`);
+        console.log(`[Longform] Attempted to insert frontmatter into existing draft at ${file.path}; ignoring.`);
     }
     else if (checking) {
         return true;
@@ -47514,7 +39609,7 @@ const callbackForFormat = (format, checking, _editor, view) => {
 };
 const insertMultiSceneTemplate = (_plugin) => ({
     id: "longform-insert-multi-scene",
-    name: translate("cmd.insertMultiScene"),
+    name: "Insert multi-scene frontmatter",
     editorCheckCallback(checking, editor, view) {
         const result = callbackForFormat("scenes", checking, editor, view);
         return result;
@@ -47522,7 +39617,7 @@ const insertMultiSceneTemplate = (_plugin) => ({
 });
 const insertSingleSceneTemplate = (_plugin) => ({
     id: "longform-insert-single-scene",
-    name: translate("cmd.insertSingleScene"),
+    name: "Insert single-scene frontmatter",
     editorCheckCallback(checking, editor, view) {
         return callbackForFormat("single", checking, editor, view);
     },
@@ -47530,690 +39625,15 @@ const insertSingleSceneTemplate = (_plugin) => ({
 
 const startNewSession = (plugin) => ({
     id: "longform-start-new-session",
-    name: translate("cmd.startSession"),
+    name: "Start new writing session",
     callback: () => {
         plugin.writingSessionTracker.startNewSession();
-    },
-});
-
-const setupPandocExport = (plugin) => ({
-    id: "longform-setup-pandoc-export",
-    name: translate("cmd.setupPandoc"),
-    callback: () => {
-        new PandocSetupModal(plugin.app, plugin).open();
-    },
-});
-
-/**
- * Pure logic for the manuscript-reference authoring commands (the TS
- * reimplementation of the QuickAdd `mark-manuscript-span` / `insert-manuscript-ref`
- * scripts). Side-effect free and unit-tested; the command file wires it to the
- * Obsidian editor + a fuzzy picker. See 回复信手稿引用规范 §2.1, §6.
- */
-/** Scene basename → span-id prefix. Falls back to the first letters of the name. */
-const SECTION_PREFIX = {
-    introduction: "intro",
-    intro: "intro",
-    background: "bg",
-    results: "res",
-    result: "res",
-    methods: "meth",
-    method: "meth",
-    discussion: "disc",
-    conclusion: "concl",
-    abstract: "abs",
-    "odd+": "odd",
-    odd: "odd",
-};
-const STOPWORDS = new Set([
-    "the", "a", "an", "of", "and", "or", "to", "in", "on", "for", "with", "that", "this",
-    "is", "are", "was", "were", "be", "by", "as", "at", "from", "it", "we", "our", "their",
-]);
-function sectionPrefix(sceneName) {
-    const key = sceneName.trim().toLowerCase();
-    if (SECTION_PREFIX[key])
-        return SECTION_PREFIX[key];
-    const letters = key.replace(/[^a-z0-9]/g, "");
-    return letters ? letters.slice(0, 4) : "ms";
-}
-/** A short semantic slug from selected text: drop citations/stopwords, first few words. */
-function slugFromText(text) {
-    const cleaned = text
-        .replace(/\[@[^\]]*\]/g, " ") // drop [@cite]
-        .replace(/[^\p{L}\p{N}\s-]/gu, " ") // keep letters/numbers/space/hyphen
-        .toLowerCase();
-    const words = cleaned
-        .split(/\s+/)
-        .filter((w) => w.length > 0 && !STOPWORDS.has(w));
-    const slug = words.slice(0, 4).join("-").slice(0, 40).replace(/-+$/g, "");
-    return slug || "span";
-}
-/** A unique span id `prefix-slug`, disambiguated with `-2`, `-3`… against `existing`. */
-function generateSpanId(sceneName, selection, existing) {
-    const taken = new Set(existing);
-    const base = `${sectionPrefix(sceneName)}-${slugFromText(selection)}`;
-    if (!taken.has(base))
-        return base;
-    for (let n = 2;; n++) {
-        const candidate = `${base}-${n}`;
-        if (!taken.has(candidate))
-            return candidate;
-    }
-}
-function wrapSelection(selection, id) {
-    return `<!--ms:${id}-->${selection}<!--/ms:${id}-->`;
-}
-function insertRefText(id) {
-    return "```manuscript\n@" + id + "\n```\n";
-}
-/**
- * Extract `<!--ms:id-->body<!--/ms:id-->` spans from a set of source files.
- * `preview` is the whitespace-collapsed body. Ids are `[\w-]` (hyphens survive).
- */
-function scanSpans(files) {
-    const spans = [];
-    const re = /<!--ms:([\w-]+)-->([\s\S]*?)<!--\/ms:\1-->/g;
-    for (const f of files) {
-        let m;
-        re.lastIndex = 0;
-        while ((m = re.exec(f.content)) !== null) {
-            spans.push({
-                id: m[1],
-                preview: m[2].replace(/\s+/g, " ").trim(),
-                file: f.name,
-            });
-        }
-    }
-    spans.sort((a, b) => a.id.localeCompare(b.id));
-    return spans;
-}
-/** All existing span ids across the given files (for uniqueness checks). */
-function existingSpanIds(files) {
-    return new Set(scanSpans(files).map((s) => s.id));
-}
-/** Display string for the fuzzy picker: `id — preview…`. */
-function spanDisplay(span) {
-    const preview = span.preview.slice(0, 60);
-    return `${span.id} — ${preview}${span.preview.length > 60 ? "…" : ""}`;
-}
-
-/** The project's scene files: the active scene's sibling `.md` files. */
-function projectMarkdownFiles(app, activeFile) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const parent = activeFile.parent;
-        if (!parent)
-            return [];
-        const out = [];
-        for (const child of parent.children) {
-            if (child instanceof obsidian.TFile && child.extension === "md") {
-                out.push({
-                    name: child.basename,
-                    content: yield app.vault.cachedRead(child),
-                });
-            }
-        }
-        return out;
-    });
-}
-/** Fuzzy picker over marked `<!--ms:id-->` spans. */
-class SpanSuggestModal extends obsidian.FuzzySuggestModal {
-    constructor(app, spans, onPick) {
-        super(app);
-        this.spans = spans;
-        this.onPick = onPick;
-        this.setPlaceholder("Pick a marked manuscript span to cite…");
-    }
-    getItems() {
-        return this.spans;
-    }
-    getItemText(span) {
-        return spanDisplay(span);
-    }
-    onChooseItem(span) {
-        this.onPick(span);
-    }
-}
-/** Wrap the editor selection in a unique `<!--ms:id-->…<!--/ms:id-->` marker. */
-const markManuscriptSpan = (plugin) => ({
-    id: "longform-mark-manuscript-span",
-    name: translate("cmd.markManuscriptSpan"),
-    editorCallback: (editor) => {
-        void (() => __awaiter(void 0, void 0, void 0, function* () {
-            const selection = editor.getSelection();
-            if (!selection || !selection.trim()) {
-                new obsidian.Notice("Select the manuscript text to mark first.");
-                return;
-            }
-            const activeFile = plugin.app.workspace.getActiveFile();
-            if (!activeFile)
-                return;
-            const files = yield projectMarkdownFiles(plugin.app, activeFile);
-            const id = generateSpanId(activeFile.basename, selection, existingSpanIds(files));
-            editor.replaceSelection(wrapSelection(selection, id));
-            new obsidian.Notice(`Marked manuscript span \`${id}\`.`);
-        }))();
-    },
-});
-/** Insert a ```manuscript / @id fence citing a marked span (fuzzy-picked). */
-const insertManuscriptRef = (plugin) => ({
-    id: "longform-insert-manuscript-ref",
-    name: translate("cmd.insertManuscriptRef"),
-    editorCallback: (editor) => {
-        void (() => __awaiter(void 0, void 0, void 0, function* () {
-            const activeFile = plugin.app.workspace.getActiveFile();
-            if (!activeFile)
-                return;
-            const files = yield projectMarkdownFiles(plugin.app, activeFile);
-            const spans = scanSpans(files);
-            if (spans.length === 0) {
-                new obsidian.Notice("No <!--ms:--> spans in this project yet — mark one in the manuscript first.");
-                return;
-            }
-            new SpanSuggestModal(plugin.app, spans, (span) => {
-                editor.replaceSelection(insertRefText(span.id));
-            }).open();
-        }))();
-    },
-});
-
-/**
- * Base64-encoded binary starter assets for the PaperBell paper scaffold, so a new
- * project can compile out of the box: a placeholder figure for `![…](figs/…)` and a
- * one-sheet workbook for the ```xlsx-table``` blocks. Decoded to bytes on write.
- * Mirrors test-longform-vault/paperbell-minimal/figs/*.
- */
-/** A small placeholder figure (PNG) referenced as figs/example_figure.png. */
-const EXAMPLE_FIGURE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAUAAAADICAIAAAAWZq/8AAAHFElEQVR42u3dT0iU6x7A8WdmTIncBCeoRVzCMIeKQIIgGEs3uohCkiLuxnZGGFEXSqQWQRGT/VkkbQOJoEW4KNAoIoViIEoQlVYRBkkcg7DS0HzPYmBulNnpdG/2jp/PavzTjL319ff4zvg+iSiKAhBPSYcABAwIGBAwCBgQMCBgQMAgYEDAgIBBwICAAQEDAgYBAwIGBAwIGIpDyUI9cCaTcfQhr7+/3wQGEzgm33igOPzkUtQEhuAkFiBgIEY/A8Mi1/HnnyGEXDq9ZWREwBAbuXT66zd/NGNLaPAzMPAT4/e77xcwmMBAcBYaFqt//TsXQgjVV288af76oz96EkvA8GvTNYEh1um+uLYlhBDCSPjsrJXngSEu6f7Xf/74I/zEb/UIGBYmXUtoWLzpChhinK6AIcbpChhinK6AIcbpChhinK6AIcbpChhinK6AIcbpChhinK6AIcbpChhinK6AIcbpChhinK6ACYvzQpCf/+p8fNMVMIv6Eup7qq/GOl0BQ4zTFTCL+hLqN540/7PLUAXXhQYEDMGF3SG4hLqAoZgvoS5giPEl1AUMC/lqqmLqVsB4IaSAQboCBukKGOkKGKQrYJCugJGudAWMdAUM0hUwSFfASBcBI10Bg3QFjHQRMNIVMEhXwCBdASNdBIx0BQzSFTDSRcBIV8AgXQEjXQSMdBEw4X+zre7nGxpIV8DEbEfs/Jt7qq9KV8DEnnQFTGzGb8GNJ81FuTlY3CUdAhAwwb7YCJgFSzdf7xcnq0JRb67rZ2CK8EndXNpRETBxWy0XTi/nh+2czwMjYH7fdK2ZBYyXQCJgfvnIRcBIFwFjtYyAdStdASNdBIzVMgLGyEXA0kXAWC0jYIxcBCxdBIzVMgLGyEXA0pUuArZaRsAYuQgY6SJgq2UQsJGLgAnh29dwlC4Cjt9efltGRqyWEXAxrJmlS7C1Suz28sunq14EHOyjCwK2lx8Cxl5+BCex7OUHAraXHwLGXn4I2OuWQcBetwwCli4CtloGARu5IGDpwuIO2GoZARu5IGDpgoCtlhGwkQsCli4I2GoZij9gIxcBSxcEbLUMAjZyoagCli7EMmCrZYhfwEYu/NYB59LpDulC7AK2lx8U2xLaXn4Qfv+tVezlB8W5N5J0weZmIOD/m2/tP2JfEjCBITgL/SuGsL38IMZPI20ZGclkMiGEfv8CYAkNAgYEDCySl1LmfxIGTGBYdBJRFDkKYAIDAgYEDAIGBAwIGBAwCBgQMCBgvu/FixfXrl17//69QyFgfjsNDQ3zf0J7e3tZWdno6Gh3d7fDFfw2EvEyPj7e1NQUQqiqqnI0BMyPmZiYuHTp0vj4+MzMzMGDB9PpdHt7e0NDQyaTyWazmzZtqqysPHfu3Lt373bs2LFnz578UN22bdvAwMC+ffsGBwcHBwebmpoKH9q5c+fQ0FAikWhvb1+1atW3HiX//u7u7g8fPrS2tmaz2cbGxp6enjdv3mSz2YmJiZUrV+ZyuVu3buXvtqenpzDS87cbGhpqamoqKyvr6+vnvHMWUsQvcfbs2aGhoSiKxsbGmpuboyh6/fr1/v37h4eHjx49GkVRR0fHwMDA27dvd+3alf8jtbW1Q0NDY2NjmUxmeHj41atXhQ/V1dXdvXs3iqLe3t62trYoiurr6+d8lIL8JxRunDp1qre3N4qivr6+2traLz7n89t1dXW5XG7+O2ehmMC/SC6Xe/nyZf721NTU7OzsihUr6uvr29rarly5EkI4cODAvXv3Hj58WDjPlEwmq6qqkslkSUnJunXrksnk1NRU/kOJRKKmpiaEUFtb29nZOc+jJJNzn+Z4+vTp8ePHQwhbt25NpVJzfmcvfBmbN2/+oTvHErrYfPr06fz586WlpbOzs4ODg/n/+pOTk6lUanJyMoRw4sSJ7du3NzU1FU4ylZSU5D+ttLT0i1QSiUShuiVLlsz/KHOamZnJ35idnS20Wrjx7t276enp/O1UKpW/n79/5wRnoYvMxo0b+/r68nOsq6srhDA6Ovr48eNsNnvhwoUoip49e1ZXV/fx48dCOfN/O3j06FEI4f79+9XV1fM8yrds2LChv78/hNDX11fodtmyZc+fPw8h3LlzJ5FIfPevgAm8WBw6dCibzXZ3d6dSqWPHjoUQOjo6WlpaKioq1qxZc/v27cbGxpaWlrVr15aXl09PT38+V79WWlr64MGD69evl5eX51fCq1ev7urq+vpRvqW1tfX06dM3b95cv3790qVL8+88fPjwyZMnly9fnk6nv/4C/v6dE1xShzDvs76F08X/zJkzZ/bu3VtRUTEyMtLZ2Xn58mVH1QQmNnbv3n3x4sWysrLp6ekjR444ICYwEJzEAgQMAgYEDAgYEDAIGBAwIGAQMCBgQMCAgEHAgIABAQMChvj7C7k4uRnjAvxHAAAAAElFTkSuQmCC";
-/** A one-sheet "Data" workbook (XLSX) referenced by the xlsx-table blocks. */
-const EXAMPLE_DATA_XLSX_BASE64 = "UEsDBBQAAAAIABFv4VxGx01IlQAAAM0AAAAQAAAAZG9jUHJvcHMvYXBwLnhtbE3PTQvCMAwG4L9SdreZih6kDkQ9ip68zy51hbYpbYT67+0EP255ecgboi6JIia2mEXxLuRtMzLHDUDWI/o+y8qhiqHke64x3YGMsRoPpB8eA8OibdeAhTEMOMzit7Dp1C5GZ3XPlkJ3sjpRJsPiWDQ6sScfq9wcChDneiU+ixNLOZcrBf+LU8sVU57mym/8ZAW/B7oXUEsDBBQAAAAIABFv4Vy3J6Nr7gAAACsCAAARAAAAZG9jUHJvcHMvY29yZS54bWzNksFKxDAQhl9Fcm+nadkKoZuL4klBcEHxFpLZ3WDThmSk3bc3jbtdRB/AY2b+fPMNTKe90GPA5zB6DGQx3syuH6LQfsuORF4ARH1Ep2KZEkNq7sfgFKVnOIBX+kMdEOqqasEhKaNIwQIs/EpksjNa6ICKxnDGG73i/WfoM8xowB4dDhSBlxyYXCb609x3cAUsMMLg4ncBzUrM1T+xuQPsnJyjXVPTNJVTk3NpBw5vT48ved3CDpHUoDH9ilbQyeOWXSa/Nnf3uwcm66pui+q2qPiOc7FpRbN5X1x/+F2F3Wjs3v5j44ug7ODXXcgvUEsDBBQAAAAIABFv4VyZXJwjEAYAAJwnAAATAAAAeGwvdGhlbWUvdGhlbWUxLnhtbO1aW3PaOBR+76/QeGf2bQvGNoG2tBNzaXbbtJmE7U4fhRFYjWx5ZJGEf79HNhDLlg3tkk26mzwELOn7zkVH5+g4efPuLmLohoiU8nhg2S/b1ru3L97gVzIkEUEwGaev8MAKpUxetVppAMM4fckTEsPcgosIS3gUy9Zc4FsaLyPW6rTb3VaEaWyhGEdkYH1eLGhA0FRRWm9fILTlHzP4FctUjWWjARNXQSa5iLTy+WzF/NrePmXP6TodMoFuMBtYIH/Ob6fkTlqI4VTCxMBqZz9Wa8fR0kiAgsl9lAW6Sfaj0xUIMg07Op1YznZ89sTtn4zK2nQ0bRrg4/F4OLbL0otwHATgUbuewp30bL+kQQm0o2nQZNj22q6RpqqNU0/T933f65tonAqNW0/Ta3fd046Jxq3QeA2+8U+Hw66JxqvQdOtpJif9rmuk6RZoQkbj63oSFbXlQNMgAFhwdtbM0gOWXin6dZQa2R273UFc8FjuOYkR/sbFBNZp0hmWNEZynZAFDgA3xNFMUHyvQbaK4MKS0lyQ1s8ptVAaCJrIgfVHgiHF3K/99Ze7yaQzep19Os5rlH9pqwGn7bubz5P8c+jkn6eT101CznC8LAnx+yNbYYcnbjsTcjocZ0J8z/b2kaUlMs/v+QrrTjxnH1aWsF3Pz+SejHIju932WH32T0duI9epwLMi15RGJEWfyC265BE4tUkNMhM/CJ2GmGpQHAKkCTGWoYb4tMasEeATfbe+CMjfjYj3q2+aPVehWEnahPgQRhrinHPmc9Fs+welRtH2Vbzco5dYFQGXGN80qjUsxdZ4lcDxrZw8HRMSzZQLBkGGlyQmEqk5fk1IE/4rpdr+nNNA8JQvJPpKkY9psyOndCbN6DMawUavG3WHaNI8ev4F+Zw1ChyRGx0CZxuzRiGEabvwHq8kjpqtwhErQj5iGTYacrUWgbZxqYRgWhLG0XhO0rQR/FmsNZM+YMjszZF1ztaRDhGSXjdCPmLOi5ARvx6GOEqa7aJxWAT9nl7DScHogstm/bh+htUzbCyO90fUF0rkDyanP+kyNAejmlkJvYRWap+qhzQ+qB4yCgXxuR4+5Xp4CjeWxrxQroJ7Af/R2jfCq/iCwDl/Ln3Ppe+59D2h0rc3I31nwdOLW95GblvE+64x2tc0LihjV3LNyMdUr5Mp2DmfwOz9aD6e8e362SSEr5pZLSMWkEuBs0EkuPyLyvAqxAnoZFslCctU02U3ihKeQhtu6VP1SpXX5a+5KLg8W+Tpr6F0PizP+Txf57TNCzNDt3JL6raUvrUmOEr0scxwTh7LDDtnPJIdtnegHTX79l125COlMFOXQ7gaQr4Dbbqd3Do4npiRuQrTUpBvw/npxXga4jnZBLl9mFdt59jR0fvnwVGwo+88lh3HiPKiIe6hhpjPw0OHeXtfmGeVxlA0FG1srCQsRrdguNfxLBTgZGAtoAeDr1EC8lJVYDFbxgMrkKJ8TIxF6HDnl1xf49GS49umZbVuryl3GW0iUjnCaZgTZ6vK3mWxwVUdz1Vb8rC+aj20FU7P/lmtyJ8MEU4WCxJIY5QXpkqi8xlTvucrScRVOL9FM7YSlxi84+bHcU5TuBJ2tg8CMrm7Oal6ZTFnpvLfLQwJLFuIWRLiTV3t1eebnK56Inb6l3fBYPL9cMlHD+U751/0XUOufvbd4/pukztITJx5xREBdEUCI5UcBhYXMuRQ7pKQBhMBzZTJRPACgmSmHICY+gu98gy5KRXOrT45f0Usg4ZOXtIlEhSKsAwFIRdy4+/vk2p3jNf6LIFthFQyZNUXykOJwT0zckPYVCXzrtomC4Xb4lTNuxq+JmBLw3punS0n/9te1D20Fz1G86OZ4B6zh3OberjCRaz/WNYe+TLfOXDbOt4DXuYTLEOkfsF9ioqAEativrqvT/klnDu0e/GBIJv81tuk9t3gDHzUq1qlZCsRP0sHfB+SBmOMW/Q0X48UYq2msa3G2jEMeYBY8wyhZjjfh0WaGjPVi6w5jQpvQdVA5T/b1A1o9g00HJEFXjGZtjaj5E4KPNz+7w2wwsSO4e2LvwFQSwMEFAAAAAgAEW/hXD3eV96jAQAAFgQAABgAAAB4bC93b3Jrc2hlZXRzL3NoZWV0MS54bWx9lN9vozAMx/8VlPdraMtu0wRIW6vp7mGnatW25xRMiZofLHHL3X9/MW0Rm2BP2I79zcchTtpad/A1AEZ/tTI+YzVic8+5L2rQws9sAyasVNZpgcF1e+4bB6LsirTiizj+ybWQhuVpF9u4PLVHVNLAxkX+qLVw/x5B2TZjc3YNvMh9jRTgedqIPWwBX5uNCx7vVUqpwXhpTeSgytjD/H6VUH6X8Cah9QM7ok521h7I+V1mLCYgUFAgKYjwOcEKlCKhgPFx0WT9llQ4tK/qT13voZed8LCy6l2WWGfsjkUlVOKo8MW2v+DSz00PuBYo8tTZNnLUZ54WZNDeIU8aOp8tuhCXYSPMnwGdLFKOAYEivLhUPE5VvAl1hJGC1VTBq5H4OZ8HvJ5x0TMuJgT+jOGdk+n3n/JkkfLTEGVKyQvdKPDf0Cx7muXkiQkzBrQcAC1n8+QL0pTcj29gkh4mmajersdQkgFKPLu7/YIyJTaKwge3iibmWbi9ND5SUAWReHZ7wyJ3voVnB23TTdzOIlrdmXUYXHCUENYra/Hq0BD0T0H+H1BLAwQUAAAACAARb+FcfPOj3FECAAD2CQAADQAAAHhsL3N0eWxlcy54bWzdVtuK2zAQ/RXhD6iTmDVxSfJQQ2ChLQu7D31VYjkR6OLK8pL06zsjOXazq1kofatN8MwcnbkbZ9P7qxLPZyE8u2hl+m129r77nOf98Sw07z/ZThhAWus096C6U953TvCmR5JW+WqxKHPNpcl2GzPovfY9O9rB+G22yPLdprVmtiyzaICjXAv2ytU2q7mSByfDWa6lukbzCg1Hq6xjHlIRSAZL/yvCy6hhlqMfLY11aMxjhPDowalUakpglUXDbtNx74Uze1ACJxjfQWyUX64dZHBy/LpcPWQzITwgyMG6Rri7OqNpt1Gi9UBw8nTGp7ddjqD3VoPQSH6yhoccboxRALdHodQzjuhHe+f70rLY68cG28yw1JsICY1idBMV9P+nt+j7n92yTr5a/2WAakzQfw7WiycnWnkJ+qW9jz+FDoncRZ+sDJdjm33HnVOzC3YYpPLSjNpZNo0w72oD954fYKnv/MP5RrR8UP5lArfZLH8TjRx0NZ16wrLGU7P8FWe4LKfNhFjSNOIimnpU3ekQRAYCRB0vJLxF9uFKIxQnYmkEMSoOlQHFiSwqzv9Uz5qsJ2JUbusksiY5a5ITWSmkDjcVJ82p4EpXWlVFUZZUR+s6mUFN9a0s8Zf2RuWGDCoORvq7XtPTpjfk4z2gZvrRhlCV0ptIVUr3GpF035BRVelpU3GQQU2B2h2Mn46DO5XmFAVOlcqNeoNppKooBHcxvaNlSXSnxDs9H+otKYqqSiOIpTMoCgrBt5FGqAwwBwopivAdfPM9ym/fqXz+p7f7DVBLAwQUAAAACAARb+Fcl4q7HMAAAAATAgAACwAAAF9yZWxzLy5yZWxznZK5bsMwDEB/xdCeMAfQIYgzZfEWBPkBVqIP2BIFikWdv6/apXGQCxl5PTwS3B5pQO04pLaLqRj9EFJpWtW4AUi2JY9pzpFCrtQsHjWH0kBE22NDsFosPkAuGWa3vWQWp3OkV4hc152lPdsvT0FvgK86THFCaUhLMw7wzdJ/MvfzDDVF5UojlVsaeNPl/nbgSdGhIlgWmkXJ06IdpX8dx/aQ0+mvYyK0elvo+XFoVAqO3GMljHFitP41gskP7H4AUEsDBBQAAAAIABFv4Vw6ag4EMQEAACECAAAPAAAAeGwvd29ya2Jvb2sueG1sjVHRSsNAEPyVcB9gUtGCpemLRS2IFit9vySbZundbdjbtNqvd5MQLPji097OLMPM3PJMfCyIjsmXdyHmphFpF2kaywa8jTfUQlCmJvZWdOVDGlsGW8UGQLxLb7NsnnqLwayWk9aW0+uFBEpBCgr2wB7hHH/5fk1OGLFAh/Kdm+HtwCQeA3q8QJWbzCSxofMLMV4oiHW7ksm53MxGYg8sWP6Bd73JT1vEARFbfFg1kpt5poI1cpThYtC36vEEejxundATOgFeW4Fnpq7FcOhlNEV6FWPoYZpjiQv+T41U11jCmsrOQ5CxRwbXGwyxwTaaJFgPuVEDto+j+ptqjCbq6aooXqASvKlGd5OlCmoMUL2pSlRc6ym3nPRj0Lm9u589aA2dc4+KvYdXstWUcPqd1Q9QSwMEFAAAAAgAEW/hXCQem6KtAAAA+AEAABoAAAB4bC9fcmVscy93b3JrYm9vay54bWwucmVsc7WRPQ6DMAyFrxLlADVQqUMFTF1YKy4QBfMjEhLFrgq3L4UBkDp0YbKeLX/vyU6faBR3bqC28yRGawbKZMvs7wCkW7SKLs7jME9qF6ziWYYGvNK9ahCSKLpB2DNknu6Zopw8/kN0dd1pfDj9sjjwDzC8XeipRWQpShUa5EzCaLY2wVLiy0yWoqgyGYoqlnBaIOLJIG1pVn2wT06053kXN/dFrs3jCa7fDHB4dP4BUEsDBBQAAAAIABFv4VxlkHmSGQEAAM8DAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbK2TTU7DMBCFrxJlWyUuLFigphtgC11wAWNPGqv+k2da0tszTtpKoBIVhU2seN68z56XrN6PEbDonfXYlB1RfBQCVQdOYh0ieK60ITlJ/Jq2Ikq1k1sQ98vlg1DBE3iqKHuU69UztHJvqXjpeRtN8E2ZwGJZPI3CzGpKGaM1ShLXxcHrH5TqRKi5c9BgZyIuWFCKq4Rc+R1w6ns7QEpGQ7GRiV6lY5XorUA6WsB62uLKGUPbGgU6qL3jlhpjAqmxAyBn69F0MU0mnjCMz7vZ/MFmCsjKTQoRObEEf8edI8ndVWQjSGSmr3ghsvXs+0FOW4O+kc3j/QxpN+SBYljmz/h7xhf/G87xEcLuvz+xvNZOGn/mi+E/Xn8BUEsBAhQDFAAAAAgAEW/hXEbHTUiVAAAAzQAAABAAAAAAAAAAAAAAAIABAAAAAGRvY1Byb3BzL2FwcC54bWxQSwECFAMUAAAACAARb+Fctyeja+4AAAArAgAAEQAAAAAAAAAAAAAAgAHDAAAAZG9jUHJvcHMvY29yZS54bWxQSwECFAMUAAAACAARb+FcmVycIxAGAACcJwAAEwAAAAAAAAAAAAAAgAHgAQAAeGwvdGhlbWUvdGhlbWUxLnhtbFBLAQIUAxQAAAAIABFv4Vw93lfeowEAABYEAAAYAAAAAAAAAAAAAACAgSEIAAB4bC93b3Jrc2hlZXRzL3NoZWV0MS54bWxQSwECFAMUAAAACAARb+FcfPOj3FECAAD2CQAADQAAAAAAAAAAAAAAgAH6CQAAeGwvc3R5bGVzLnhtbFBLAQIUAxQAAAAIABFv4VyXirscwAAAABMCAAALAAAAAAAAAAAAAACAAXYMAABfcmVscy8ucmVsc1BLAQIUAxQAAAAIABFv4Vw6ag4EMQEAACECAAAPAAAAAAAAAAAAAACAAV8NAAB4bC93b3JrYm9vay54bWxQSwECFAMUAAAACAARb+FcJB6boq0AAAD4AQAAGgAAAAAAAAAAAAAAgAG9DgAAeGwvX3JlbHMvd29ya2Jvb2sueG1sLnJlbHNQSwECFAMUAAAACAARb+FcZZB5khkBAADPAwAAEwAAAAAAAAAAAAAAgAGiDwAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLBQYAAAAACQAJAD4CAADsEAAAAAA=";
-
-/** Initials of a title, upper-cased, digits kept — "Sea Level Memory" → "SLM". */
-function acronymFromTitle(title) {
-    const initials = (title || "")
-        .split(/[\s_-]+/)
-        .filter(Boolean)
-        .map((w) => w.replace(/[^A-Za-z0-9]/g, "")[0])
-        .filter(Boolean)
-        .join("")
-        .toUpperCase()
-        .slice(0, 6);
-    return initials || "PAPER";
-}
-/** JSON.stringify with the 2-space, trailing-newline shape the fixtures use. */
-function json(value) {
-    return JSON.stringify(value, null, 2) + "\n";
-}
-function mainMetadata(title, acronym, author) {
-    return json({
-        title,
-        publication_date: "",
-        upload_type: "publication",
-        publication_type: "article",
-        description: "One-paragraph summary of the paper. Fill this in — it is emitted into the compiled manuscript's frontmatter and (for Zenodo) the deposit description.",
-        creators: [
-            {
-                name: author,
-                affiliation: "Your Institution",
-                orcid: "0000-0000-0000-0000",
-                email: "you@example.com",
-            },
-        ],
-        keywords: ["keyword-one", "keyword-two"],
-        journal_title: "Target Journal",
-        version: "v1.0",
-        _longform: {
-            acronym,
-            csl: "nature",
-            template: "paperbell",
-            lineno: true,
-            figures_at_end: false,
-            corresponding: [author],
-            extra_yaml: "corresponding_email: you@example.com\nnumbersections: true\n",
-        },
-    });
-}
-function supplementaryMetadata(title, acronym, author) {
-    return json({
-        title: `${title} — Supplementary Information`,
-        publication_date: "",
-        upload_type: "publication",
-        publication_type: "article",
-        description: "Supplementary information for the paper. Shares the main manuscript's metadata but adds supplementary: true so figures and tables receive an S prefix.",
-        creators: [
-            {
-                name: author,
-                affiliation: "Your Institution",
-                orcid: "0000-0000-0000-0000",
-                email: "you@example.com",
-            },
-        ],
-        keywords: ["keyword-one", "keyword-two"],
-        journal_title: "Target Journal",
-        version: "v1.0",
-        _longform: {
-            acronym,
-            csl: "nature",
-            template: "paperbell",
-            corresponding: [author],
-            extra_yaml: "supplementary: true\nnumbersections: true\n",
-        },
-    });
-}
-const RESULTS_JSON = json({
-    summary: { n: 0, mean: 0, unit: "samples" },
-    samples: [{ id: "S-01" }, { id: "S-02" }],
-    computed_date: "",
-});
-const REFERENCES_BIB = `@article{doe2020,
-  author  = {Doe, Jane},
-  title   = {A Prior Study},
-  journal = {Journal Name},
-  year    = {2020},
-  volume  = {1},
-  pages   = {1--10}
-}
-
-@article{roe2021,
-  author  = {Roe, Rick},
-  title   = {A Related Study},
-  journal = {Journal Name},
-  year    = {2021},
-  volume  = {2},
-  pages   = {11--20}
-}
-`;
-function mainIndex(title) {
-    return `---
-longform:
-  format: scenes
-  title: ${title}
-  draftTitle: Main Manuscript
-  workflow: PaperBell Manuscript
-  sceneFolder: manuscript
-  scenes:
-    - introduction
-    - methods
-    - results
-  ignoredFiles: []
----
-
-Main manuscript of **${title}**. Shared publication metadata lives in \`metadata.json\` in this folder; compile it with the **PaperBell Manuscript** workflow.
-`;
-}
-function responseIndex(title) {
-    return `---
-longform:
-  format: scenes
-  title: ${title}
-  draftTitle: Response Letter
-  workflow: PaperBell Response Letter
-  sceneFolder: response
-  scenes:
-    - response
-  ignoredFiles: []
----
-
-Response-letter draft of **${title}**. Compile the **Main Manuscript** first (it harvests \`manuscript-lines.json\` / \`figure-numbers.json\`), then compile this with **PaperBell Response Letter**: the \`\`\`manuscript\`\`\` fences pull the manuscript's current text for \`@intro-gap\` into a Page/Line box, and \`@fig:demo\` / \`\\ref{fig:demo}\` resolve to the manuscript's figure number.
-`;
-}
-// The cover letter is a single-file draft (not multi-scene): the cover_letter
-// template reads to/date/manuscript/corresponding straight from the note's own
-// frontmatter, so its workflow exports the note as-is without strip/concatenate.
-function coverLetter(title, acronym, author) {
-    return `---
-longform:
-  format: single
-  title: ${title}
-  draftTitle: Cover Letter
-  workflow: PaperBell Cover Letter
-title: Cover letter
-manuscript: ${title}
-acronym: ${acronym}
-date:
-to: Dear Editor,
-corresponding: ${author} (you@example.com)
----
-
-We are pleased to submit our manuscript, *{{manuscript}}*, for consideration for publication in *{{JournalName}}*.
-
-State in one or two sentences what the paper shows and why it matters to this journal's readers.
-
-State the key advance over prior work, and why this venue is the right fit.
-
-We confirm that this manuscript is original, has not been published elsewhere, and is not under consideration by another journal. All authors have approved the submission and declare no competing interests.
-
-Thank you for your consideration; we look forward to your response.
-`;
-}
-function supplementaryIndex(title) {
-    return `---
-longform:
-  format: scenes
-  title: ${title}
-  draftTitle: Supplementary
-  workflow: PaperBell Supplementary
-  sceneFolder: /
-  scenes:
-    - supplementary results
-  ignoredFiles: []
----
-
-Supplementary draft of **${title}**. Its own \`metadata.json\` in this folder (found before the shared one at the project root) adds \`supplementary: true\`, so figures and tables are numbered S1, S2, …
-`;
-}
-const INTRODUCTION_MD = `# Introduction
-
-Open with the background and the gap your paper addresses. You can use *italic*, **bold**, and ==highlight== for emphasis, and Markdown footnotes for asides.[^note]
-
-Cite prior work with bracketed keys that resolve against \`references.bib\`: a single citation [@doe2020] or several [@doe2020; @roe2021]. Values from \`metadata.json\` render live in reading mode and at compile time — this is *{{title}}* (acronym {{_longform.acronym}}, version {{version}}).
-
-Wrap the one sentence you will quote in your response letter in a manuscript span so the response letter can pull its live text and line number: <!--ms:intro-gap-->state here, in one sentence, the specific gap this paper closes.<!--/ms:intro-gap-->
-
-[^note]: Footnotes render in the compiled PDF.
-`;
-const METHODS_MD = `# Methods
-
-Describe your approach. Inline math like $E = mc^2$ and display math both work:
-
-$$\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_i.$$
-
-Blackboard symbols such as $\\mathbb{R}$ come from \`amssymb\`, which the template loads.
-
-Values below are injected at compile time from \`results.json\` (they are not in \`metadata.json\`, so they stay as raw placeholders in the live preview and are substituted only by the compile step): we analysed {{ summary.n }} {{ summary.unit }} with a mean of {{ summary.mean }}, the first identified as {{ samples[0].id }}. Computed on {{ computed_date }}.
-`;
-const RESULTS_MD = `# Results
-
-State the primary outcome and point to Figure \\ref{fig:demo}.
-
-![Replace with your figure caption. {#fig:demo width=70%}](figs/example_figure.png)
-
-Report tabular results in Table \\ref{tbl:demo}, generated from a spreadsheet at compile time by the pipeline's \`xlsx_table.lua\`:
-
-\`\`\`xlsx-table
-file: figs/example_data.xlsx
-sheet: Data
-caption: Replace with your table caption.
-label: tbl:demo
-skip_n: 0
-\`\`\`
-
-Defer extended analyses to the supplementary results.
-`;
-const SUPPLEMENTARY_RESULTS_MD = `# Supplementary Results
-
-Because this draft's workflow includes the **Supplementary Information** step, the figure and table below are numbered with an S prefix automatically: Figure \\ref{fig:supp_demo} becomes "Figure S1" and Table \\ref{tbl:supp_demo} becomes "Table S1".
-
-![A supplementary figure caption. {#fig:supp_demo width=60%}](../figs/example_figure.png)
-
-\`\`\`xlsx-table
-file: ../figs/example_data.xlsx
-sheet: Data
-caption: A supplementary table caption.
-label: tbl:supp_demo
-skip_n: 0
-\`\`\`
-`;
-const RESPONSE_MD = `# Response to Reviewer 1
-
-> [!RC] Reviewer 1, Comment 1
-> Paraphrase the reviewer's comment here.
-
-Write your reply. To quote the manuscript's *current* text (kept in sync automatically), fence a manuscript reference — it renders as a gray box with the live Page/Line:
-
-\`\`\`manuscript
-@intro-gap
-\`\`\`
-
-To show a manuscript figure with its manuscript number:
-
-\`\`\`manuscript
-@fig:demo
-\`\`\`
-
-You can also refer to it inline as Figure \\ref{fig:demo}.
-`;
-function readme(title, acronym) {
-    return `# ${title}
-
-A PaperBell paper project scaffolded by PaperOut To-Authors. Four drafts of one
-project (same \`title\`, distinct \`draftTitle\`): a multi-scene **Main Manuscript**,
-a **Supplementary Information** draft, a **Response Letter**, and a **Cover Letter**.
-
-## Layout
-
-\`\`\`
-${title}/
-├── metadata.json               # shared publication metadata (Zenodo schema + _longform)
-├── results.json                # externally-computed values for {{ }} compile-time placeholders
-├── references.bib              # local bib for [@citekey] (consumed by pandoc)
-├── figs/
-│   ├── example_figure.png      # placeholder figure — replace with your own
-│   └── example_data.xlsx       # Data sheet for the \`\`\`xlsx-table\`\`\` blocks
-├── Main Manuscript (Index).md  # draft 1 (sceneFolder: manuscript)
-├── manuscript/
-│   ├── introduction.md
-│   ├── methods.md
-│   └── results.md
-├── Response Letter (Index).md  # draft 2 (sceneFolder: response)
-├── response/
-│   └── response.md
-├── Cover Letter.md             # draft 3 (single-file; own to/date/manuscript frontmatter)
-└── supplementary/
-    ├── Supplementary (Index).md   # draft 4 (same title → same project)
-    ├── metadata.json              # nearest-wins override adding supplementary: true → S-numbering
-    └── supplementary results.md
-\`\`\`
-
-## Getting started
-
-1. Fill in \`metadata.json\` (title, authors, \`email\` for the corresponding author,
-   \`publication_date\`) and \`results.json\`. The acronym is set to \`${acronym}\`.
-2. Replace \`figs/example_figure.png\` and \`figs/example_data.xlsx\` with your own.
-3. Write your scenes under \`manuscript/\`. Keep each scene's own \`#\` heading.
-4. Compile with the **Compile** tab or the **Compile All Drafts** board. Compile the
-   Main Manuscript first so the Response Letter can resolve \`@intro-gap\` / \`@fig:demo\`.
-
-The Pandoc toolchain (defaults/filters/templates/CSL) is downloaded on demand — run
-the **Set up Pandoc export** command for a prerequisites checklist.
-`;
-}
-/**
- * Build every file of a new PaperBell paper project. Paths are relative to the
- * project folder (named after `title`); the writer prefixes the parent path.
- */
-function buildPaperbellScaffold(opts) {
-    const title = opts.title.trim();
-    const acronym = (opts.acronym || acronymFromTitle(title)).trim();
-    const author = (opts.author || "Lastname, Firstname").trim();
-    return [
-        { path: "metadata.json", text: mainMetadata(title, acronym, author) },
-        { path: "results.json", text: RESULTS_JSON },
-        { path: "references.bib", text: REFERENCES_BIB },
-        { path: "README.md", text: readme(title, acronym) },
-        { path: "figs/example_figure.png", base64: EXAMPLE_FIGURE_PNG_BASE64 },
-        { path: "figs/example_data.xlsx", base64: EXAMPLE_DATA_XLSX_BASE64 },
-        { path: "Main Manuscript (Index).md", text: mainIndex(title) },
-        { path: "manuscript/introduction.md", text: INTRODUCTION_MD },
-        { path: "manuscript/methods.md", text: METHODS_MD },
-        { path: "manuscript/results.md", text: RESULTS_MD },
-        { path: "Response Letter (Index).md", text: responseIndex(title) },
-        { path: "response/response.md", text: RESPONSE_MD },
-        { path: "Cover Letter.md", text: coverLetter(title, acronym, author) },
-        {
-            path: "supplementary/Supplementary (Index).md",
-            text: supplementaryIndex(title),
-        },
-        {
-            path: "supplementary/metadata.json",
-            text: supplementaryMetadata(title, acronym, author),
-        },
-        {
-            path: "supplementary/supplementary results.md",
-            text: SUPPLEMENTARY_RESULTS_MD,
-        },
-    ];
-}
-/** The project's primary draft path (relative), for selecting it after creation. */
-const SCAFFOLD_PRIMARY_DRAFT = "Main Manuscript (Index).md";
-
-/** Create every intermediate folder of a vault-relative path, top down. */
-function ensureFolder(app, folder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const parts = obsidian.normalizePath(folder).split("/").filter(Boolean);
-        let cur = "";
-        for (const part of parts) {
-            cur = cur ? `${cur}/${part}` : part;
-            if (!(yield app.vault.adapter.exists(cur))) {
-                yield app.vault.createFolder(cur);
-            }
-        }
-    });
-}
-/**
- * Write a full PaperBell paper scaffold under `parentPath` into a new folder named
- * after the project title, and return the vault path of its primary (Main
- * Manuscript) draft. Throws if the project folder already exists.
- */
-function writePaperbellScaffold(app, parentPath, opts) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const projectFolder = obsidian.normalizePath(`${parentPath ? parentPath + "/" : ""}${opts.title.trim()}`);
-        if (yield app.vault.adapter.exists(projectFolder)) {
-            throw new Error(`A folder already exists at ${projectFolder}.`);
-        }
-        const files = buildPaperbellScaffold(opts);
-        for (const file of files) {
-            const full = obsidian.normalizePath(`${projectFolder}/${file.path}`);
-            yield ensureFolder(app, full.split("/").slice(0, -1).join("/"));
-            if ("text" in file) {
-                yield app.vault.create(full, file.text);
-            }
-            else {
-                yield app.vault.createBinary(full, obsidian.base64ToArrayBuffer(file.base64));
-            }
-        }
-        return obsidian.normalizePath(`${projectFolder}/${SCAFFOLD_PRIMARY_DRAFT}`);
-    });
-}
-
-const ILLEGAL = /[:\\/]/;
-/**
- * Prompts for a project title (+ optional acronym) and scaffolds a full PaperBell
- * paper project — Main Manuscript, Supplementary, and Response Letter drafts with
- * starter content, metadata, references, and example assets — under `parent`.
- */
-class NewPaperModal extends obsidian.Modal {
-    constructor(app, parent) {
-        super(app);
-        this.titleValue = "";
-        this.acronymValue = "";
-        this.acronymEdited = false;
-        this.parent = parent;
-    }
-    onOpen() {
-        const { contentEl } = this;
-        contentEl.createEl("h1", { text: translate("scaffold.title") }, (el) => {
-            el.style.margin = "0 0 var(--size-4-2) 0";
-        });
-        contentEl.createEl("p", {
-            text: translate("scaffold.desc"),
-            cls: "setting-item-description",
-        });
-        let acronymInput;
-        let createButton;
-        const validate = () => {
-            const title = this.titleValue.trim();
-            const ok = !!title && !ILLEGAL.test(title);
-            createButton === null || createButton === void 0 ? void 0 : createButton.setDisabled(!ok);
-        };
-        new obsidian.Setting(contentEl)
-            .setName(translate("scaffold.nameLabel"))
-            .setDesc(translate("scaffold.nameDesc"))
-            .addText((text) => {
-            text.setPlaceholder("My Paper").onChange((value) => {
-                this.titleValue = value;
-                if (!this.acronymEdited) {
-                    this.acronymValue = acronymFromTitle(value);
-                    acronymInput === null || acronymInput === void 0 ? void 0 : acronymInput.setValue(this.acronymValue);
-                }
-                validate();
-            });
-            window.setTimeout(() => text.inputEl.focus(), 0);
-        });
-        new obsidian.Setting(contentEl)
-            .setName(translate("scaffold.acronymLabel"))
-            .setDesc(translate("scaffold.acronymDesc"))
-            .addText((text) => {
-            acronymInput = text;
-            text.setPlaceholder("MP").onChange((value) => {
-                this.acronymEdited = true;
-                this.acronymValue = value;
-            });
-        });
-        new obsidian.Setting(contentEl).addButton((button) => {
-            createButton = button;
-            button
-                .setButtonText(translate("scaffold.create"))
-                .setCta()
-                .setDisabled(true)
-                .onClick(() => this.create());
-        });
-        validate();
-    }
-    create() {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            const title = this.titleValue.trim();
-            if (!title || ILLEGAL.test(title)) {
-                new obsidian.Notice(translate("scaffold.invalidName"));
-                return;
-            }
-            try {
-                const primaryPath = yield writePaperbellScaffold(this.app, this.parent.path, {
-                    title,
-                    acronym: this.acronymValue.trim() || undefined,
-                });
-                selectedDraftVaultPath.set(primaryPath);
-                selectedTab.set("Scenes");
-                this.app.workspace.openLinkText(primaryPath, "/", false);
-                new obsidian.Notice(translate("scaffold.created", { title }));
-                this.close();
-            }
-            catch (e) {
-                new obsidian.Notice(translate("scaffold.failed", { error: String((_a = e === null || e === void 0 ? void 0 : e.message) !== null && _a !== void 0 ? _a : e) }));
-            }
-        });
-    }
-    onClose() {
-        this.contentEl.empty();
-    }
-}
-
-const newPaperProject = (plugin) => ({
-    id: "longform-new-paper-project",
-    name: translate("cmd.newPaperProject"),
-    callback: () => {
-        // No folder context from the palette: scaffold under the active file's folder,
-        // falling back to the vault root.
-        const active = plugin.app.workspace.getActiveFile();
-        const parent = (active === null || active === void 0 ? void 0 : active.parent) instanceof obsidian.TFolder
-            ? active.parent
-            : plugin.app.vault.getRoot();
-        new NewPaperModal(plugin.app, parent).open();
-    },
-});
-
-const openPandocMarket = (plugin) => ({
-    id: "longform-open-pandoc-market",
-    name: translate("cmd.openMarket"),
-    callback: () => {
-        new PandocMarketModal(plugin.app, plugin).open();
     },
 });
 
 const commandBuilders = [
     compileCurrent,
     compileSelection,
-    setupPandocExport,
     focusCurrentDraft,
     previousScene,
     previousSceneAtIndent,
@@ -48229,10 +39649,6 @@ const commandBuilders = [
     insertMultiSceneTemplate,
     insertSingleSceneTemplate,
     startNewSession,
-    markManuscriptSpan,
-    insertManuscriptRef,
-    newPaperProject,
-    openPandocMarket,
 ];
 function addCommands(plugin) {
     commandBuilders.forEach((c) => {
@@ -48885,7 +40301,7 @@ class NewProjectModalContainer extends obsidian.Modal {
         context.set("createProject", (format, title, path) => __awaiter(this, void 0, void 0, function* () {
             const exists = yield this.app.vault.adapter.exists(path);
             if (exists) {
-                console.log(`[PaperOut] Cannot create project at ${path}, already exists.`);
+                console.log(`[Longform] Cannot create project at ${path}, already exists.`);
                 return;
             }
             const parentPath = path.split("/").slice(0, -1).join("/");
@@ -49047,470 +40463,6 @@ class LongformAPI {
     }
 }
 
-/**
- * VENDORED COPY of PaperBell's public shared contract (`paperbell-shared-config.ts`).
- *
- * Source of truth lives in the PaperBell main plugin. This file is intentionally a
- * zero-dependency copy (no Obsidian/plugin imports) so we can type our IPC surface
- * without a build/submodule coupling — as the upstream file's own docstring recommends.
- *
- * SYNC POLICY: this copy is pinned to `PPB_SCHEMA_VERSION`. When PaperBell bumps its
- * schema, re-vendor this file and reconcile the compatibility check in `client.ts`.
- * See MAINTAINING.md → "PaperBell relationship".
- *
- * ── Original header ──────────────────────────────────────────────────────────
- * PaperBell 对外共享契约(消费方 / IPC 表面)。
- * 安全约定:
- * - `PaperBellSharedConfig` 是主插件内部持有的完整形态(含 `llm.apiKey`)。
- * - 经 IPC 对外暴露的一律是 `*Public` 变体,永不包含 apiKey / 激活码等密钥。
- */
-/** 契约版本号,便于未来兼容判断。 */
-const PPB_SCHEMA_VERSION = 1;
-/**
- * 宿主挂载完成后在 `app.workspace` 上 trigger 的事件名,载荷为 {@link PPBHostApi}。
- * 子插件与 PaperBell 的加载顺序不确定,推荐握手模式(事件只在宿主加载时触发一次,
- * 后加载的一方必须先主动探测)。
- */
-const PPB_READY_EVENT = "paperbell:ready";
-
-/** PaperBell host plugin id (the parent). */
-const HOST_PLUGIN_ID = "paperbell";
-/** Our own id — MUST match manifest.json `id`. Used for registration and settings deep-link. */
-const THIS_PLUGIN_ID = "longform-paperbell";
-const THIS_PLUGIN_NAME = "PaperOut To-Authors";
-/**
- * Optional bridge to the PaperBell host plugin.
- *
- * The plugin works fully standalone; when PaperBell is installed we handshake per its
- * `PPB*` contract to follow the host's language/account and (later) proxy LLM calls —
- * so no API key ever lives in this plugin. Everything degrades gracefully when the host
- * is absent (all methods no-op / return null).
- *
- * We deliberately do NOT request the `config`/`account`/`llm-invoke` scopes at startup:
- * those trigger a host consent prompt, so they are requested lazily on user action
- * (settings button, AI command). Capabilities come from `getPluginInfo()`, which needs
- * no consent.
- */
-class PaperBellClient {
-    constructor(plugin) {
-        this.client = null;
-        this.unsubscribeConfig = null;
-        this.plugin = plugin;
-    }
-    get app() {
-        return this.plugin.app;
-    }
-    /** True once we have registered with the host. */
-    get connected() {
-        return this.client !== null;
-    }
-    /**
-     * Probe for the host now; if it isn't loaded yet, wait (once) for its ready event.
-     * The listener is registered via `plugin.registerEvent`, so it is cleaned up on unload.
-     */
-    init() {
-        const host = this.lookupHost();
-        if (host) {
-            this.onHostReady(host);
-        }
-        // The host fires PPB_READY_EVENT once when it loads; this covers the
-        // host-loads-after-us ordering. Guard against a double connect.
-        this.plugin.registerEvent(this.app.workspace.on(PPB_READY_EVENT, ((api) => {
-            if (!this.client && api) {
-                this.onHostReady(api);
-            }
-        })));
-    }
-    lookupHost() {
-        var _a, _b, _c;
-        const api = (_c = (_b = (_a = this.app.plugins) === null || _a === void 0 ? void 0 : _a.plugins) === null || _b === void 0 ? void 0 : _b[HOST_PLUGIN_ID]) === null || _c === void 0 ? void 0 : _c.api;
-        return api !== null && api !== void 0 ? api : null;
-    }
-    onHostReady(host) {
-        var _a, _b;
-        let handle;
-        try {
-            handle = host.registerPPBplugin({
-                id: THIS_PLUGIN_ID,
-                name: THIS_PLUGIN_NAME,
-                description: "Academic manuscript writing & Pandoc export. Follows PaperBell's language and can use its AI.",
-                icon: "feather",
-                onOpen: () => this.openOwnSettings(),
-            });
-        }
-        catch (e) {
-            console.error("[PaperOut] Failed to register with PaperBell host:", e);
-            return;
-        }
-        this.client = handle;
-        // plugin-info is consent-free; use it to gate features (e.g. llm-invoke).
-        let capabilities = DISCONNECTED.capabilities;
-        try {
-            capabilities = (_b = (_a = host.getPluginInfo()) === null || _a === void 0 ? void 0 : _a.capabilities) !== null && _b !== void 0 ? _b : [];
-        }
-        catch (e) {
-            console.warn("[PaperOut] Could not read PaperBell plugin info:", e);
-        }
-        paperbell.set({ connected: true, config: null, capabilities });
-        console.log("[PaperOut] Connected to PaperBell host.");
-        // Keep the public config fresh when the host pushes changes. Subscribing does
-        // not prompt for consent (it's a plain workspace event under the hood).
-        this.unsubscribeConfig = handle.onConfigChange((config) => {
-            this.checkSchema(config);
-            paperbell.update((s) => (Object.assign(Object.assign({}, s), { config })));
-        });
-    }
-    /**
-     * Request the host's public shared config (scope: `config`). First call prompts the
-     * user for consent. Returns null if denied or the host is absent. Updates the store.
-     */
-    fetchSharedConfig() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!this.client)
-                return null;
-            const config = yield this.client.requestSharedConfig();
-            if (config) {
-                this.checkSchema(config);
-                paperbell.update((s) => (Object.assign(Object.assign({}, s), { config })));
-            }
-            return config;
-        });
-    }
-    /** Request the host's account info (scope: `account`). First call prompts for consent. */
-    fetchAccountInfo() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.client ? this.client.requestAccountInfo() : null;
-        });
-    }
-    /**
-     * Ask the host to run one non-streaming completion with its AI config (scope:
-     * `llm-invoke`). The key never leaves the host. Returns:
-     * - `null` — host absent or the user denied the scope;
-     * - `{ ok: false, error }` — host unconfigured / upstream failed;
-     * - `{ ok: true, text, model }` — success.
-     */
-    requestCompletion(params) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.client ? this.client.requestCompletion(params) : null;
-        });
-    }
-    /** Tear down: unsubscribe, unregister from the host, reset the store. */
-    destroy() {
-        if (this.unsubscribeConfig) {
-            this.unsubscribeConfig();
-            this.unsubscribeConfig = null;
-        }
-        if (this.client) {
-            try {
-                this.client.unregister();
-            }
-            catch (e) {
-                console.warn("[PaperOut] Error unregistering from PaperBell host:", e);
-            }
-            this.client = null;
-        }
-        paperbell.set(Object.assign({}, DISCONNECTED));
-    }
-    checkSchema(config) {
-        if (config.schemaVersion > PPB_SCHEMA_VERSION) {
-            console.warn(`[PaperOut] PaperBell shared-config schemaVersion ${config.schemaVersion} is newer ` +
-                `than the vendored contract (${PPB_SCHEMA_VERSION}). Consider re-vendoring ` +
-                `src/paperbell/shared-config.ts (see MAINTAINING.md).`);
-        }
-    }
-    openOwnSettings() {
-        const setting = this.app.setting;
-        if (setting) {
-            setting.open();
-            setting.openTabById(THIS_PLUGIN_ID);
-        }
-    }
-}
-
-/** Best-effort read of Obsidian's own UI language (falls back to English). */
-function obsidianLocale() {
-    try {
-        const lang = (window.localStorage.getItem("language") || "en").toLowerCase();
-        return lang.startsWith("zh") ? "zh" : "en";
-    }
-    catch (_a) {
-        return "en";
-    }
-}
-/**
- * Resolve the effective locale from three inputs, in priority order:
- *   1. an explicit user preference ("en" / "zh") always wins;
- *   2. otherwise ("auto") follow the connected PaperBell host's language;
- *   3. otherwise fall back to Obsidian's UI language.
- */
-function resolveLocale(preference, hostLanguage) {
-    if (preference === "en" || preference === "zh")
-        return preference;
-    return hostLanguage !== null && hostLanguage !== void 0 ? hostLanguage : obsidianLocale();
-}
-/**
- * Keep the active `locale` in sync with the plugin's language preference and the
- * PaperBell host's language. Returns an unsubscriber; call it on plugin unload.
- */
-function startLocaleSync() {
-    const effective = derived([pluginSettings, paperbell], ([$settings, $paperbell]) => {
-        var _a, _b;
-        const preference = (_a = $settings === null || $settings === void 0 ? void 0 : $settings.language) !== null && _a !== void 0 ? _a : "auto";
-        const hostLanguage = $paperbell.connected
-            ? (_b = $paperbell.config) === null || _b === void 0 ? void 0 : _b.language
-            : undefined;
-        return resolveLocale(preference, hostLanguage);
-    });
-    return effective.subscribe((loc) => locale.set(loc));
-}
-
-/**
- * Locate and read the `metadata.json` that backs the Longform project owning
- * `sourcePath`, mirroring how the compile steps resolve project resources: from
- * the draft's own folder up to the project root (lowest common ancestor of the
- * project's drafts), checking each level's `source/` subfolder too.
- *
- * Returns `null` when the note is not part of any Longform draft or no metadata
- * file exists — so live rendering only ever touches project notes.
- */
-function resolveProjectMetadataFile(app, sourcePath) {
-    var _a;
-    return __awaiter(this, void 0, void 0, function* () {
-        const allDrafts = get_store_value(drafts);
-        const draft = draftForPath(sourcePath, allDrafts);
-        if (!draft)
-            return null;
-        const projectDrafts = (_a = get_store_value(projects)[draft.title]) !== null && _a !== void 0 ? _a : [draft];
-        const root = projectRootPath(projectDrafts);
-        const startDir = draftParentFolder(draft.vaultPath);
-        const candidatePaths = projectResourceCandidatePaths(startDir, root, "metadata.json");
-        let file = null;
-        for (const path of candidatePaths) {
-            const f = app.vault.getAbstractFileByPath(path);
-            if (f instanceof obsidian.TFile) {
-                file = f;
-                break;
-            }
-        }
-        if (!file)
-            return null;
-        let data = null;
-        try {
-            data = JSON.parse(yield app.vault.cachedRead(file));
-        }
-        catch (_b) {
-            data = null;
-        }
-        return { file, data };
-    });
-}
-
-/**
- * Coerce a text input into the scalar we store in metadata.json: `true`/`false`
- * become booleans, clean numeric strings become numbers, everything else stays a
- * string (so "2.2.0" or "Paper 1" are preserved verbatim).
- */
-function coerceScalar(raw) {
-    const t = raw.trim();
-    if (t === "true")
-        return true;
-    if (t === "false")
-        return false;
-    if (t !== "" && /^-?\d+(\.\d+)?$/.test(t))
-        return Number(t);
-    return raw;
-}
-/**
- * Lightweight editor for a single `{{Variable}}`: edits one field of the
- * project's metadata.json in place. Created/overwrites simple object-key paths;
- * defers array/complex paths to the full "Edit metadata…" modal.
- */
-class VariableEditModal extends obsidian.Modal {
-    constructor(app, opts) {
-        super(app);
-        this.opts = opts;
-        this.value = opts.currentValue;
-    }
-    onOpen() {
-        const { contentEl, titleEl } = this;
-        titleEl.setText(`Edit variable: ${this.opts.varPath}`);
-        contentEl.empty();
-        const setting = new obsidian.Setting(contentEl)
-            .setName("Value")
-            .addText((text) => {
-            text.setValue(this.value).onChange((v) => (this.value = v));
-            text.inputEl.addEventListener("keydown", (evt) => {
-                if (evt.key === "Enter") {
-                    evt.preventDefault();
-                    void this.save();
-                }
-            });
-            // Focus and select for quick replacement.
-            window.setTimeout(() => {
-                text.inputEl.focus();
-                text.inputEl.select();
-            }, 0);
-        });
-        setting.descEl.setText(`Saved to ${this.opts.metadataFilePath}. Booleans and numbers are stored as-is; everything else as text.`);
-        new obsidian.Setting(contentEl)
-            .addButton((b) => b.setButtonText("Cancel").onClick(() => this.close()))
-            .addButton((b) => b
-            .setButtonText("Save")
-            .setCta()
-            .onClick(() => void this.save()));
-    }
-    save() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const file = this.app.vault.getAbstractFileByPath(this.opts.metadataFilePath);
-            if (!(file instanceof obsidian.TFile)) {
-                new obsidian.Notice("Could not find the project's metadata.json.");
-                return;
-            }
-            let data;
-            try {
-                data = JSON.parse(yield this.app.vault.read(file));
-            }
-            catch (e) {
-                new obsidian.Notice(`metadata.json is not valid JSON: ${e.message}`);
-                return;
-            }
-            if (typeof data !== "object" || data === null || Array.isArray(data)) {
-                new obsidian.Notice("metadata.json must be a JSON object.");
-                return;
-            }
-            const coerced = coerceScalar(this.value);
-            if (!setByPath(data, this.opts.varPath, coerced)) {
-                new obsidian.Notice(`Can't set "${this.opts.varPath}" here — edit it from “Edit metadata…”.`);
-                return;
-            }
-            try {
-                yield this.app.vault.modify(file, JSON.stringify(data, null, 2) + "\n");
-            }
-            catch (e) {
-                new obsidian.Notice(`Failed to save: ${e.message}`);
-                return;
-            }
-            this.opts.onSaved(formatPlaceholderValue(coerced));
-            this.close();
-        });
-    }
-    onClose() {
-        this.contentEl.empty();
-    }
-}
-
-/** True when a text node is nested inside inline code or a code block. */
-function isInCodeOrPre(node) {
-    let el = node.parentElement;
-    while (el) {
-        const tag = el.tagName;
-        if (tag === "CODE" || tag === "PRE")
-            return true;
-        el = el.parentElement;
-    }
-    return false;
-}
-function makeVariableSpan(app, metadataFilePath, path, value) {
-    const span = document.createElement("span");
-    span.className = "longform-variable";
-    const defined = value !== undefined;
-    const display = defined ? formatPlaceholderValue(value) : `{{${path}}}`;
-    span.dataset.longformVarPath = path;
-    span.dataset.longformVarDefined = String(defined);
-    span.textContent = display;
-    span.setAttribute("aria-label", `Longform variable: ${path} — double-click to edit`);
-    span.addEventListener("dblclick", (evt) => {
-        evt.preventDefault();
-        evt.stopPropagation();
-        try {
-            new VariableEditModal(app, {
-                metadataFilePath,
-                varPath: path,
-                currentValue: defined ? formatPlaceholderValue(value) : "",
-                onSaved: (newDisplay) => {
-                    const nowDefined = newDisplay !== "";
-                    span.textContent = nowDefined ? newDisplay : `{{${path}}}`;
-                    span.dataset.longformVarDefined = String(nowDefined);
-                },
-            }).open();
-        }
-        catch (e) {
-            console.error("longform: failed to open the variable editor", e);
-            new obsidian.Notice("Couldn't open the variable editor.");
-        }
-    });
-    return span;
-}
-/** Replace every `{{path}}` in a text node with a rendered variable span. */
-function renderTextNode(textNode, regex, data, metadataFilePath, app) {
-    var _a;
-    const text = (_a = textNode.nodeValue) !== null && _a !== void 0 ? _a : "";
-    regex.lastIndex = 0;
-    let match;
-    let lastIndex = 0;
-    let matched = false;
-    const frag = document.createDocumentFragment();
-    while ((match = regex.exec(text)) !== null) {
-        matched = true;
-        const start = match.index;
-        if (start > lastIndex) {
-            frag.appendChild(document.createTextNode(text.slice(lastIndex, start)));
-        }
-        const path = match[1].trim();
-        const value = getByPath(data, path);
-        frag.appendChild(makeVariableSpan(app, metadataFilePath, path, value));
-        lastIndex = start + match[0].length;
-    }
-    if (!matched)
-        return;
-    if (lastIndex < text.length) {
-        frag.appendChild(document.createTextNode(text.slice(lastIndex)));
-    }
-    // The node may have been detached since we collected it; only replace when
-    // it is still attached, otherwise replaceWith throws.
-    if (textNode.parentNode) {
-        textNode.replaceWith(frag);
-    }
-}
-/**
- * Register a reading-mode post-processor that renders `{{Variable}}`
- * placeholders in Longform project notes as their resolved value from the
- * project's metadata.json, and lets the author double-click a value to edit it.
- */
-function registerVariablePostProcessor(plugin) {
-    plugin.registerMarkdownPostProcessor((el, ctx) => __awaiter(this, void 0, void 0, function* () {
-        // Never let a rendering hiccup break Obsidian's reading view: any failure
-        // here just leaves the raw `{{...}}` text untouched.
-        try {
-            // Quick bail before any async work if there's nothing to render.
-            if (!el.textContent || !el.textContent.includes("{{"))
-                return;
-            const resolved = yield resolveProjectMetadataFile(plugin.app, ctx.sourcePath);
-            if (!resolved || !resolved.data)
-                return;
-            const { file, data } = resolved;
-            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-            const textNodes = [];
-            let node;
-            while ((node = walker.nextNode())) {
-                const t = node;
-                if (!t.nodeValue || !t.nodeValue.includes("{{"))
-                    continue;
-                if (isInCodeOrPre(t))
-                    continue;
-                textNodes.push(t);
-            }
-            const regex = buildPlaceholderRegex("{{", "}}");
-            for (const textNode of textNodes) {
-                renderTextNode(textNode, regex, data, file.path, plugin.app);
-            }
-        }
-        catch (e) {
-            console.error("longform: failed to render {{Variable}} placeholders", e);
-        }
-    }));
-}
-
 const LONGFORM_LEAF_CLASS = "longform-leaf";
 // TODO: Try and abstract away more logic from actual plugin hooks here
 class LongformPlugin extends obsidian.Plugin {
@@ -49523,7 +40475,7 @@ class LongformPlugin extends obsidian.Plugin {
     }
     onload() {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(`[PaperOut] Starting PaperOut To-Authors ${this.manifest.version}…`);
+            console.log(`[Longform] Starting Longform ${this.manifest.version}…`);
             obsidian.addIcon(ICON_NAME, ICON_SVG);
             this.registerView(VIEW_TYPE_LONGFORM_EXPLORER, (leaf) => new ExplorerPane(leaf));
             this.registerEvent(this.app.workspace.on("file-menu", (menu, file) => {
@@ -49532,18 +40484,10 @@ class LongformPlugin extends obsidian.Plugin {
                 }
                 menu.addItem((item) => {
                     item
-                        .setTitle(translate("menu.createProject"))
+                        .setTitle("Create Longform Project")
                         .setIcon(ICON_NAME)
                         .onClick(() => {
                         new NewProjectModalContainer(this.app, file).open();
-                    });
-                });
-                menu.addItem((item) => {
-                    item
-                        .setTitle(translate("menu.newPaperProject"))
-                        .setIcon(ICON_NAME)
-                        .onClick(() => {
-                        new NewPaperModal(this.app, file).open();
                     });
                 });
             }));
@@ -49563,9 +40507,6 @@ class LongformPlugin extends obsidian.Plugin {
                 }
             }));
             yield this.loadSettings();
-            // Resolve UI language from the saved preference (+ PaperBell/Obsidian) before
-            // commands and notices are created, so their labels use the right language.
-            this.unsubscribeLocale = startLocaleSync();
             this.addSettingTab(new LongformSettingsTab(this.app, this));
             this.storeVaultSync = new StoreVaultSync(this.app);
             this.app.workspace.onLayoutReady(this.postLayoutInit.bind(this));
@@ -49583,16 +40524,6 @@ class LongformPlugin extends obsidian.Plugin {
                 }
             }));
             addCommands(this);
-            // Render {{Variable}} placeholders in reading mode from the project's
-            // metadata.json, with double-click-to-edit.
-            registerVariablePostProcessor(this);
-            // One-time hint that PDF export exists and how to set it up.
-            this.app.workspace.onLayoutReady(() => {
-                if (!get_store_value(pluginSettings).pandocSetupDismissed) {
-                    new obsidian.Notice(translate("notice.pdfExport"), 12000);
-                    pluginSettings.update((s) => (Object.assign(Object.assign({}, s), { pandocSetupDismissed: true })));
-                }
-            });
             // Dynamically style longform scenes
             this.registerEvent(this.app.workspace.on("layout-change", () => {
                 this.styleLongformLeaves();
@@ -49604,9 +40535,6 @@ class LongformPlugin extends obsidian.Plugin {
         });
     }
     onunload() {
-        var _a, _b;
-        (_a = this.unsubscribeLocale) === null || _a === void 0 ? void 0 : _a.call(this);
-        (_b = this.paperBell) === null || _b === void 0 ? void 0 : _b.destroy();
         this.userScriptObserver.destroy();
         this.storeVaultSync.destroy();
         this.unsubscribeSettings();
@@ -49635,18 +40563,8 @@ class LongformPlugin extends obsidian.Plugin {
             yield this.userScriptObserver.loadUserSteps();
             let _workflows = settings["workflows"];
             if (!_workflows) {
-                console.log("[PaperOut] No workflows found; adding default workflows.");
-                _workflows = Object.assign({}, DEFAULT_WORKFLOWS);
-            }
-            else {
-                // Back-fill built-in workflows added in newer versions (e.g. PaperBell
-                // Cover Letter) into an existing vault, without touching the user's own or
-                // customized workflows. Idempotent, so it also self-heals on every load.
-                const { workflows: merged, added } = mergeMissingWorkflows(_workflows, DEFAULT_WORKFLOWS);
-                if (added.length > 0) {
-                    console.log(`[PaperOut] Adding missing built-in workflows: ${added.join(", ")}.`);
-                    _workflows = merged;
-                }
+                console.log("[Longform] No workflows found; adding default workflow.");
+                _workflows = DEFAULT_WORKFLOWS;
             }
             const deserializedWorkflows = {};
             Object.entries(_workflows).forEach(([key, value]) => {
@@ -49734,7 +40652,7 @@ class LongformPlugin extends obsidian.Plugin {
                     let file = null;
                     if (this.cachedSettings.sessionStorage === "plugin-folder") {
                         if (!this.manifest.dir) {
-                            console.error(`[PaperOut] No manifest.dir for saving sessions.`);
+                            console.error(`[Longform] No manifest.dir for saving sessions.`);
                             return;
                         }
                         file = obsidian.normalizePath(`${this.manifest.dir}/sessions.json`);
@@ -49787,17 +40705,11 @@ class LongformPlugin extends obsidian.Plugin {
                     if (target &&
                         !this.writingSessionTracker.goalsNotifiedFor.has(target)) {
                         this.writingSessionTracker.goalsNotifiedFor.add(target);
-                        new obsidian.Notice(translate("notice.goalMet"));
+                        new obsidian.Notice("Writing goal met!");
                     }
                 }
             });
             this.initLeaf();
-            refreshPandocTemplates(this.app);
-            // Optional PaperBell host integration. Standalone-safe: this no-ops if the
-            // PaperBell plugin isn't installed, and connects (now or on its ready event)
-            // if it is. See src/paperbell/.
-            this.paperBell = new PaperBellClient(this);
-            this.paperBell.init();
             initialized.set(true);
         });
     }
