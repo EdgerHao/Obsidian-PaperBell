@@ -1,0 +1,26 @@
+{
+  "id": "conv-1779265642694-viet82fyk",
+  "providerId": "codex",
+  "title": "Add filters to library configuration",
+  "titleGenerationStatus": "success",
+  "createdAt": 1779265642695,
+  "updatedAt": 1779339846729,
+  "lastResponseAt": 1779339654442,
+  "sessionId": "019e447f-2241-7351-9a56-54a68b281d30",
+  "providerState": {
+    "threadId": "019e447f-2241-7351-9a56-54a68b281d30",
+    "sessionFilePath": "/Users/a1234/.codex/sessions/2026/05/20/rollout-2026-05-20T16-27-23-019e447f-2241-7351-9a56-54a68b281d30.jsonl",
+    "transcriptRootPath": "/Users/a1234/.codex/sessions"
+  },
+  "currentNote": "40 - Obsidian/脚本/pandoc/PaperBell-md-2-word/README.md",
+  "usage": {
+    "inputTokens": 53687,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 52352,
+    "contextWindow": 258400,
+    "contextWindowIsAuthoritative": true,
+    "contextTokens": 53687,
+    "percentage": 21,
+    "model": "gpt-5.5"
+  }
+}

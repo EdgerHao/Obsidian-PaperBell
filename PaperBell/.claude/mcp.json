@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "zotero-mcp": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://127.0.0.1:23120/mcp"
+      ],
+      "env": {}
+    },
+    "ai4scholar": {
+      "command": "/usr/local/Cellar/python@3.11/3.11.15_1/bin/python3.11",
+      "args": [
+        "-m",
+        "ai4scholar_mcp.server"
+      ],
+      "env": {
+        "AI4SCHOLAR_API_KEY": "sk-user-b97c72b9f7ac52cc8dd631461b98cdccd4ae51bc110edc00"
+      }
+    },
+    "mcp-obsidian": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "obsidian-mcp",
+        "/Users/a1234/ob-value/郝小晏的知识宝库"
+      ],
+      "env": {}
+    }
+  }
+}

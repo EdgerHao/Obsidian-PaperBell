@@ -1,0 +1,26 @@
+{
+  "id": "conv-1779265585326-cs55v9mih",
+  "providerId": "codex",
+  "title": "Summarize Content",
+  "titleGenerationStatus": "success",
+  "createdAt": 1779265585327,
+  "updatedAt": 1779265601604,
+  "lastResponseAt": 1779265601604,
+  "sessionId": "019e447e-4458-7e02-b49e-06357075fbf6",
+  "providerState": {
+    "threadId": "019e447e-4458-7e02-b49e-06357075fbf6",
+    "sessionFilePath": "/Users/a1234/.codex/sessions/2026/05/20/rollout-2026-05-20T16-26-26-019e447e-4458-7e02-b49e-06357075fbf6.jsonl",
+    "transcriptRootPath": "/Users/a1234/.codex/sessions"
+  },
+  "currentNote": "Outputs/PaperBell用户文档/功能介绍/导出学术文档.md",
+  "usage": {
+    "inputTokens": 18362,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 17024,
+    "contextWindow": 258400,
+    "contextWindowIsAuthoritative": true,
+    "contextTokens": 18362,
+    "percentage": 7,
+    "model": "gpt-5.5"
+  }
+}
